@@ -1,5 +1,6 @@
 import streamDeck from '@elgato/streamdeck';
 
+import { LapTimeAction } from './actions/lap-time';
 import { SpeedMeterAction } from './actions/speed-meter';
 import { parseSettings } from './settings/settings';
 import { TelemetryManager } from './telemetry/manager';
@@ -9,6 +10,7 @@ streamDeck.logger.setLevel('trace');
 
 // Register the action.
 streamDeck.actions.registerAction(new SpeedMeterAction());
+streamDeck.actions.registerAction(new LapTimeAction());
 
 // グローバル設定の適用処理
 function handleGlobalSettings(settingsObj: object) {

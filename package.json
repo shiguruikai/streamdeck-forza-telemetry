@@ -4,7 +4,8 @@
     "watch"   : "rollup -c -w --watch.onEnd=\"streamdeck restart com.github.shiguruikai.streamdeck-forza-telemetry\"",
     "lint"    : "eslint .",
     "lint:fix": "eslint . --fix",
-    "sim"     : "jiti tests/simulate-telemetry.ts"
+    "sim"     : "node tests/simulate-telemetry.ts",
+    "validate": "streamdeck validate com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin"
   },
   "type"           : "module",
   "devDependencies": {

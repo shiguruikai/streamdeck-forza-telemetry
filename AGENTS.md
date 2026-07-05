@@ -17,25 +17,33 @@ Forza HorizonからUDPテレメトリデータ（"Data Out"）を受信し、Elg
 
 - `pnpm build`: プラグインをビルドし、成果物を出力する
 - `pnpm watch`: コードの変更を監視して自動ビルドし、Stream Deckプラグインを再起動する
-- `pnpm lint:fix`: ESLintによるコードの自動修正を実行する
+- `pnpm lint:fix`: ESLintによるコード自動修正 **※対象ファイルは、JavaScript、TypeScript、JSONのみ**
 - `pnpm sim`: テレメトリ送信をシミュレートする（`tests/simulate-telemetry.ts`の実行）
+- `pnpm validate`: `streamdeck validate`コマンドにより、`com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin`フォルダ内のファイルを検証する。
+- `pnpm exec streamdeck restart com.github.shiguruikai.streamdeck-forza-telemetry`: Stream Deck上でプラグインを強制的に再起動し、レイアウトや設定の変更を即座に反映する。
 
 ## 設計／開発ルール
 
 - **仕様の参照ルール**:
   - テレメトリのデータ構造やパケット定義の変更を行う際は、`docs/forza-telemetry/`内のファイルを参照すること。
   - Stream DeckのAPI仕様、CLI、デザインガイドラインについては、`docs/stream-deck-docs/index.md`を参照すること。
+- **レイアウトのデザインルール**:
+  - Dialの液晶ディスプレイ（キャンバスサイズは 200×100px）に情報を表示する際は、左右に 10px、上下 5px のパディングを確保すること。
+  - すべての要素の描画領域（`rect`）は、以下の範囲内に収めること。
+    - X座標（左右）: `10` ～ `190`
+    - Y座標（上下）: `5` ～ `95`
 
 ## テストルール
 
 - 動作確認の手段として`tests/simulate-telemetry.ts`を使用すること。
 - 機能の追加・修正を行った際は、`pnpm sim`を実行して擬似的なテレメトリデータを送信し、Stream Deck上での表示や挙動が正しいか実機またはシミュレータで確認すること。
+- Stream Deckプラグインの定義ファイルや設定ファイルを変更した際は、`pnpm validate`を実行し、ファイルが正しいか検証すること。
 
 ## Gitルール
 
 - コミットメッセージ: `Conventional Commits` の仕様に従った簡潔な文章（原則、日本語）
   - type: build, ci, docs, feat, fix, perf, refactor, style, test
-- コミットする前に、リント＆フォーマットを実行すること。
+- コミットする前に、`pnpm lint:fix`を実行すること。
 
 ## ディレクトリ構造
 
@@ -45,8 +53,11 @@ Forza HorizonからUDPテレメトリデータ（"Data Out"）を受信し、Elg
 │   ├── bin/                        # ビルド成果物の出力先
 │   ├── imgs/                       # プラグイン用画像リソース
 │   │   ├── actions/                # アクション用の各種アイコン画像
+│   │   │   ├── lap-time/           # ラップタイム用のアイコン画像
+│   │   │   └── speed-meter/        # 速度計用のアイコン画像
 │   │   └── plugin/                 # プラグイン共通のアイコン画像
 │   ├── layouts/                    # Stream Deckのレイアウト定義
+│   │   ├── lap-time-layout.json    # ラップタイムアクションのレイアウト定義ファイル
 │   │   └── speed-meter-layout.json # 速度計アクションのレイアウト定義ファイル
 │   ├── logs/                       # ログ出力先
 │   ├── ui/                         # プロパティインスペクタ用のUI定義
@@ -54,10 +65,12 @@ Forza HorizonからUDPテレメトリデータ（"Data Out"）を受信し、Elg
 │   │   └── speed-meter.html        # 速度計設定画面のHTML
 │   └── manifest.json               # プラグインの構成定義
 ├── docs/                           # 設計・開発用ドキュメント
-│   ├── stream-deck-docs/           # Stream Deck SDKのドキュメント（OKF形式）
-│   └── fh6_data_out.md             # Forza Horizon 6 "Data Out"の仕様書
+│   ├── forza-telemetry/            # Forzaテレメトリデータ定義
+│   │   └── fh6.md                  # Forza Horizon 6 "Data Out"の仕様書
+│   └── stream-deck-docs/           # Stream Deck SDKのドキュメント（OKF形式）
 ├── src/                            # ソースコードディレクトリ
 │   ├── actions/                    # Stream Deckのアクション定義
+│   │   ├── lap-time.ts             # ラップタイムのアクション実装
 │   │   └── speed-meter.ts          # 速度計のアクション実装
 │   ├── settings/                   # アクションの設定関連
 │   │   └── settings.ts             # アクション設定の定義

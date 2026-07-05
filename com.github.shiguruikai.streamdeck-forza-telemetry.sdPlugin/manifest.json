@@ -15,6 +15,17 @@
       "Controllers": ["Encoder"],
       "Encoder": {"layout": "layouts/speed-meter-layout.json"},
       "States": [ {"Image": "imgs/actions/speed-meter/key", "TitleAlignment": "middle"} ]
+    },
+    {
+      "UserTitleEnabled": false,
+      "DisableCaching": true,
+      "Name": "Lap Time",
+      "UUID": "com.github.shiguruikai.streamdeck-forza-telemetry.lap-time",
+      "Icon": "imgs/actions/lap-time/icon",
+      "Tooltip": "Show lap time.",
+      "Controllers": ["Encoder"],
+      "Encoder": {"layout": "layouts/lap-time-layout.json"},
+      "States": [ {"Image": "imgs/actions/lap-time/key", "TitleAlignment": "middle"} ]
     }
   ],
   "Category"    : "Forza Telemetry",

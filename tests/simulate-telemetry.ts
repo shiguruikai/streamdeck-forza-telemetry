@@ -24,6 +24,11 @@ interface CarState {
   rpm: number;
   speed: number;
   timestampMs: number;
+  lapNumber: number;
+  currentLap: number;
+  lastLap: number;
+  bestLap: number;
+  racePosition: number;
 }
 
 /**
@@ -66,6 +71,13 @@ function buildTelemetryPacket(state: CarState): Buffer {
 
   buf.writeFloatLE(state.speed, 256); // speed (m/s)
 
+  // Lap times
+  buf.writeFloatLE(state.bestLap, 296);    // bestLap
+  buf.writeFloatLE(state.lastLap, 300);    // lastLap
+  buf.writeFloatLE(state.currentLap, 304); // currentLap
+  buf.writeUInt16LE(state.lapNumber, 312); // lapNumber
+  buf.writeUInt8(state.racePosition, 314); // racePosition
+
   buf.writeUInt8(255, 315); // accel: 255 (全開)
   buf.writeUInt8(0, 316); // brake: 0
   buf.writeUInt8(state.gear, 319); // gear: 現在のギア
@@ -79,6 +91,11 @@ const state: CarState = {
   rpm: IDLE_RPM,
   speed: 0,
   timestampMs: 0,
+  lapNumber: 1,
+  currentLap: 0,
+  lastLap: 0,
+  bestLap: 0,
+  racePosition: 4,
 };
 
 const socket: dgram.Socket = dgram.createSocket('udp4');
@@ -113,6 +130,20 @@ setInterval(() => {
   state.speed = calculateSpeed(state.rpm, state.gear);
   state.timestampMs += INTERVAL_MS;
 
+  // ラップタイムの更新 (60秒で1周と仮定)
+  state.currentLap += INTERVAL_MS / 1000;
+  if (state.currentLap >= 60) {
+    const finalLapTime = state.currentLap;
+    state.lastLap = finalLapTime;
+    if (state.bestLap === 0 || finalLapTime < state.bestLap) {
+      state.bestLap = finalLapTime;
+    }
+    state.lapNumber++;
+    state.currentLap = 0;
+    // 順位もたまに変化させる (1〜12位の間)
+    state.racePosition = Math.max(1, Math.min(12, state.racePosition + (Math.random() > 0.5 ? 1 : -1)));
+  }
+
   // 2. パケット生成と送信
   const packet: Buffer = buildTelemetryPacket(state);
 
@@ -127,8 +158,9 @@ setInterval(() => {
   const speedKmh: string = (state.speed * 3.6).toFixed(0);
   const currentRpm: string = state.rpm.toFixed(0);
   const gearChar: string = state.gear === 0 ? 'R' : state.gear === 1 ? 'N' : (state.gear - 1).toString();
+  const currentLapStr: string = state.currentLap.toFixed(1);
   process.stdout.write(
-    `\rGear: ${gearChar} | RPM: ${currentRpm.padStart(4, ' ')} | Speed: ${speedKmh.padStart(4, ' ')} km/h`,
+    `\rGear: ${gearChar} | RPM: ${currentRpm.padStart(4, ' ')} | Speed: ${speedKmh.padStart(4, ' ')} km/h | Lap: ${state.lapNumber} (${currentLapStr}s) | Pos: ${state.racePosition}`,
   );
 
   // 最高ギアで最高回転数に到達した場合、初期状態（ギア2＝1速）にリセットしてループを継続する
