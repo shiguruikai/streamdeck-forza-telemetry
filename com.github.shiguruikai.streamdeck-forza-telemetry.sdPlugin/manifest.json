@@ -7,9 +7,9 @@
     {
       "UserTitleEnabled": false,
       "DisableCaching": true,
-      "Name": "Speed Mater",
-      "UUID": "com.github.shiguruikai.streamdeck-forza-telemetry.speed-mater",
-      "Icon": "imgs/actions/counter/icon",
+      "Name": "Speed Meter",
+      "UUID": "com.github.shiguruikai.streamdeck-forza-telemetry.speed-meter",
+      "Icon": "imgs/actions/speed-meter/icon",
       "Tooltip": "Show speed meter.",
       "PropertyInspectorPath": "ui/speed-meter.html",
       "Controllers": ["Encoder"],
@@ -18,7 +18,7 @@
       },
       "States": [
         {
-          "Image": "imgs/actions/counter/key",
+          "Image": "imgs/actions/speed-meter/key",
           "TitleAlignment": "middle"
         }
       ]

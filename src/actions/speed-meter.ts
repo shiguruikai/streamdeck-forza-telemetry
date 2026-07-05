@@ -19,7 +19,7 @@ const MS_TO_MPH = 2.23694;
 const telemetryManager = TelemetryManager.getInstance();
 
 @action({
-  UUID: "com.github.shiguruikai.streamdeck-forza-telemetry.speed-mater",
+  UUID: "com.github.shiguruikai.streamdeck-forza-telemetry.speed-meter",
 })
 export class SpeedMeterAction extends SingletonAction<SpeedMeterDialSettings> {
   private readonly logger = streamDeck.logger.createScope(
@@ -44,6 +44,13 @@ export class SpeedMeterAction extends SingletonAction<SpeedMeterDialSettings> {
     return Math.floor(speed).toString();
   }
 
+  private decodeGear(gear: number): string {
+    if (gear === 0) return "R";
+    if (gear === 1) return "N";
+    if (gear >= 2) return (gear - 1).toString();
+    return "?";
+  }
+
   private computeRpmBar(
     data: Pick<ForzaTelemetryData, "engineMaxRpm" | "currentEngineRpm">,
   ): { value: number, bar_fill_c: string } {
@@ -54,7 +61,14 @@ export class SpeedMeterAction extends SingletonAction<SpeedMeterDialSettings> {
       )
       : 0;
 
-    return { value: rpmPercent, bar_fill_c: '#ffffff' }
+    let barColor = '#ffffff';
+    if (rpmPercent >= 85) {
+      barColor = '#ff3b30'; // 赤 (レッドゾーン)
+    } else if (rpmPercent >= 70) {
+      barColor = '#ffcc00'; // 黄
+    }
+
+    return { value: rpmPercent, bar_fill_c: barColor };
   }
 
   override onWillAppear(
@@ -68,20 +82,24 @@ export class SpeedMeterAction extends SingletonAction<SpeedMeterDialSettings> {
       unit: this.unit,
     });
 
+    // 既にハンドラが存在する場合は一旦解除して重複登録を防ぐ
+    const existingHandler = this.handlers.get(ev.action.id);
+    if (existingHandler) {
+      telemetryManager.off("data", existingHandler);
+    }
 
     const dataHandler = (data: ForzaTelemetryData) => {
       if (!ev.action.isDial()) return;
 
       ev.action.setFeedback({
         speed: this.computeSpeed(data),
-        gear: data.gear.toString(),
+        gear: this.decodeGear(data.gear),
         rpmBar: this.computeRpmBar(data),
       });
     };
 
     this.handlers.set(ev.action.id, dataHandler);
 
-    telemetryManager.start();
     telemetryManager.on("data", dataHandler);
   }
 

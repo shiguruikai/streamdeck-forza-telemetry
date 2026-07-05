@@ -12,8 +12,8 @@ const SHIFT_UP_RPM: number = 7500;
 const TIRE_RADIUS_M: number = 0.33; // タイヤ半径(メートル)
 const FINAL_DRIVE: number = 3.5;
 
-// 各ギアのギア比 (インデックス0はニュートラルとして扱う)
-const GEAR_RATIOS: number[] = [0, 3.0, 2.0, 1.5, 1.1, 0.85, 0.65];
+// 各ギアのギア比 (インデックス0はリバース[R]、1はニュートラル[N]、2以上が前進ギア)
+const GEAR_RATIOS: number[] = [3.0, 0, 3.0, 2.0, 1.5, 1.1, 0.85, 0.65];
 const MAX_GEAR: number = GEAR_RATIOS.length - 1;
 
 /**
@@ -37,7 +37,7 @@ interface CarState {
  * number: 車両速度 (m/s)
  */
 function calculateSpeed(rpm: number, gear: number): number {
-  if (gear === 0 || gear > MAX_GEAR) return 0;
+  if (gear <= 1 || gear > MAX_GEAR) return 0;
 
   const tireCircumference: number = 2 * Math.PI * TIRE_RADIUS_M;
   const wheelRpm: number = rpm / (GEAR_RATIOS[gear] * FINAL_DRIVE);
@@ -73,9 +73,9 @@ function buildTelemetryPacket(state: CarState): Buffer {
   return buf;
 }
 
-// 初期状態のセットアップ
+// 初期状態のセットアップ (ギア2＝1速)
 const state: CarState = {
-  gear: 1,
+  gear: 2,
   rpm: IDLE_RPM,
   speed: 0,
   timestampMs: 0,
@@ -92,7 +92,7 @@ console.log(
 setInterval(() => {
   // 1. 車両状態の更新
   // 低いギアほどRPMの上がり方を早くする簡易ロジック
-  const rpmGain: number = 600 / state.gear;
+  const rpmGain: number = 600 / (state.gear - 1);
   state.rpm += rpmGain;
 
   // シフトアップ判定
@@ -126,21 +126,15 @@ setInterval(() => {
   // 3. コンソール出力 (m/s を km/h に変換して表示)
   const speedKmh: string = (state.speed * 3.6).toFixed(0);
   const currentRpm: string = state.rpm.toFixed(0);
-   process.stdout.write(
-    `\rGear: ${state.gear} | RPM: ${currentRpm.padStart(4, " ")} | Speed: ${speedKmh.padStart(4, " ")} km/h`,
+  const gearChar: string = state.gear === 0 ? "R" : state.gear === 1 ? "N" : (state.gear - 1).toString();
+  process.stdout.write(
+    `\rGear: ${gearChar} | RPM: ${currentRpm.padStart(4, " ")} | Speed: ${speedKmh.padStart(4, " ")} km/h`,
   );
 
-  // 最高ギアで最高回転数に到達した場合、初期状態にリセットしてループを継続する
+  // 最高ギアで最高回転数に到達した場合、初期状態（ギア2＝1速）にリセットしてループを継続する
   if (state.gear === MAX_GEAR && state.rpm >= MAX_RPM) {
-    state.gear = 1;
+    state.gear = 2;
     state.rpm = IDLE_RPM;
     state.speed = 0;
   }
 }, INTERVAL_MS);
-
-
-
-//   process.stdout.write(
-//     `\rSpeed: ${speedKmh.toString().padStart(3, " ")} km/h | Gear: ${gearChar} | RPM: ${Math.floor(currentRpm).toString().padStart(4, " ")}`,
-//   );
-// }, INTERVAL_MS);

@@ -10,23 +10,34 @@ streamDeck.logger.setLevel("trace");
 // Register the action.
 streamDeck.actions.registerAction(new SpeedMeterAction());
 
+// グローバル設定の適用処理
+function handleGlobalSettings(settingsObj: object) {
+  const settings = parseSettings(settingsObj);
+
+  if (settings.port && settings.address) {
+    TelemetryManager.getInstance().configure({
+      port: settings.port,
+      address: settings.address,
+    });
+  } else {
+    TelemetryManager.getInstance().clearConfig();
+  }
+}
+
 // グローバル設定の変更を監視
 streamDeck.settings.onDidReceiveGlobalSettings((ev) => {
   streamDeck.logger.info(
     `Received GlobalSettings: ${JSON.stringify(ev.settings)}`,
   );
-
-  const settings = parseSettings(ev.settings);
-
-  if (settings.port && settings.address) {
-    TelemetryManager.getInstance().start({
-      port: settings.port,
-      address: settings.address,
-    });
-  } else {
-    TelemetryManager.getInstance().stop();
-  }
+  handleGlobalSettings(ev.settings);
 });
 
 // Finally, connect to the Stream Deck.
-streamDeck.connect();
+await streamDeck.connect();
+
+// 起動時に現在の設定を適用
+const initialSettings = await streamDeck.settings.getGlobalSettings();
+streamDeck.logger.info(
+  `Loaded Initial GlobalSettings: ${JSON.stringify(initialSettings)}`,
+);
+handleGlobalSettings(initialSettings);
