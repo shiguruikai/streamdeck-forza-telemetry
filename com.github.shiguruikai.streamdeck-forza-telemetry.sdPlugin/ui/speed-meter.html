@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+  <head lang="en">
+    <meta charset="utf-8" />
+    <script src="sdpi-components.js"></script>
+  </head>
+  <body>
+    <sdpi-item label="IP Address">
+      <sdpi-textfield
+        setting="address"
+        pattern="^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])){3}$"
+        required
+        global
+      ></sdpi-textfield>
+    </sdpi-item>
+
+    <sdpi-item label="Port">
+      <sdpi-textfield setting="port" pattern="^\d+$" required global></sdpi-textfield>
+    </sdpi-item>
+
+    <sdpi-item label="Speed Unit">
+      <sdpi-select setting="unit" default="kmh">
+        <option value="kmh">KM/H</option>
+        <option value="mph">MPH</option>
+      </sdpi-select>
+    </sdpi-item>
+
+    <script src="inspector.js"></script>
+  </body>
+</html>
