@@ -1,8 +1,8 @@
-import * as dgram from "node:dgram";
-import { Buffer } from "node:buffer";
+import { Buffer } from 'node:buffer';
+import * as dgram from 'node:dgram';
 
 const PORT: number = 5300;
-const HOST: string = "127.0.0.1";
+const HOST: string = '127.0.0.1';
 const INTERVAL_MS: number = 100;
 
 // 車両のスペック定義
@@ -81,7 +81,7 @@ const state: CarState = {
   timestampMs: 0,
 };
 
-const socket: dgram.Socket = dgram.createSocket("udp4");
+const socket: dgram.Socket = dgram.createSocket('udp4');
 
 console.log(`[Simulation Started] Target: ${HOST}:${PORT}`);
 console.log(
@@ -126,9 +126,9 @@ setInterval(() => {
   // 3. コンソール出力 (m/s を km/h に変換して表示)
   const speedKmh: string = (state.speed * 3.6).toFixed(0);
   const currentRpm: string = state.rpm.toFixed(0);
-  const gearChar: string = state.gear === 0 ? "R" : state.gear === 1 ? "N" : (state.gear - 1).toString();
+  const gearChar: string = state.gear === 0 ? 'R' : state.gear === 1 ? 'N' : (state.gear - 1).toString();
   process.stdout.write(
-    `\rGear: ${gearChar} | RPM: ${currentRpm.padStart(4, " ")} | Speed: ${speedKmh.padStart(4, " ")} km/h`,
+    `\rGear: ${gearChar} | RPM: ${currentRpm.padStart(4, ' ')} | Speed: ${speedKmh.padStart(4, ' ')} km/h`,
   );
 
   // 最高ギアで最高回転数に到達した場合、初期状態（ギア2＝1速）にリセットしてループを継続する

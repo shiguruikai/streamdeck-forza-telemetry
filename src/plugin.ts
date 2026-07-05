@@ -1,11 +1,11 @@
-import streamDeck from "@elgato/streamdeck";
+import streamDeck from '@elgato/streamdeck';
 
-import { SpeedMeterAction } from "./actions/speed-meter";
-import { parseSettings } from "./settings/settings";
-import { TelemetryManager } from "./telemetry/manager";
+import { SpeedMeterAction } from './actions/speed-meter';
+import { parseSettings } from './settings/settings';
+import { TelemetryManager } from './telemetry/manager';
 
 // We can enable "trace" logging so that all messages between the Stream Deck, and the plugin are recorded. When storing sensitive information
-streamDeck.logger.setLevel("trace");
+streamDeck.logger.setLevel('trace');
 
 // Register the action.
 streamDeck.actions.registerAction(new SpeedMeterAction());

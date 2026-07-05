@@ -1,7 +1,8 @@
-import { EventEmitter } from "node:events";
-import * as dgram from "node:dgram";
-import streamDeck from "@elgato/streamdeck";
-import { isNativeError } from "node:util/types";
+import * as dgram from 'node:dgram';
+import { EventEmitter } from 'node:events';
+import { isNativeError } from 'node:util/types';
+
+import streamDeck from '@elgato/streamdeck';
 
 type TelemetryServerEvents = {
   listening: [];
@@ -14,7 +15,7 @@ export class TelemetryServer extends EventEmitter<TelemetryServerEvents> {
 
   private server?: dgram.Socket;
   private port = 5300;
-  private address = "127.0.0.1";
+  private address = '127.0.0.1';
 
   public start(params?: { port?: number; address?: string }): void {
     // 接続済みかつ接続パラメーターが変更されない場合、スキップ
@@ -34,26 +35,26 @@ export class TelemetryServer extends EventEmitter<TelemetryServerEvents> {
 
     try {
       this.stop();
-      this.server = dgram.createSocket("udp4");
+      this.server = dgram.createSocket('udp4');
 
-      this.server.on("listening", () => {
+      this.server.on('listening', () => {
         if (!this.server) return;
         const address = this.server.address();
         this.logger.info(`Listening on ${address.address}:${address.port}`);
-        this.emit("listening");
+        this.emit('listening');
       });
 
-      this.server.on("message", (msg, rinfo) => {
-        this.emit("message", msg, rinfo);
+      this.server.on('message', (msg, rinfo) => {
+        this.emit('message', msg, rinfo);
       });
 
-      this.server.on("close", () => {
+      this.server.on('close', () => {
         this.stop();
       });
 
-      this.server.on("error", (err) => {
+      this.server.on('error', (err) => {
         this.logger.error(`Server error:\n${err.stack}`);
-        this.emit("error", err);
+        this.emit('error', err);
         this.stop();
       });
 
@@ -63,7 +64,7 @@ export class TelemetryServer extends EventEmitter<TelemetryServerEvents> {
 
       const err = isNativeError(e) ? e : new Error(String(e));
       this.logger.error(`Failed to bind server: ${err.message}\n${err.stack}`);
-      this.emit("error", err);
+      this.emit('error', err);
     }
   }
 

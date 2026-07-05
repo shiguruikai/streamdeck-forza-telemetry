@@ -1,4 +1,4 @@
-import { Buffer } from "node:buffer";
+import { Buffer } from 'node:buffer';
 
 export type ForzaTelemetryData = {
   /** レース中か否か (1 = レース中、0 = メニュー画面やレース停止中) */

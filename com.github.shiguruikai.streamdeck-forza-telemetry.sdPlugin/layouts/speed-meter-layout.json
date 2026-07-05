@@ -1,48 +1,47 @@
 {
-  "$schema": "https://schemas.elgato.com/streamdeck/plugins/layout.json",
-  "id": "CustomLayout",
+  "id"   : "CustomLayout",
   "items": [
     {
       "zOrder": 0,
-      "key": "gear-circle",
-      "type": "text",
-      "value": "◯",
-      "rect": [5, 20, 45, 45],
-      "font": { "size": 40, "weight": 800 },
-      "color": "#00ff7f"
+      "key"   : "gear-circle",
+      "type"  : "text",
+      "value" : "◯",
+      "rect"  : [5, 20, 45, 45],
+      "font"  : {"size": 40, "weight": 800},
+      "color" : "#00ff7f"
     },
     {
       "zOrder": 1,
-      "key": "gear",
-      "type": "text",
-      "rect": [5, 20, 45, 45],
-      "font": { "size": 35, "weight": 800 },
-      "color": "#00ff7f"
+      "key"   : "gear",
+      "type"  : "text",
+      "rect"  : [5, 20, 45, 45],
+      "font"  : {"size": 35, "weight": 800},
+      "color" : "#00ff7f"
     },
     {
-      "key": "speed",
-      "type": "text",
-      "rect": [50, 5, 110, 65],
-      "font": { "size": 65, "weight": 800 },
+      "key"      : "speed",
+      "type"     : "text",
+      "rect"     : [50, 5, 110, 65],
+      "font"     : {"size": 65, "weight": 800},
       "alignment": "right"
     },
     {
-      "key": "unit",
-      "type": "text",
+      "key"  : "unit",
+      "type" : "text",
       "value": "KM/H",
-      "rect": [160, 50, 40, 13],
-      "font": { "size": 13, "weight": 800 },
+      "rect" : [160, 50, 40, 13],
+      "font" : {"size": 13, "weight": 800},
       "color": "#7f7f7f"
     },
     {
-      "key": "rpmBar",
-      "type": "bar",
-      "rect": [5, 70, 195, 25],
-      "value": 0,
-      "subtype": 0,
+      "key"       : "rpmBar",
+      "type"      : "bar",
+      "rect"      : [5, 70, 195, 25],
+      "value"     : 0,
+      "subtype"   : 0,
       "bar_fill_c": "#333333",
-      "bar_bg_c": "#333333",
-      "border_w": 0
+      "bar_bg_c"  : "#333333",
+      "border_w"  : 0
     }
   ]
 }

@@ -1,9 +1,9 @@
 {
-  "$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
-  "Name": "Forza Telemetry",
-  "Version": "0.1.0.0",
-  "Author": "shiguruikai",
-  "Actions": [
+  "$schema"     : "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
+  "Name"        : "Forza Telemetry",
+  "Version"     : "0.1.0.0",
+  "Author"      : "shiguruikai",
+  "Actions"     : [
     {
       "UserTitleEnabled": false,
       "DisableCaching": true,
@@ -13,39 +13,18 @@
       "Tooltip": "Show speed meter.",
       "PropertyInspectorPath": "ui/speed-meter.html",
       "Controllers": ["Encoder"],
-      "Encoder": {
-        "layout": "layouts/speed-meter-layout.json"
-      },
-      "States": [
-        {
-          "Image": "imgs/actions/speed-meter/key",
-          "TitleAlignment": "middle"
-        }
-      ]
+      "Encoder": {"layout": "layouts/speed-meter-layout.json"},
+      "States": [ {"Image": "imgs/actions/speed-meter/key", "TitleAlignment": "middle"} ]
     }
   ],
-  "Category": "Forza Telemetry",
+  "Category"    : "Forza Telemetry",
   "CategoryIcon": "imgs/plugin/category-icon",
-  "CodePath": "bin/plugin.js",
-  "Description": "Displays Forza Horizon telemetry data on Stream Deck.",
-  "Icon": "imgs/plugin/marketplace",
-  "SDKVersion": 3,
-  "Software": {
-    "MinimumVersion": "7.1"
-  },
-  "OS": [
-    {
-      "Platform": "mac",
-      "MinimumVersion": "12"
-    },
-    {
-      "Platform": "windows",
-      "MinimumVersion": "10"
-    }
-  ],
-  "Nodejs": {
-    "Version": "24",
-    "Debug": "enabled"
-  },
-  "UUID": "com.github.shiguruikai.streamdeck-forza-telemetry"
+  "CodePath"    : "bin/plugin.js",
+  "Description" : "Displays Forza Horizon telemetry data on Stream Deck.",
+  "Icon"        : "imgs/plugin/marketplace",
+  "SDKVersion"  : 3,
+  "Software"    : {"MinimumVersion": "7.1"},
+  "OS"          : [ {"Platform": "mac", "MinimumVersion": "12"}, {"Platform": "windows", "MinimumVersion": "10"} ],
+  "Nodejs"      : {"Version": "24", "Debug": "enabled"},
+  "UUID"        : "com.github.shiguruikai.streamdeck-forza-telemetry"
 }

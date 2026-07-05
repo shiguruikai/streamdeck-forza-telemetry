@@ -1,13 +1,15 @@
-import { EventEmitter } from "node:events";
-import { TelemetryServer } from "./server";
-import streamDeck from "@elgato/streamdeck";
-import { ForzaTelemetryData, parseToForzaTelemetryData } from "./parser";
+import { EventEmitter } from 'node:events';
+
+import streamDeck from '@elgato/streamdeck';
+
+import { ForzaTelemetryData, parseToForzaTelemetryData } from './parser';
+import { TelemetryServer } from './server';
 
 type TelemetryManagerEvents = {
   data: [data: ForzaTelemetryData];
   error: [err: Error];
-  newListener: [eventName: string | symbol, listener: Function];
-  removeListener: [eventName: string | symbol, listener: Function];
+  newListener: [eventName: string | symbol, listener: () => any];
+  removeListener: [eventName: string | symbol, listener: () => any];
 };
 
 export class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
@@ -26,7 +28,7 @@ export class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
     super();
     this.server = new TelemetryServer();
 
-    this.server.on("message", (msg) => {
+    this.server.on('message', (msg) => {
       const now = Date.now();
       if (now - this.lastUpdate < this.updateIntervalMs) {
         return; // スロットリング
@@ -36,34 +38,34 @@ export class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
         const data = parseToForzaTelemetryData(msg);
         if (data) {
           this.lastUpdate = now;
-          this.emit("data", data);
+          this.emit('data', data);
         }
       } catch (err) {
         this.logger.error(`Failed to parse telemetry data: ${err}`);
       }
     });
 
-    this.server.on("error", (err) => {
-      this.emit("error", err);
+    this.server.on('error', (err) => {
+      this.emit('error', err);
     });
 
     // dataイベントのリスナー追加・削除を監視してサーバーを自動制御
-    this.on("newListener", (eventName) => {
-      if (eventName === "data") {
-        const count = this.listenerCount("data");
+    this.on('newListener', (eventName) => {
+      if (eventName === 'data') {
+        const count = this.listenerCount('data');
         if (count === 0) {
-          this.logger.info("First telemetry listener added. Starting UDP server...");
+          this.logger.info('First telemetry listener added. Starting UDP server...');
           this.server.start(this.startParams);
         }
       }
     });
 
-    this.on("removeListener", (eventName) => {
-      if (eventName === "data") {
+    this.on('removeListener', (eventName) => {
+      if (eventName === 'data') {
         process.nextTick(() => {
-          const count = this.listenerCount("data");
+          const count = this.listenerCount('data');
           if (count === 0) {
-            this.logger.info("Last telemetry listener removed. Stopping UDP server...");
+            this.logger.info('Last telemetry listener removed. Stopping UDP server...');
             this.server.stop();
           }
         });
@@ -80,7 +82,7 @@ export class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
     this.startParams = params;
 
     // リスナーが既に存在する場合は、新しいパラメータでサーバーを起動/更新する
-    if (this.listenerCount("data") > 0) {
+    if (this.listenerCount('data') > 0) {
       this.server.start(this.startParams);
     }
   }

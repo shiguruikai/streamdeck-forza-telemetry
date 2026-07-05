@@ -1,22 +1,13 @@
 {
   /* JSON schemas */
-  "json.schemas": [
-    {
-      "fileMatch": [
-        "**/manifest.json"
-      ],
-      "url": "https://schemas.elgato.com/streamdeck/plugins/manifest.json"
-    },
-    {
-      "fileMatch": [
-        "**/layouts/*.json"
-      ],
-      "url": "https://schemas.elgato.com/streamdeck/plugins/layout.json"
-    }
+  "json.schemas"               : [
+    { "fileMatch": ["**/manifest.json" ], "url": "https://schemas.elgato.com/streamdeck/plugins/manifest.json" },
+    { "fileMatch": ["**/layouts/*.json"], "url": "https://schemas.elgato.com/streamdeck/plugins/layout.json"   }
   ],
-  "cSpell.words": [
-    "elgato",
-    "Forza",
-    "streamdeck"
-  ]
+  /*  https://eslint.style/guide/faq#vs-code */
+  "editor.formatOnSave"        : false,
+  "editor.codeActionsOnSave"   : {"source.fixAll.eslint": "explicit"},
+  "eslint.rules.customizations": [ {"rule": "@stylistic/*", "fixable": true, "severity": "off"} ],
+  "eslint.validate"            : ["javascript", "typescript", "json", "jsonc"],
+  "cSpell.words"               : ["elgato", "Forza", "streamdeck"]
 }
