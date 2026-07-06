@@ -50,7 +50,7 @@ Forza HorizonからUDPテレメトリデータ（"Data Out"）を受信し、Elg
 
 - コミットメッセージ: `Conventional Commits`の仕様に従った簡潔な文章（原則、日本語）
   - type: build, ci, docs, feat, fix, perf, refactor, style, test
-- コミットする前に、`pnpm lint:fix`を実行すること。
+- コミットする前に、`pnpm lint:fix`を実行すること（Markdown等のドキュメントファイルのみを修正した場合は不要）。
 
 ## ディレクトリ構造
 
@@ -65,6 +65,7 @@ Forza HorizonからUDPテレメトリデータ（"Data Out"）を受信し、Elg
 │   │   │   └── speed-meter/        # 速度計用のアイコン画像
 │   │   └── plugin/                 # プラグイン共通のアイコン画像
 │   ├── layouts/                    # Stream Deckのレイアウト定義
+│   │   ├── g-force-layout.json     # Gフォースメーターアクションのレイアウト定義ファイル
 │   │   ├── lap-time-layout.json    # ラップタイムアクションのレイアウト定義ファイル
 │   │   └── speed-meter-layout.json # 速度計アクションのレイアウト定義ファイル
 │   ├── logs/                       # ログ出力先
@@ -76,18 +77,24 @@ Forza HorizonからUDPテレメトリデータ（"Data Out"）を受信し、Elg
 │   ├── forza-telemetry/            # Forzaテレメトリデータ定義
 │   │   └── fh6.md                  # Forza Horizon 6 "Data Out"の仕様書
 │   ├── stream-deck-docs/           # Stream Deck SDKのドキュメント（OKF形式）
+│   ├── architecture.md             # 機能・アーキテクチャ設計書
 │   └── release-roadmap.md          # リリースロードマップおよび進捗管理シート
 ├── src/                            # ソースコードディレクトリ
 │   ├── actions/                    # Stream Deckのアクション定義
 │   │   ├── g-force.ts              # Gフォースメーターのアクション実装
 │   │   ├── lap-time.ts             # ラップタイムのアクション実装
+│   │   ├── press-duration.ts       # 長押し・短押し判定付きアクションの基底クラス
 │   │   └── speed-meter.ts          # 速度計のアクション実装
+│   ├── constants/                  # 定数定義
+│   │   └── constants.ts            # アプリケーション共通の定数定義
 │   ├── settings/                   # アクションの設定関連
 │   │   └── settings.ts             # アクション設定の定義
 │   ├── telemetry/                  # UDPテレメトリ受信・解析処理
 │   │   ├── manager.ts              # テレメトリの管理・配信処理
 │   │   ├── parser.ts               # テレメトリデータパケットの解析処理
 │   │   └── server.ts               # UDP受信サーバー
+│   ├── utils/                      # ユーティリティ関数
+│   │   └── image.ts                # 画像・SVG描画ユーティリティ
 │   └── plugin.ts                   # プラグインのエントリポイント
 ├── tests/                          # テスト・シミュレーションスクリプト
 │   ├── simulate-telemetry.ts       # テレメトリ送信シミュレータ
