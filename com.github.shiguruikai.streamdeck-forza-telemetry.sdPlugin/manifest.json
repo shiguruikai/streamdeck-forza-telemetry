@@ -1,9 +1,9 @@
 {
-  "$schema"     : "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
-  "Name"        : "Forza Telemetry",
-  "Version"     : "0.1.0.0",
-  "Author"      : "shiguruikai",
-  "Actions"     : [
+  "$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
+  "Name": "Forza Telemetry",
+  "Version": "0.1.0.0",
+  "Author": "shiguruikai",
+  "Actions": [
     {
       "UserTitleEnabled": false,
       "DisableCaching": true,
@@ -12,9 +12,11 @@
       "Icon": "imgs/actions/speed-meter/icon",
       "Tooltip": "Show speed meter.",
       "PropertyInspectorPath": "ui/speed-meter.html",
-      "Controllers": ["Encoder"],
-      "Encoder": {"layout": "layouts/speed-meter-layout.json"},
-      "States": [ {"Image": "imgs/actions/speed-meter/key", "TitleAlignment": "middle"} ]
+      "Controllers": [ "Encoder" ],
+      "Encoder": { "layout": "layouts/speed-meter-layout.json" },
+      "States": [
+        { "Image": "imgs/actions/speed-meter/key", "TitleAlignment": "middle" }
+      ]
     },
     {
       "UserTitleEnabled": false,
@@ -23,9 +25,11 @@
       "UUID": "com.github.shiguruikai.streamdeck-forza-telemetry.lap-time",
       "Icon": "imgs/actions/lap-time/icon",
       "Tooltip": "Show lap time.",
-      "Controllers": ["Encoder"],
-      "Encoder": {"layout": "layouts/lap-time-layout.json"},
-      "States": [ {"Image": "imgs/actions/lap-time/key", "TitleAlignment": "middle"} ]
+      "Controllers": [ "Encoder" ],
+      "Encoder": { "layout": "layouts/lap-time-layout.json" },
+      "States": [
+        { "Image": "imgs/actions/lap-time/key", "TitleAlignment": "middle" }
+      ]
     },
     {
       "UserTitleEnabled": false,
@@ -34,18 +38,24 @@
       "UUID": "com.github.shiguruikai.streamdeck-forza-telemetry.g-force",
       "Icon": "imgs/actions/g-force/icon",
       "Tooltip": "Show G-Force meter.",
-      "Controllers": ["Keypad"],
-      "States": [ {"Image": "imgs/actions/g-force/key", "TitleAlignment": "middle"} ]
+      "Controllers": [ "Keypad", "Encoder" ],
+      "Encoder": { "layout": "layouts/g-force-layout.json" },
+      "States": [
+        { "Image": "imgs/actions/g-force/key", "TitleAlignment": "middle" }
+      ]
     }
   ],
-  "Category"    : "Forza Telemetry",
+  "Category": "Forza Telemetry",
   "CategoryIcon": "imgs/plugin/category-icon",
-  "CodePath"    : "bin/plugin.js",
-  "Description" : "Displays Forza Horizon telemetry data on Stream Deck.",
-  "Icon"        : "imgs/plugin/marketplace",
-  "SDKVersion"  : 3,
-  "Software"    : {"MinimumVersion": "7.1"},
-  "OS"          : [ {"Platform": "mac", "MinimumVersion": "12"}, {"Platform": "windows", "MinimumVersion": "10"} ],
-  "Nodejs"      : {"Version": "24", "Debug": "enabled"},
-  "UUID"        : "com.github.shiguruikai.streamdeck-forza-telemetry"
+  "CodePath": "bin/plugin.js",
+  "Description": "Displays Forza Horizon telemetry data on Stream Deck.",
+  "Icon": "imgs/plugin/marketplace",
+  "SDKVersion": 3,
+  "Software": { "MinimumVersion": "7.1" },
+  "OS": [
+    { "Platform": "mac", "MinimumVersion": "12" },
+    { "Platform": "windows", "MinimumVersion": "10" }
+  ],
+  "Nodejs": { "Version": "24", "Debug": "enabled" },
+  "UUID": "com.github.shiguruikai.streamdeck-forza-telemetry"
 }

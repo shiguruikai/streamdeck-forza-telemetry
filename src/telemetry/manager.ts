@@ -1,5 +1,6 @@
+import { EventEmitter } from 'node:events';
+
 import streamDeck from '@elgato/streamdeck';
-import { EventEmitter } from '@elgato/utils';
 
 import { ForzaTelemetryData, parseToForzaTelemetryData } from './parser';
 import { TelemetryServer } from './server';

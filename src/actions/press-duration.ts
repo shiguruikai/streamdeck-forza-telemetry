@@ -1,4 +1,6 @@
 import {
+  DialDownEvent,
+  DialUpEvent,
   KeyDownEvent,
   KeyUpEvent,
   SingletonAction,
@@ -8,6 +10,7 @@ import { JsonObject } from '@elgato/utils';
 
 /**
  * 長押し（Long Press）と短押し（Short Press）のハンドリング機能を提供するアクション基底クラス。
+ * キーボタン（Keypad）およびダイヤルプッシュ（Encoder）の両方のイベントに対応しています。
  */
 export abstract class PressDurationAction<TSettings extends JsonObject = JsonObject> extends SingletonAction<TSettings> {
   private readonly pressTimers = new Map<string, NodeJS.Timeout>();
@@ -20,16 +23,14 @@ export abstract class PressDurationAction<TSettings extends JsonObject = JsonObj
   protected longPressDurationMs = 500;
 
   /**
-   * 短押し（キーが離された際に、長押しが発生していなかった場合）のコールバック。
-   * 子クラスで実装します。
+   * 短押し（キーまたはダイヤルが離された際に、長押しが発生していなかった場合）のコールバック。
    */
-  protected abstract onShortPress(ev: KeyUpEvent<TSettings>): Promise<void> | void;
+  protected abstract onShortPress(ev: KeyUpEvent<TSettings> | DialUpEvent<TSettings>): Promise<void> | void;
 
   /**
-   * 長押し（キーが押されてから規定時間が経過した瞬間）のコールバック。
-   * 子クラスで実装します。
+   * 長押し（キーまたはダイヤルが押されてから規定時間が経過した瞬間）のコールバック。
    */
-  protected abstract onLongPress(ev: KeyDownEvent<TSettings>): Promise<void> | void;
+  protected abstract onLongPress(ev: KeyDownEvent<TSettings> | DialDownEvent<TSettings>): Promise<void> | void;
 
   /**
    * アクションが非表示になった（WillDisappear）際のコールバック。
@@ -38,33 +39,19 @@ export abstract class PressDurationAction<TSettings extends JsonObject = JsonObj
   protected abstract onDisappear(ev: WillDisappearEvent<TSettings>): Promise<void> | void;
 
   override onKeyDown(ev: KeyDownEvent<TSettings>): Promise<void> | void {
-    const actionId = ev.action.id;
-
-    this.cancelTimer(actionId);
-
-    const timer = setTimeout(async () => {
-      this.longPressedFlags.add(actionId);
-      await this.onLongPress(ev);
-    }, this.longPressDurationMs);
-
-    this.pressTimers.set(actionId, timer);
+    this.handleDown(ev);
   }
 
   override onKeyUp(ev: KeyUpEvent<TSettings>): Promise<void> | void {
-    const actionId = ev.action.id;
+    this.handleUp(ev);
+  }
 
-    const timer = this.pressTimers.get(actionId);
-    if (timer) {
-      clearTimeout(timer);
-      this.pressTimers.delete(actionId);
-    }
+  override onDialDown(ev: DialDownEvent<TSettings>): Promise<void> | void {
+    this.handleDown(ev);
+  }
 
-    const wasLongPressed = this.longPressedFlags.has(actionId);
-    this.longPressedFlags.delete(actionId);
-
-    if (!wasLongPressed) {
-      return this.onShortPress(ev);
-    }
+  override onDialUp(ev: DialUpEvent<TSettings>): Promise<void> | void {
+    this.handleUp(ev);
   }
 
   override onWillDisappear(ev: WillDisappearEvent<TSettings>): Promise<void> | void {
@@ -72,12 +59,42 @@ export abstract class PressDurationAction<TSettings extends JsonObject = JsonObj
     return this.onDisappear(ev);
   }
 
+  private handleDown(ev: KeyDownEvent<TSettings> | DialDownEvent<TSettings>): void {
+    // すでにタイマーが存在する場合は登録をスキップする（チャタリング・キーリピート対策）
+    if (this.pressTimers.has(ev.action.id)) {
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      this.longPressedFlags.add(ev.action.id);
+      await this.onLongPress(ev);
+    }, this.longPressDurationMs);
+
+    this.pressTimers.set(ev.action.id, timer);
+  }
+
+  private handleUp(ev: KeyUpEvent<TSettings> | DialUpEvent<TSettings>): void | Promise<void> {
+    const existingTimer = this.pressTimers.get(ev.action.id);
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+      this.pressTimers.delete(ev.action.id);
+    }
+
+    const wasLongPressed = this.longPressedFlags.has(ev.action.id);
+    this.longPressedFlags.delete(ev.action.id);
+
+    if (!wasLongPressed) {
+      return this.onShortPress(ev);
+    }
+  }
+
   private cancelTimer(actionId: string): void {
-    const timer = this.pressTimers.get(actionId);
-    if (timer) {
-      clearTimeout(timer);
+    const existingTimer = this.pressTimers.get(actionId);
+    if (existingTimer) {
+      clearTimeout(existingTimer);
       this.pressTimers.delete(actionId);
     }
+
     this.longPressedFlags.delete(actionId);
   }
 }

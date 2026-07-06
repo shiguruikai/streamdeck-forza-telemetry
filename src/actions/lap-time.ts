@@ -2,6 +2,7 @@ import {
   action,
   DialAction,
   DialDownEvent,
+  DidReceiveSettingsEvent,
   SingletonAction,
   TouchTapEvent,
   WillAppearEvent,
@@ -12,7 +13,7 @@ import { telemetryManager } from '../telemetry/manager';
 import { ForzaTelemetryData } from '../telemetry/parser';
 
 function formatTime(seconds: number): string {
-  if (seconds <= 0) {
+  if (!Number.isFinite(seconds) || seconds <= 0) {
     return '--:--.---';
   }
   const mins = Math.floor(seconds / 60);
@@ -39,6 +40,8 @@ type LapTimeSettings = {
 export class LapTimeAction extends SingletonAction<LapTimeSettings> {
   private readonly settings = new Map<string, LapTimeSettings>();
   private readonly handlers = new Map<string, (data: ForzaTelemetryData) => void>();
+
+  // 画面切り替えを跨いでも値を保持しておく
   private readonly lastTelemetryData = new Map<string, ForzaTelemetryData>();
 
   private getDisplayMode(actionId: string): 'best' | 'last' {
@@ -72,7 +75,8 @@ export class LapTimeAction extends SingletonAction<LapTimeSettings> {
 
     if (data) {
       action.setFeedback({
-        lap: formatLap(data.lapNumber),
+        // Forza telemetryのlapNumberは完了した周回数（0から開始）なので、現在ラップ数は +1 する
+        lap: formatLap(data.lapNumber + 1),
         pos: formatPosition(data.racePosition),
         current: formatTime(data.currentLap),
         subLabel: mode === 'best' ? 'BEST' : 'LAST',
@@ -91,33 +95,44 @@ export class LapTimeAction extends SingletonAction<LapTimeSettings> {
 
   override onWillAppear(ev: WillAppearEvent<LapTimeSettings>): Promise<void> | void {
     if (!ev.action.isDial()) return;
-    const action = ev.action;
 
-    this.settings.set(action.id, ev.payload.settings);
+    this.settings.set(ev.action.id, ev.payload.settings);
 
-    const lastData = this.lastTelemetryData.get(action.id);
-    this.updateFeedback(action, lastData);
+    const lastData = this.lastTelemetryData.get(ev.action.id);
+    this.updateFeedback(ev.action, lastData);
 
-    const existingHandler = this.handlers.get(action.id);
+    const existingHandler = this.handlers.get(ev.action.id);
     if (existingHandler) {
       telemetryManager.off('data', existingHandler);
     }
 
     const dataHandler = (data: ForzaTelemetryData) => {
-      this.lastTelemetryData.set(action.id, data);
-      this.updateFeedback(action, data);
+      if (!ev.action.isDial()) return;
+
+      this.lastTelemetryData.set(ev.action.id, data);
+      this.updateFeedback(ev.action, data);
     };
 
-    this.handlers.set(action.id, dataHandler);
+    this.handlers.set(ev.action.id, dataHandler);
     telemetryManager.on('data', dataHandler);
   }
 
+  override onDidReceiveSettings(ev: DidReceiveSettingsEvent<LapTimeSettings>): Promise<void> | void {
+    if (!ev.action.isDial()) return;
+
+    this.settings.set(ev.action.id, ev.payload.settings);
+    const lastData = this.lastTelemetryData.get(ev.action.id);
+    this.updateFeedback(ev.action, lastData);
+  }
+
   override onWillDisappear(ev: WillDisappearEvent<LapTimeSettings>): Promise<void> | void {
-    const handler = this.handlers.get(ev.action.id);
-    if (handler) {
-      telemetryManager.off('data', handler);
-      this.handlers.delete(ev.action.id);
+    const existingHandler = this.handlers.get(ev.action.id);
+    if (existingHandler) {
+      telemetryManager.off('data', existingHandler);
     }
+
+    this.settings.delete(ev.action.id);
+    this.handlers.delete(ev.action.id);
   }
 
   override onDialDown(ev: DialDownEvent<LapTimeSettings>): Promise<void> | void {
