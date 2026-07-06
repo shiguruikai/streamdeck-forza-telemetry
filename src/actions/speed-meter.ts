@@ -1,12 +1,13 @@
 import streamDeck, {
   action,
+  DialAction,
   DidReceiveSettingsEvent,
   SingletonAction,
   WillAppearEvent,
   WillDisappearEvent,
 } from '@elgato/streamdeck';
 
-import { TelemetryManager } from '../telemetry/manager';
+import { telemetryManager } from '../telemetry/manager';
 import { ForzaTelemetryData } from '../telemetry/parser';
 
 type SpeedMeterDialSettings = {
@@ -16,31 +17,28 @@ type SpeedMeterDialSettings = {
 const MS_TO_KMH = 3.6;
 const MS_TO_MPH = 2.23694;
 
-const telemetryManager = TelemetryManager.getInstance();
-
 @action({
   UUID: 'com.github.shiguruikai.streamdeck-forza-telemetry.speed-meter',
 })
 export class SpeedMeterAction extends SingletonAction<SpeedMeterDialSettings> {
-  private readonly logger = streamDeck.logger.createScope(
-    SpeedMeterAction.name,
-  );
-  private readonly handlers = new Map<
-    string,
-    (data: ForzaTelemetryData) => void
-  >();
+  private readonly logger = streamDeck.logger.createScope(SpeedMeterAction.name);
 
-  private unit: 'KM/H' | 'MPH' = 'KM/H';
+  private readonly handlers = new Map<string, (data: ForzaTelemetryData) => void>();
 
-  private setSettings(settings: SpeedMeterDialSettings) {
-    const { unit } = settings;
-    this.unit = unit === 'mph' ? 'MPH' : 'KM/H';
+  private readonly settings = new Map<string, SpeedMeterDialSettings>();
+
+  private getUnit(actionId: string): 'KM/H' | 'MPH' {
+    const unit = this.settings.get(actionId)?.unit;
+    return unit === 'mph' ? 'MPH' : 'KM/H';
   }
 
-  private computeSpeed(
-    data: Pick<ForzaTelemetryData, 'speed'>,
-  ): string {
-    const speed = data.speed * (this.unit === 'KM/H' ? MS_TO_KMH : MS_TO_MPH);
+  private setSettings(actionId: string, settings: SpeedMeterDialSettings) {
+    this.settings.set(actionId, settings);
+  }
+
+  private computeSpeed(actionId: string, data: Pick<ForzaTelemetryData, 'speed'>): string {
+    const unit = this.getUnit(actionId);
+    const speed = data.speed * (unit === 'KM/H' ? MS_TO_KMH : MS_TO_MPH);
     return Math.floor(speed).toString();
   }
 
@@ -53,12 +51,12 @@ export class SpeedMeterAction extends SingletonAction<SpeedMeterDialSettings> {
 
   private computeRpmBar(
     data: Pick<ForzaTelemetryData, 'engineMaxRpm' | 'currentEngineRpm'>,
-  ): { value: number, bar_fill_c: string } {
+  ): { value: number; bar_fill_c: string } {
     const rpmPercent = data.engineMaxRpm > 0
       ? Math.min(
-        100,
-        Math.max(0, (data.currentEngineRpm / data.engineMaxRpm) * 100),
-      )
+          100,
+          Math.max(0, (data.currentEngineRpm / data.engineMaxRpm) * 100),
+        )
       : 0;
 
     let barColor = '#ffffff';
@@ -71,58 +69,60 @@ export class SpeedMeterAction extends SingletonAction<SpeedMeterDialSettings> {
     return { value: rpmPercent, bar_fill_c: barColor };
   }
 
-  override onWillAppear(
-    ev: WillAppearEvent<SpeedMeterDialSettings>,
-  ): Promise<void> | void {
+  private updateFeedback(action: DialAction, data?: ForzaTelemetryData) {
+    const unit = this.getUnit(action.id);
+    if (data) {
+      action.setFeedback({
+        speed: this.computeSpeed(action.id, data),
+        gear: this.decodeGear(data.gear),
+        rpmBar: this.computeRpmBar(data),
+        unit,
+      });
+    } else {
+      action.setFeedback({
+        speed: '0',
+        gear: 'N',
+        rpmBar: { value: 0, bar_fill_c: '#ffffff' },
+        unit,
+      });
+    }
+  }
+
+  override onWillAppear(ev: WillAppearEvent<SpeedMeterDialSettings>): Promise<void> | void {
     if (!ev.action.isDial()) return;
+    const action = ev.action;
 
-    this.setSettings(ev.payload.settings);
-
-    ev.action.setFeedback({
-      unit: this.unit,
-    });
+    this.setSettings(action.id, ev.payload.settings);
+    this.updateFeedback(action);
 
     // 既にハンドラが存在する場合は一旦解除して重複登録を防ぐ
-    const existingHandler = this.handlers.get(ev.action.id);
+    const existingHandler = this.handlers.get(action.id);
     if (existingHandler) {
       telemetryManager.off('data', existingHandler);
     }
 
     const dataHandler = (data: ForzaTelemetryData) => {
-      if (!ev.action.isDial()) return;
-
-      ev.action.setFeedback({
-        speed: this.computeSpeed(data),
-        gear: this.decodeGear(data.gear),
-        rpmBar: this.computeRpmBar(data),
-      });
+      this.updateFeedback(action, data);
     };
 
-    this.handlers.set(ev.action.id, dataHandler);
-
+    this.handlers.set(action.id, dataHandler);
     telemetryManager.on('data', dataHandler);
   }
 
-  override onDidReceiveSettings(
-    ev: DidReceiveSettingsEvent<SpeedMeterDialSettings>,
-  ): Promise<void> | void {
+  override onDidReceiveSettings(ev: DidReceiveSettingsEvent<SpeedMeterDialSettings>): Promise<void> | void {
     if (!ev.action.isDial()) return;
+    const action = ev.action;
 
     this.logger.debug(
       'Received Settings: %s',
       JSON.stringify(ev.payload.settings),
     );
 
-    this.setSettings(ev.payload.settings);
-
-    ev.action.setFeedback({
-      unit: this.unit,
-    });
+    this.setSettings(action.id, ev.payload.settings);
+    this.updateFeedback(action);
   }
 
-  override onWillDisappear(
-    ev: WillDisappearEvent<SpeedMeterDialSettings>,
-  ): Promise<void> | void {
+  override onWillDisappear(ev: WillDisappearEvent<SpeedMeterDialSettings>): Promise<void> | void {
     const handler = this.handlers.get(ev.action.id);
     if (handler) {
       telemetryManager.off('data', handler);

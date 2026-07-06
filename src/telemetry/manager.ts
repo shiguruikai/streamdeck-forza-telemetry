@@ -1,6 +1,5 @@
-import { EventEmitter } from 'node:events';
-
 import streamDeck from '@elgato/streamdeck';
+import { EventEmitter } from '@elgato/utils';
 
 import { ForzaTelemetryData, parseToForzaTelemetryData } from './parser';
 import { TelemetryServer } from './server';
@@ -12,9 +11,7 @@ type TelemetryManagerEvents = {
   removeListener: [eventName: string | symbol, listener: () => any];
 };
 
-export class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
-  private static instance?: TelemetryManager;
-
+class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
   private readonly logger = streamDeck.logger.createScope(TelemetryManager.name);
 
   private readonly server: TelemetryServer;
@@ -24,7 +21,7 @@ export class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
 
   private startParams?: { port?: number; address?: string };
 
-  private constructor() {
+  constructor() {
     super();
     this.server = new TelemetryServer();
 
@@ -73,11 +70,6 @@ export class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
     });
   }
 
-  public static getInstance(): TelemetryManager {
-    TelemetryManager.instance ??= new TelemetryManager();
-    return TelemetryManager.instance;
-  }
-
   public configure(params?: { port?: number; address?: string }) {
     this.startParams = params;
 
@@ -92,3 +84,5 @@ export class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
     this.server.stop();
   }
 }
+
+export const telemetryManager = new TelemetryManager();

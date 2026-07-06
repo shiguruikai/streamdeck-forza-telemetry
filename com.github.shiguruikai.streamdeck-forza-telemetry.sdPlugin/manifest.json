@@ -26,6 +26,16 @@
       "Controllers": ["Encoder"],
       "Encoder": {"layout": "layouts/lap-time-layout.json"},
       "States": [ {"Image": "imgs/actions/lap-time/key", "TitleAlignment": "middle"} ]
+    },
+    {
+      "UserTitleEnabled": false,
+      "DisableCaching": true,
+      "Name": "G-Force Meter",
+      "UUID": "com.github.shiguruikai.streamdeck-forza-telemetry.g-force",
+      "Icon": "imgs/actions/g-force/icon",
+      "Tooltip": "Show G-Force meter.",
+      "Controllers": ["Keypad"],
+      "States": [ {"Image": "imgs/actions/g-force/key", "TitleAlignment": "middle"} ]
     }
   ],
   "Category"    : "Forza Telemetry",

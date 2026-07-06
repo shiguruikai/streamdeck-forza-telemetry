@@ -5,9 +5,10 @@
     { "fileMatch": ["**/layouts/*.json"], "url": "https://schemas.elgato.com/streamdeck/plugins/layout.json"   }
   ],
   /*  https://eslint.style/guide/faq#vs-code */
-  "editor.formatOnSave"        : false,
+  "cSpell.words"               : ["elgato", "Forza", "streamdeck"],
   "editor.codeActionsOnSave"   : {"source.fixAll.eslint": "explicit"},
+  "editor.formatOnSave"        : false,
+  "eslint.enable"              : true,
   "eslint.rules.customizations": [ {"rule": "@stylistic/*", "fixable": true, "severity": "off"} ],
-  "eslint.validate"            : ["javascript", "typescript", "json", "jsonc"],
-  "cSpell.words"               : ["elgato", "Forza", "streamdeck"]
+  "eslint.validate"            : ["javascript", "typescript", "json", "jsonc"]
 }

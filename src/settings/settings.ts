@@ -16,9 +16,9 @@ export function parseSettings(jsonSettings: object): GlobalSettings {
   }
 
   if (
-    'address' in jsonSettings &&
-    typeof jsonSettings['address'] === 'string' &&
-    net.isIPv4(jsonSettings['address'])
+    'address' in jsonSettings
+    && typeof jsonSettings['address'] === 'string'
+    && net.isIPv4(jsonSettings['address'])
   ) {
     result.address = jsonSettings['address'];
   }

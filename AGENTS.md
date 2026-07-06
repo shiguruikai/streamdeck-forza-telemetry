@@ -32,6 +32,13 @@ Forza HorizonからUDPテレメトリデータ（"Data Out"）を受信し、Elg
   - すべての要素の描画領域（`rect`）は、以下の範囲内に収めること。
     - X座標（左右）: `10` ～ `190`
     - Y座標（上下）: `5` ～ `95`
+- **パフォーマンスと更新頻度の仕様**:
+  - 描画負荷を抑えるため [TelemetryManager](src/telemetry/manager.ts) において、テレメトリデータの配信頻度を **最大20FPS（50ms間隔）** に制限（スロットリング）している。
+- **TelemetryManagerの利用ルール**:
+  - `TelemetryManager` を使用する場合は、モジュールからエクスポートされているシングルトンインスタンスを直接インポートすること。例：`import { telemetryManager } from '../telemetry/manager';`（外部からの直接 `new` によるインスタンス化は禁止されている）。
+- **画像・SVGアセットの設計ルール**:
+  - キーボタン（液晶キー）のアセットや動的SVGを設計・作成する際は、高DPIディスプレイ（高解像度）の表示に対応するため、**`144 × 144 px`（アスペクト比 1:1）** を基準解像度として設計すること。
+  - SVGを動的生成する場合も、将来的な画像アセットとの組み合わせ時における座標系の一貫性や、デザインデータの流用性を考慮し、基準となる`viewBox`は`0 0 144 144`（幅/高さを `144`）とすること。
 
 ## テストルール
 
@@ -41,7 +48,7 @@ Forza HorizonからUDPテレメトリデータ（"Data Out"）を受信し、Elg
 
 ## Gitルール
 
-- コミットメッセージ: `Conventional Commits` の仕様に従った簡潔な文章（原則、日本語）
+- コミットメッセージ: `Conventional Commits`の仕様に従った簡潔な文章（原則、日本語）
   - type: build, ci, docs, feat, fix, perf, refactor, style, test
 - コミットする前に、`pnpm lint:fix`を実行すること。
 
@@ -53,6 +60,7 @@ Forza HorizonからUDPテレメトリデータ（"Data Out"）を受信し、Elg
 │   ├── bin/                        # ビルド成果物の出力先
 │   ├── imgs/                       # プラグイン用画像リソース
 │   │   ├── actions/                # アクション用の各種アイコン画像
+│   │   │   ├── g-force/            # Gフォースメーター用のアイコン画像
 │   │   │   ├── lap-time/           # ラップタイム用のアイコン画像
 │   │   │   └── speed-meter/        # 速度計用のアイコン画像
 │   │   └── plugin/                 # プラグイン共通のアイコン画像
@@ -67,9 +75,11 @@ Forza HorizonからUDPテレメトリデータ（"Data Out"）を受信し、Elg
 ├── docs/                           # 設計・開発用ドキュメント
 │   ├── forza-telemetry/            # Forzaテレメトリデータ定義
 │   │   └── fh6.md                  # Forza Horizon 6 "Data Out"の仕様書
-│   └── stream-deck-docs/           # Stream Deck SDKのドキュメント（OKF形式）
+│   ├── stream-deck-docs/           # Stream Deck SDKのドキュメント（OKF形式）
+│   └── release-roadmap.md          # リリースロードマップおよび進捗管理シート
 ├── src/                            # ソースコードディレクトリ
 │   ├── actions/                    # Stream Deckのアクション定義
+│   │   ├── g-force.ts              # Gフォースメーターのアクション実装
 │   │   ├── lap-time.ts             # ラップタイムのアクション実装
 │   │   └── speed-meter.ts          # 速度計のアクション実装
 │   ├── settings/                   # アクションの設定関連

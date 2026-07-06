@@ -1,9 +1,10 @@
 import streamDeck from '@elgato/streamdeck';
 
+import { GForceAction } from './actions/g-force';
 import { LapTimeAction } from './actions/lap-time';
 import { SpeedMeterAction } from './actions/speed-meter';
 import { parseSettings } from './settings/settings';
-import { TelemetryManager } from './telemetry/manager';
+import { telemetryManager } from './telemetry/manager';
 
 // We can enable "trace" logging so that all messages between the Stream Deck, and the plugin are recorded. When storing sensitive information
 streamDeck.logger.setLevel('trace');
@@ -11,18 +12,19 @@ streamDeck.logger.setLevel('trace');
 // Register the action.
 streamDeck.actions.registerAction(new SpeedMeterAction());
 streamDeck.actions.registerAction(new LapTimeAction());
+streamDeck.actions.registerAction(new GForceAction());
 
 // グローバル設定の適用処理
 function handleGlobalSettings(settingsObj: object) {
   const settings = parseSettings(settingsObj);
 
   if (settings.port && settings.address) {
-    TelemetryManager.getInstance().configure({
+    telemetryManager.configure({
       port: settings.port,
       address: settings.address,
     });
   } else {
-    TelemetryManager.getInstance().clearConfig();
+    telemetryManager.clearConfig();
   }
 }
 

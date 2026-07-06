@@ -1,5 +1,6 @@
-import streamDeck, {
+import {
   action,
+  DialAction,
   DialDownEvent,
   SingletonAction,
   TouchTapEvent,
@@ -7,13 +8,11 @@ import streamDeck, {
   WillDisappearEvent,
 } from '@elgato/streamdeck';
 
-import { TelemetryManager } from '../telemetry/manager';
+import { telemetryManager } from '../telemetry/manager';
 import { ForzaTelemetryData } from '../telemetry/parser';
 
-const telemetryManager = TelemetryManager.getInstance();
-
 function formatTime(seconds: number): string {
-  if (seconds === undefined || seconds === null || seconds <= 0) {
+  if (seconds <= 0) {
     return '--:--.---';
   }
   const mins = Math.floor(seconds / 60);
@@ -30,111 +29,104 @@ function formatPosition(pos: number): string {
   return pos > 0 ? `POS ${pos}` : 'POS --';
 }
 
+type LapTimeSettings = {
+  displayMode?: 'best' | 'last';
+};
+
 @action({
   UUID: 'com.github.shiguruikai.streamdeck-forza-telemetry.lap-time',
 })
-export class LapTimeAction extends SingletonAction {
-  private readonly logger = streamDeck.logger.createScope(LapTimeAction.name);
+export class LapTimeAction extends SingletonAction<LapTimeSettings> {
+  private readonly settings = new Map<string, LapTimeSettings>();
   private readonly handlers = new Map<string, (data: ForzaTelemetryData) => void>();
-
-  // 各アクションインスタンスの表示モードを管理（'best' または 'last'）
-  private readonly displayModes = new Map<string, 'best' | 'last'>();
-
-  // 各アクションインスタンスの最新テレメトリキャッシュ
   private readonly lastTelemetryData = new Map<string, ForzaTelemetryData>();
 
   private getDisplayMode(actionId: string): 'best' | 'last' {
-    return this.displayModes.get(actionId) ?? 'best';
+    return this.settings.get(actionId)?.displayMode ?? 'best';
   }
 
-  private toggleDisplayMode(actionId: string) {
-    const currentMode = this.getDisplayMode(actionId);
+  private async toggleDisplayMode(action: DialAction) {
+    const currentMode = this.getDisplayMode(action.id);
     const newMode = currentMode === 'best' ? 'last' : 'best';
-    this.displayModes.set(actionId, newMode);
-    this.logger.debug(`Toggled display mode for action ${actionId} to ${newMode}`);
+
+    const newSettings: LapTimeSettings = { displayMode: newMode };
+    this.settings.set(action.id, newSettings);
+
+    // 設定を永続化
+    await action.setSettings(newSettings);
 
     // モード切り替え時に表示を即座に更新する
-    const lastData = this.lastTelemetryData.get(actionId);
+    const lastData = this.lastTelemetryData.get(action.id);
     if (lastData) {
-      this.updateFeedback(actionId, lastData);
+      this.updateFeedback(action, lastData);
     } else {
       // キャッシュデータがない場合はラベルのみ更新する
-      const action = this.actions.find(a => a.id === actionId);
-      if (action?.isDial()) {
-        action.setFeedback({
-          subLabel: newMode === 'best' ? 'BEST' : 'LAST',
-        });
-      }
+      action.setFeedback({
+        subLabel: newMode === 'best' ? 'BEST' : 'LAST',
+      });
     }
   }
 
-  private updateFeedback(actionId: string, data: ForzaTelemetryData) {
-    const action = this.actions.find(a => a.id === actionId);
-    if (!action?.isDial()) return;
+  private updateFeedback(action: DialAction, data?: ForzaTelemetryData) {
+    const mode = this.getDisplayMode(action.id);
 
-    const mode = this.getDisplayMode(actionId);
-    const subTime = mode === 'best' ? data.bestLap : data.lastLap;
-
-    action.setFeedback({
-      lap: formatLap(data.lapNumber),
-      pos: formatPosition(data.racePosition),
-      current: formatTime(data.currentLap),
-      subLabel: mode === 'best' ? 'BEST' : 'LAST',
-      subValue: formatTime(subTime),
-    });
+    if (data) {
+      action.setFeedback({
+        lap: formatLap(data.lapNumber),
+        pos: formatPosition(data.racePosition),
+        current: formatTime(data.currentLap),
+        subLabel: mode === 'best' ? 'BEST' : 'LAST',
+        subValue: formatTime(mode === 'best' ? data.bestLap : data.lastLap),
+      });
+    } else {
+      action.setFeedback({
+        lap: 'LAP --',
+        pos: 'POS --',
+        current: '--:--.---',
+        subLabel: mode === 'best' ? 'BEST' : 'LAST',
+        subValue: '--:--.---',
+      });
+    }
   }
 
-  override onWillAppear(ev: WillAppearEvent): Promise<void> | void {
+  override onWillAppear(ev: WillAppearEvent<LapTimeSettings>): Promise<void> | void {
     if (!ev.action.isDial()) return;
+    const action = ev.action;
 
-    const actionId = ev.action.id;
+    this.settings.set(action.id, ev.payload.settings);
 
-    // 初期状態の設定
-    if (!this.displayModes.has(actionId)) {
-      this.displayModes.set(actionId, 'best');
-    }
+    const lastData = this.lastTelemetryData.get(action.id);
+    this.updateFeedback(action, lastData);
 
-    // 初期状態のUIを反映
-    ev.action.setFeedback({
-      lap: 'LAP --',
-      pos: 'POS --',
-      current: '--:--.---',
-      subLabel: this.getDisplayMode(actionId) === 'best' ? 'BEST' : 'LAST',
-      subValue: '--:--.---',
-    });
-
-    const existingHandler = this.handlers.get(actionId);
+    const existingHandler = this.handlers.get(action.id);
     if (existingHandler) {
       telemetryManager.off('data', existingHandler);
     }
 
     const dataHandler = (data: ForzaTelemetryData) => {
-      this.lastTelemetryData.set(actionId, data);
-      this.updateFeedback(actionId, data);
+      this.lastTelemetryData.set(action.id, data);
+      this.updateFeedback(action, data);
     };
 
-    this.handlers.set(actionId, dataHandler);
+    this.handlers.set(action.id, dataHandler);
     telemetryManager.on('data', dataHandler);
   }
 
-  override onWillDisappear(ev: WillDisappearEvent): Promise<void> | void {
-    const actionId = ev.action.id;
-    const handler = this.handlers.get(actionId);
+  override onWillDisappear(ev: WillDisappearEvent<LapTimeSettings>): Promise<void> | void {
+    const handler = this.handlers.get(ev.action.id);
     if (handler) {
       telemetryManager.off('data', handler);
-      this.handlers.delete(actionId);
+      this.handlers.delete(ev.action.id);
     }
-    this.displayModes.delete(actionId);
-    this.lastTelemetryData.delete(actionId);
   }
 
-  override onDialDown(ev: DialDownEvent): Promise<void> | void {
+  override onDialDown(ev: DialDownEvent<LapTimeSettings>): Promise<void> | void {
     if (!ev.action.isDial()) return;
-    this.toggleDisplayMode(ev.action.id);
+    this.toggleDisplayMode(ev.action);
   }
 
-  override onTouchTap(ev: TouchTapEvent): Promise<void> | void {
+  override onTouchTap(ev: TouchTapEvent<LapTimeSettings>): Promise<void> | void {
     if (!ev.action.isDial()) return;
-    this.toggleDisplayMode(ev.action.id);
+    this.toggleDisplayMode(ev.action);
   }
 }
