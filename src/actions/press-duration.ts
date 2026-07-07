@@ -3,16 +3,17 @@ import {
   DialUpEvent,
   KeyDownEvent,
   KeyUpEvent,
-  SingletonAction,
   WillDisappearEvent,
 } from '@elgato/streamdeck';
 import { JsonObject } from '@elgato/utils';
+
+import { TelemetryAction } from './telemetry-action';
 
 /**
  * 長押し（Long Press）と短押し（Short Press）のハンドリング機能を提供するアクション基底クラス。
  * キーボタン（Keypad）およびダイヤルプッシュ（Encoder）の両方のイベントに対応しています。
  */
-export abstract class PressDurationAction<TSettings extends JsonObject = JsonObject> extends SingletonAction<TSettings> {
+export abstract class PressDurationAction<TSettings extends JsonObject = JsonObject> extends TelemetryAction<TSettings> {
   private readonly pressTimers = new Map<string, NodeJS.Timeout>();
   private readonly longPressedFlags = new Set<string>();
 
@@ -32,12 +33,6 @@ export abstract class PressDurationAction<TSettings extends JsonObject = JsonObj
    */
   protected abstract onLongPress(ev: KeyDownEvent<TSettings> | DialDownEvent<TSettings>): Promise<void> | void;
 
-  /**
-   * アクションが非表示になった（WillDisappear）際のコールバック。
-   * 子クラスで独自のクリーンアップ処理を行う場合に実装します。
-   */
-  protected abstract onDisappear(ev: WillDisappearEvent<TSettings>): Promise<void> | void;
-
   override onKeyDown(ev: KeyDownEvent<TSettings>): Promise<void> | void {
     this.handleDown(ev);
   }
@@ -56,7 +51,7 @@ export abstract class PressDurationAction<TSettings extends JsonObject = JsonObj
 
   override onWillDisappear(ev: WillDisappearEvent<TSettings>): Promise<void> | void {
     this.cancelTimer(ev.action.id);
-    return this.onDisappear(ev);
+    return super.onWillDisappear(ev);
   }
 
   private handleDown(ev: KeyDownEvent<TSettings> | DialDownEvent<TSettings>): void {

@@ -2,21 +2,19 @@ import {
   action,
   DialAction,
   DialDownEvent,
-  DidReceiveSettingsEvent,
   KeyAction,
   KeyDownEvent,
-  SingletonAction,
-  WillAppearEvent,
-  WillDisappearEvent,
 } from '@elgato/streamdeck';
 
-import { telemetryManager } from '../telemetry/manager';
 import { ForzaTelemetryData } from '../telemetry/parser';
-import { createAllWheelsImage, createWheelImage } from '../utils/utils';
+import { TempUnit, WheelPosition } from '../types/settings';
+import { formatTemp } from '../utils/format';
+import { createAllWheelsImage, createWheelImage } from '../utils/image';
+import { TelemetryAction } from './telemetry-action';
 
 type TireTempSettings = {
-  position?: 'all' | 'fl' | 'fr' | 'rl' | 'rr';
-  unit?: 'celsius' | 'fahrenheit';
+  position?: WheelPosition;
+  unit?: TempUnit;
 };
 
 type EventAction = DialAction<TireTempSettings> | KeyAction<TireTempSettings>;
@@ -46,35 +44,25 @@ function getTireColor(tempF: number): string {
   }
 }
 
-function formatTemp(tempF: number, unit?: TireTempSettings['unit']): string {
-  const value = unit === 'fahrenheit' ? tempF : (tempF - 32) / 1.8;
-  const u = unit === 'fahrenheit' ? '°F' : '°C';
-  return `${Math.round(value)}${u}`;
-}
-
 @action({
   UUID: 'com.github.shiguruikai.streamdeck-forza-telemetry.tire-temp',
 })
-export class TireTempAction extends SingletonAction<TireTempSettings> {
-  private readonly settings = new Map<string, TireTempSettings>();
-  private readonly handlers = new Map<string, (data: ForzaTelemetryData) => void>();
-  private readonly lastTelemetryData = new Map<string, ForzaTelemetryData>();
-
+export class TireTempAction extends TelemetryAction<TireTempSettings> {
   // 表示単位の切り替え
   private async toggleUnit(action: EventAction) {
-    const currentSettings = this.settings.get(action.id) ?? {};
-    const nextUnit: 'celsius' | 'fahrenheit' = currentSettings.unit === 'fahrenheit' ? 'celsius' : 'fahrenheit';
+    const currentSettings = this.getSettings(action.id) ?? {};
+    const nextUnit: TempUnit = currentSettings.unit === 'fahrenheit' ? 'celsius' : 'fahrenheit';
     const newSettings = { ...currentSettings, unit: nextUnit };
 
-    this.settings.set(action.id, newSettings);
+    this.setSettings(action.id, newSettings);
     await action.setSettings(newSettings);
 
-    const lastData = this.lastTelemetryData.get(action.id);
+    const lastData = this.getLastTelemetryData(action.id);
     this.updateImage(action, lastData);
   }
 
   private updateImage(action: EventAction, data?: ForzaTelemetryData) {
-    const currentSettings = this.settings.get(action.id);
+    const currentSettings = this.getSettings(action.id);
     const position = currentSettings?.position ?? 'all';
     const unit = currentSettings?.unit ?? 'celsius';
 
@@ -131,41 +119,11 @@ export class TireTempAction extends SingletonAction<TireTempSettings> {
     }
   }
 
-  override onWillAppear(ev: WillAppearEvent<TireTempSettings>): Promise<void> | void {
-    this.settings.set(ev.action.id, ev.payload.settings);
-
-    const lastData = this.lastTelemetryData.get(ev.action.id);
-    this.updateImage(ev.action, lastData);
-
-    const existingHandler = this.handlers.get(ev.action.id);
-    if (existingHandler) {
-      telemetryManager.off('data', existingHandler);
-    }
-
-    const dataHandler = (data: ForzaTelemetryData) => {
-      this.lastTelemetryData.set(ev.action.id, data);
-      this.updateImage(ev.action, data);
-    };
-
-    this.handlers.set(ev.action.id, dataHandler);
-    telemetryManager.on('data', dataHandler);
-  }
-
-  override onDidReceiveSettings(ev: DidReceiveSettingsEvent<TireTempSettings>): Promise<void> | void {
-    this.settings.set(ev.action.id, ev.payload.settings);
-    const lastData = this.lastTelemetryData.get(ev.action.id);
-    this.updateImage(ev.action, lastData);
-  }
-
-  override onWillDisappear(ev: WillDisappearEvent<TireTempSettings>): Promise<void> | void {
-    const existingHandler = this.handlers.get(ev.action.id);
-    if (existingHandler) {
-      telemetryManager.off('data', existingHandler);
-    }
-
-    this.handlers.delete(ev.action.id);
-    this.settings.delete(ev.action.id);
-    this.lastTelemetryData.delete(ev.action.id);
+  protected override onTelemetryData(
+    action: DialAction<TireTempSettings> | KeyAction<TireTempSettings>,
+    data?: ForzaTelemetryData,
+  ): void {
+    this.updateImage(action, data);
   }
 
   override onKeyDown(ev: KeyDownEvent<TireTempSettings>): Promise<void> | void {
