@@ -62,16 +62,22 @@ Forza HorizonからUDPテレメトリデータ（"Data Out"）を受信し、Elg
 │   │   ├── actions/                # アクション用の各種アイコン画像
 │   │   │   ├── g-force/            # Gフォースメーター用のアイコン画像
 │   │   │   ├── lap-time/           # ラップタイム用のアイコン画像
-│   │   │   └── speed-meter/        # 速度計用のアイコン画像
+│   │   │   ├── speed-meter/        # 速度計用のアイコン画像
+│   │   │   ├── suspension-travel/  # サスペンション移動量用のアイコン画像
+│   │   │   └── tire-temp/          # タイヤ温度用のアイコン画像
 │   │   └── plugin/                 # プラグイン共通のアイコン画像
 │   ├── layouts/                    # Stream Deckのレイアウト定義
 │   │   ├── g-force-layout.json     # Gフォースメーターアクションのレイアウト定義ファイル
 │   │   ├── lap-time-layout.json    # ラップタイムアクションのレイアウト定義ファイル
-│   │   └── speed-meter-layout.json # 速度計アクションのレイアウト定義ファイル
+│   │   ├── speed-meter-layout.json # 速度計アクションのレイアウト定義ファイル
+│   │   ├── suspension-travel-layout.json # サスペンション移動量アクションのレイアウト定義ファイル
+│   │   └── tire-temp-layout.json   # タイヤ温度アクションのレイアウト定義ファイル
 │   ├── logs/                       # ログ出力先
 │   ├── ui/                         # プロパティインスペクタ用のUI定義
 │   │   ├── sdpi-components.js      # Stream Deckの共通UIコンポーネントライブラリ
-│   │   └── speed-meter.html        # 速度計設定画面のHTML
+│   │   ├── speed-meter.html        # 速度計設定画面のHTML
+│   │   ├── suspension-travel.html  # サスペンション移動量設定画面のHTML
+│   │   └── tire-temp.html          # タイヤ温度設定画面のHTML
 │   └── manifest.json               # プラグインの構成定義
 ├── docs/                           # 設計・開発用ドキュメント
 │   ├── forza-telemetry/            # Forzaテレメトリデータ定義
@@ -84,7 +90,9 @@ Forza HorizonからUDPテレメトリデータ（"Data Out"）を受信し、Elg
 │   │   ├── g-force.ts              # Gフォースメーターのアクション実装
 │   │   ├── lap-time.ts             # ラップタイムのアクション実装
 │   │   ├── press-duration.ts       # 長押し・短押し判定付きアクションの基底クラス
-│   │   └── speed-meter.ts          # 速度計のアクション実装
+│   │   ├── speed-meter.ts          # 速度計のアクション実装
+│   │   ├── suspension-travel.ts    # サスペンション移動量のアクション実装
+│   │   └── tire-temp.ts            # タイヤ温度のアクション実装
 │   ├── constants/                  # 定数定義
 │   │   └── constants.ts            # アプリケーション共通の定数定義
 │   ├── settings/                   # アクションの設定関連

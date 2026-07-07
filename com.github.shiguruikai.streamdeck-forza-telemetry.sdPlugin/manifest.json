@@ -43,6 +43,34 @@
       "States": [
         { "Image": "imgs/actions/g-force/key", "TitleAlignment": "middle" }
       ]
+    },
+    {
+      "UserTitleEnabled": false,
+      "DisableCaching": true,
+      "Name": "Tire Temperature",
+      "UUID": "com.github.shiguruikai.streamdeck-forza-telemetry.tire-temp",
+      "Icon": "imgs/actions/tire-temp/icon",
+      "Tooltip": "Show tire temperature.",
+      "PropertyInspectorPath": "ui/tire-temp.html",
+      "Controllers": [ "Keypad", "Encoder" ],
+      "Encoder": { "layout": "layouts/tire-temp-layout.json" },
+      "States": [
+        { "Image": "imgs/actions/tire-temp/key", "TitleAlignment": "middle" }
+      ]
+    },
+    {
+      "UserTitleEnabled": false,
+      "DisableCaching": true,
+      "Name": "Suspension Travel",
+      "UUID": "com.github.shiguruikai.streamdeck-forza-telemetry.suspension-travel",
+      "Icon": "imgs/actions/suspension-travel/icon",
+      "Tooltip": "Show normalized suspension travel.",
+      "PropertyInspectorPath": "ui/suspension-travel.html",
+      "Controllers": [ "Keypad", "Encoder" ],
+      "Encoder": { "layout": "layouts/suspension-travel-layout.json" },
+      "States": [
+        { "Image": "imgs/actions/suspension-travel/key", "TitleAlignment": "middle" }
+      ]
     }
   ],
   "Category": "Forza Telemetry",

@@ -32,6 +32,14 @@ interface CarState {
   accelerationX: number;
   accelerationY: number;
   accelerationZ: number;
+  tireTempFL: number;
+  tireTempFR: number;
+  tireTempRL: number;
+  tireTempRR: number;
+  suspensionFL: number;
+  suspensionFR: number;
+  suspensionRL: number;
+  suspensionRR: number;
 }
 
 /**
@@ -77,7 +85,19 @@ function buildTelemetryPacket(state: CarState): Buffer {
   buf.writeFloatLE(state.accelerationY, 24); // accelerationY
   buf.writeFloatLE(state.accelerationZ, 28); // accelerationZ
 
+  // サスペンション移動量（Offset: 68, 72, 76, 80）
+  buf.writeFloatLE(state.suspensionFL, 68);
+  buf.writeFloatLE(state.suspensionFR, 72);
+  buf.writeFloatLE(state.suspensionRL, 76);
+  buf.writeFloatLE(state.suspensionRR, 80);
+
   buf.writeFloatLE(state.speed, 256); // speed（m/s）
+
+  // タイヤ温度（Offset: 268, 272, 276, 280）
+  buf.writeFloatLE(state.tireTempFL, 268);
+  buf.writeFloatLE(state.tireTempFR, 272);
+  buf.writeFloatLE(state.tireTempRL, 276);
+  buf.writeFloatLE(state.tireTempRR, 280);
 
   // Lap times
   buf.writeFloatLE(state.bestLap, 296); // bestLap
@@ -108,6 +128,14 @@ const state: CarState = {
   accelerationX: 0,
   accelerationY: 0,
   accelerationZ: 0,
+  tireTempFL: 80,
+  tireTempFR: 80,
+  tireTempRL: 75,
+  tireTempRR: 75,
+  suspensionFL: 0.5,
+  suspensionFR: 0.5,
+  suspensionRL: 0.5,
+  suspensionRR: 0.5,
 };
 
 const socket: dgram.Socket = dgram.createSocket('udp4');
@@ -156,6 +184,38 @@ setInterval(() => {
   }
 
   state.accelerationZ = currentAccelZ;
+
+  // タイヤ温度のシミュレーション
+  const loadFL = state.accelerationX > 0 ? state.accelerationX * 1.2 : 0;
+  const loadFR = state.accelerationX < 0 ? -state.accelerationX * 1.2 : 0;
+  const loadRL = (state.accelerationX > 0 ? state.accelerationX * 0.8 : 0) + (state.accelerationZ > 0 ? state.accelerationZ * 0.5 : 0);
+  const loadRR = (state.accelerationX < 0 ? -state.accelerationX * 0.8 : 0) + (state.accelerationZ > 0 ? state.accelerationZ * 0.5 : 0);
+
+  // 摂氏でシミュレートしてから華氏に変換（テレメトリデータはネイティブで華氏のため）
+  const tempFL_C = 70 + Math.sin(state.timestampMs / 8000) * 5 + loadFL;
+  const tempFR_C = 70 + Math.cos(state.timestampMs / 8000) * 5 + loadFR;
+  const tempRL_C = 65 + Math.sin(state.timestampMs / 10000) * 4 + loadRL;
+  const tempRR_C = 65 + Math.cos(state.timestampMs / 10000) * 4 + loadRR;
+
+  state.tireTempFL = tempFL_C * 1.8 + 32;
+  state.tireTempFR = tempFR_C * 1.8 + 32;
+  state.tireTempRL = tempRL_C * 1.8 + 32;
+  state.tireTempRR = tempRR_C * 1.8 + 32;
+
+  // サスペンション移動量のシミュレーション
+  // ロール（左右Gによる傾き）、ピッチ（前後Gによる傾き）、路面凹凸（Y軸加速度）を反映
+  const rollEffect = state.accelerationX * 0.05; // 左右Gで沈み込む
+  const pitchEffect = state.accelerationZ * 0.03; // 前後Gでリア沈み・フロント浮き
+  const bumpFL = (Math.random() - 0.5) * 0.1;
+  const bumpFR = (Math.random() - 0.5) * 0.1;
+  const bumpRL = (Math.random() - 0.5) * 0.1;
+  const bumpRR = (Math.random() - 0.5) * 0.1;
+
+  // 0.0〜1.0 の範囲にクランプする
+  state.suspensionFL = Math.max(0.0, Math.min(1.0, 0.5 - rollEffect + pitchEffect + bumpFL));
+  state.suspensionFR = Math.max(0.0, Math.min(1.0, 0.5 + rollEffect + pitchEffect + bumpFR));
+  state.suspensionRL = Math.max(0.0, Math.min(1.0, 0.5 - rollEffect - pitchEffect + bumpRL));
+  state.suspensionRR = Math.max(0.0, Math.min(1.0, 0.5 + rollEffect - pitchEffect + bumpRR));
 
   // 速度の再計算とタイムスタンプ更新
   state.speed = calculateSpeed(state.rpm, state.gear);

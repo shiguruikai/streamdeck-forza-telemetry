@@ -3,7 +3,7 @@ type: Reference
 title: リリースロードマップ
 description: Forza HorizonのテレメトリデータをStream Deck +に表示するプラグインのリリースに向けたロードマップおよび進捗管理シート
 tags: [roadmap, release, streamdeck]
-timestamp: 2026-07-07T02:35:00+09:00
+timestamp: 2026-07-07T03:02:00+09:00
 ---
 
 # Forza Telemetry Stream Deck プラグイン リリースロードマップ
@@ -30,6 +30,7 @@ graph TD
 * **マニフェスト設定**: 対応済（`com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin/manifest.json` の `SDKVersion: 3`、および `Software.MinimumVersion: "7.1"` 設定済）
 * **UUID構成**: 対応済（逆DNS形式 `com.github.shiguruikai.streamdeck-forza-telemetry` を使用）
 * **検証コマンド**: 実行済（`pnpm lint:fix` による静的解析および `pnpm validate` によるマニフェスト適合テストをパス）
+* **リファクタリング・バグ修正（今回）**: 完了（サスペンション移動量とタイヤ温度アクションの共通描画ユーティリティへの移行、角丸処理の改善、静的状態における設定変更トグルバグおよびGメーターのトグルバグ修正完了）
 
 ---
 
@@ -54,13 +55,13 @@ Elgatoが定めるプラグイン開発ガイドラインに準拠している�
   * `tests/simulate-telemetry.ts` を実行し、擬似テレメトリデータを送信して、Stream Deck上での描画や挙動を確認。（コマンド： `pnpm sim`）
 * [x] **液晶ディスプレイ（Touch Strip）の描画領域の検証**
   * すべての描画領域（`rect`）が、ガイドラインで定められた `X座標: 10〜190`、`Y座標: 5〜95` の範囲内に収まっていることを確認。
-  * 対象レイアウト： `com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin/layouts/` 配下の `speed-meter-layout.json`, `lap-time-layout.json`, `g-force-layout.json`
+  * 対象レイアウト： `com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin/layouts/` 配下の `speed-meter-layout.json`, `lap-time-layout.json`, `g-force-layout.json`, `tire-temp-layout.json`, `suspension-travel-layout.json`
 
 ### フェーズ 2: ストア用アセットの準備（進行中）
 Elgato Marketplaceでユーザーに魅力を伝えるためのアセットを作成します。
 
-* [x] **G-Force アクション用の新規フラットアセット作成と配置**
-  * ガイドラインのベストプラクティスに基づき、白（`#FFFFFF`）の太線のみ・背景透過のミニマルなモノクロアイコン（`icon.png`, `icon@2x.png`, `key.png`, `key@2x.png`）を作成して適用。
+* [x] **G-Force, Tire Temperature, Suspension Travel アクション用の新規アセット作成と配置**
+  * 各アクション用のアイコン（`icon.png`, `icon@2x.png`, `key.png`, `key@2x.png`）を作成して適用。
 * [ ] **Marketplace用アセットの作成**
   * [ ] **アプリ（プラグイン）アイコン**： Marketplace掲載用の高解レスアイコン（プロダクトガイドライン準拠）
   * [ ] **ギャラリーアイテム（スクリーンショット／動画）**： 実際の動作の様子が伝わる動画や画像を複数枚

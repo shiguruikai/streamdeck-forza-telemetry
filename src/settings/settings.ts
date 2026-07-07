@@ -8,8 +8,9 @@ export type GlobalSettings = {
 export function parseSettings(jsonSettings: object): GlobalSettings {
   const result: GlobalSettings = {};
 
-  if ('port' in jsonSettings && typeof jsonSettings['port'] === 'string') {
-    const port = Number.parseInt(jsonSettings['port'], 10);
+  if ('port' in jsonSettings) {
+    const portValue = jsonSettings['port'];
+    const port = typeof portValue === 'number' ? portValue : Number.parseInt(String(portValue), 10);
     if (Number.isInteger(port) && port > 0 && port < 65536) {
       result.port = port;
     }

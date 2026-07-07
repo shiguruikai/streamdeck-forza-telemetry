@@ -3,6 +3,8 @@ import streamDeck from '@elgato/streamdeck';
 import { GForceAction } from './actions/g-force';
 import { LapTimeAction } from './actions/lap-time';
 import { SpeedMeterAction } from './actions/speed-meter';
+import { SuspensionTravelAction } from './actions/suspension-travel';
+import { TireTempAction } from './actions/tire-temp';
 import { parseSettings } from './settings/settings';
 import { telemetryManager } from './telemetry/manager';
 
@@ -13,6 +15,8 @@ streamDeck.logger.setLevel('trace');
 streamDeck.actions.registerAction(new SpeedMeterAction());
 streamDeck.actions.registerAction(new LapTimeAction());
 streamDeck.actions.registerAction(new GForceAction());
+streamDeck.actions.registerAction(new TireTempAction());
+streamDeck.actions.registerAction(new SuspensionTravelAction());
 
 // グローバル設定の適用処理
 function handleGlobalSettings(settingsObj: object) {

@@ -14,7 +14,7 @@ import {
 import { STANDARD_GRAVITY } from '../constants/constants';
 import { telemetryManager } from '../telemetry/manager';
 import { ForzaTelemetryData } from '../telemetry/parser';
-import { toSvgDataUri } from '../utils/image';
+import { toSvgDataUri } from '../utils/utils';
 import { PressDurationAction } from './press-duration';
 
 const DEFAULT_SCALE = 2;
@@ -57,8 +57,12 @@ export class GForceAction extends PressDurationAction<GForceSettings> {
     const newSettings = { scale: nextScale };
     this.settings.set(action.id, newSettings);
 
-    // 設定を永続化 => その後、onDidReceiveSettings() で再描画
+    // 設定を永続化
     await action.setSettings(newSettings);
+
+    // 即座に再描画する
+    const lastData = this.lastTelemetryData.get(action.id);
+    this.updateImage(action, lastData);
   }
 
   private resetPeakG(action: EventAction) {
@@ -181,7 +185,7 @@ export class GForceAction extends PressDurationAction<GForceSettings> {
   <text x="${rightTextX}" y="${bottomTextY}" text-anchor="end" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#ffffff">${currentGText}</text>
   ${centerDisplay}
 </svg>
-`.replace(/>\s+</g, '><').trim();
+`;
 
     const dataUri = toSvgDataUri(svg);
 
