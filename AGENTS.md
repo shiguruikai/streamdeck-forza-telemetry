@@ -19,14 +19,17 @@ Forza HorizonからUDPテレメトリデータ（"Data Out"）を受信し、Elg
 - `pnpm watch`: コードの変更を監視して自動ビルドし、Stream Deckプラグインを再起動する
 - `pnpm lint:fix`: ESLintによるコード自動修正 **※対象ファイルは、JavaScript、TypeScript、JSONのみ**
 - `pnpm sim`: テレメトリ送信をシミュレートする（`tests/simulate-telemetry.ts`の実行）
-- `pnpm validate`: `streamdeck validate`コマンドにより、`com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin`フォルダ内のファイルを検証する。
-- `pnpm exec streamdeck restart com.github.shiguruikai.streamdeck-forza-telemetry`: Stream Deck上でプラグインを強制的に再起動し、レイアウトや設定の変更を即座に反映する。
+- `pnpm streamdeck:validate`: `streamdeck validate`コマンドにより、`com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin`フォルダ内のファイルを検証する。
+- `pnpm streamdeck:restart`: Stream Deck上でプラグインを強制的に再起動し、レイアウトや設定の変更を即座に反映する。
 
 ## 設計／開発ルール
 
 - **仕様の参照ルール**:
   - テレメトリのデータ構造やパケット定義の変更を行う際は、`docs/forza-telemetry/`内のファイルを参照すること。
   - Stream DeckのAPI仕様、CLI、デザインガイドラインについては、`docs/stream-deck-docs/index.md`を参照すること。
+- **プロセス制御と合意形成のルール**:
+  - ユーザーから「実装計画の作成」や「調査・分析」、または「/grill-me によるすり合わせ」が求められている場合、あるいは「実装開始」の明示的な許可がユーザーから与えられていない場合は、絶対にソースコードの変更（新規ファイル作成や編集）や、ビルド、プラグイン再起動などの環境変更を伴うコマンドを実行してはならない。必ず計画書への合意を得てから実装に進むこと。
+  - プロセスの誤りについてユーザーから指摘や質問を受けた際は、ツールを実行して勝手に修復しようとせず（例：勝手な `git restore` の実行など）、まずはテキスト対話のみで質問に回答し、次のアクションについてユーザーの明確な指示を仰ぐこと。
 - **レイアウトのデザインルール**:
   - Dialの液晶ディスプレイ（キャンバスサイズは 200×100px）に情報を表示する際は、左右に 10px、上下 5px のパディングを確保すること。
   - すべての要素の描画領域（`rect`）は、以下の範囲内に収めること。

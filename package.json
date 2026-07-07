@@ -5,7 +5,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "sim": "node tests/simulate-telemetry.ts",
-    "validate": "streamdeck validate com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin"
+    "streamdeck:validate": "streamdeck validate com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin",
+    "streamdeck:restart": "streamdeck restart com.github.shiguruikai.streamdeck-forza-telemetry"
   },
   "type": "module",
   "devDependencies": {

@@ -24,20 +24,11 @@
 
     <div class="settings-group">
       <div class="settings-group-title">Action Settings</div>
-      <sdpi-item label="Display Position">
-        <sdpi-select setting="position" default="all">
-          <option value="all">All Wheels</option>
-          <option value="fl">Front Left (FL)</option>
-          <option value="fr">Front Right (FR)</option>
-          <option value="rl">Rear Left (RL)</option>
-          <option value="rr">Rear Right (RR)</option>
-        </sdpi-select>
-      </sdpi-item>
-
-      <sdpi-item label="Temperature Unit">
-        <sdpi-select setting="unit" default="celsius">
-          <option value="celsius">Celsius (°C)</option>
-          <option value="fahrenheit">Fahrenheit (°F)</option>
+      <sdpi-item label="Display Scale">
+        <sdpi-select setting="scale" value-type="number" default="2">
+          <option value="1">1.0G</option>
+          <option value="2">2.0G</option>
+          <option value="3">3.0G</option>
         </sdpi-select>
       </sdpi-item>
     </div>

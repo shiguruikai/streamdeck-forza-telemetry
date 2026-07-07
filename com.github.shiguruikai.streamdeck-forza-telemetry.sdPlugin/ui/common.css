@@ -1,0 +1,24 @@
+body {
+  /* sdpi-components.js で使用されているフォントと同じフォントを使用する。 */
+  --font-family: "Segoe UI", Arial, Roboto, "Helvetica Neue", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+
+  font-family: var(--font-family);
+}
+
+.settings-group {
+  background-color: #2b2b2b;
+  border: 1px solid #444;
+  border-radius: 4px;
+  margin-bottom: 12px;
+  padding: 8px;
+}
+
+.settings-group-title {
+  border-bottom: 1px solid #444;
+  color: #ddd;
+  font-family: var(--font-family);
+  font-size: 10pt;
+  font-weight: bold;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+}

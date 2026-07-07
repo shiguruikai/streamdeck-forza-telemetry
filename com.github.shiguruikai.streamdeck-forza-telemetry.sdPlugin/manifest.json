@@ -25,6 +25,7 @@
       "UUID": "com.github.shiguruikai.streamdeck-forza-telemetry.lap-time",
       "Icon": "imgs/actions/lap-time/icon",
       "Tooltip": "Show lap time.",
+      "PropertyInspectorPath": "ui/lap-time.html",
       "Controllers": [ "Encoder" ],
       "Encoder": { "layout": "layouts/lap-time-layout.json" },
       "States": [
@@ -38,6 +39,7 @@
       "UUID": "com.github.shiguruikai.streamdeck-forza-telemetry.g-force",
       "Icon": "imgs/actions/g-force/icon",
       "Tooltip": "Show G-Force meter.",
+      "PropertyInspectorPath": "ui/g-force.html",
       "Controllers": [ "Keypad", "Encoder" ],
       "Encoder": { "layout": "layouts/g-force-layout.json" },
       "States": [
