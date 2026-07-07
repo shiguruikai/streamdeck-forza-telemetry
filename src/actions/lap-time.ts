@@ -6,26 +6,27 @@ import {
 } from '@elgato/streamdeck';
 
 import { ForzaTelemetryData } from '../telemetry/parser';
+import { LapTimeMode } from '../types/settings';
 import { formatLap, formatPosition, formatTime } from '../utils/format';
 import { TelemetryAction } from './telemetry-action';
 
 type LapTimeSettings = {
-  displayMode?: 'best' | 'last';
+  mode?: LapTimeMode;
 };
 
 @action({
   UUID: 'com.github.shiguruikai.streamdeck-forza-telemetry.lap-time',
 })
 export class LapTimeAction extends TelemetryAction<LapTimeSettings> {
-  private getDisplayMode(actionId: string): 'best' | 'last' {
-    return this.getSettings(actionId)?.displayMode ?? 'best';
+  private getDisplayMode(actionId: string): LapTimeMode {
+    return this.getSettings(actionId)?.mode ?? 'best';
   }
 
   private async toggleDisplayMode(action: DialAction) {
     const currentMode = this.getDisplayMode(action.id);
-    const newMode = currentMode === 'best' ? 'last' : 'best';
+    const newMode: LapTimeMode = currentMode === 'best' ? 'last' : 'best';
 
-    const newSettings: LapTimeSettings = { displayMode: newMode };
+    const newSettings: LapTimeSettings = { mode: newMode };
     this.setSettings(action.id, newSettings);
 
     // 設定を永続化
@@ -38,7 +39,7 @@ export class LapTimeAction extends TelemetryAction<LapTimeSettings> {
     } else {
       // キャッシュデータがない場合はラベルのみ更新する
       action.setFeedback({
-        subLabel: newMode === 'best' ? 'BEST' : 'LAST',
+        subLabel: newMode.toUpperCase(),
       });
     }
   }
@@ -52,7 +53,7 @@ export class LapTimeAction extends TelemetryAction<LapTimeSettings> {
         lap: formatLap(data.lapNumber + 1),
         pos: formatPosition(data.racePosition),
         current: formatTime(data.currentLap),
-        subLabel: mode === 'best' ? 'BEST' : 'LAST',
+        subLabel: mode.toUpperCase(),
         subValue: formatTime(mode === 'best' ? data.bestLap : data.lastLap),
       });
     } else {
@@ -60,7 +61,7 @@ export class LapTimeAction extends TelemetryAction<LapTimeSettings> {
         lap: 'LAP --',
         pos: 'POS --',
         current: '--:--.---',
-        subLabel: mode === 'best' ? 'BEST' : 'LAST',
+        subLabel: mode.toUpperCase(),
         subValue: '--:--.---',
       });
     }

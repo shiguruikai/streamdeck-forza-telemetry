@@ -129,4 +129,4 @@ timestamp: 2026-07-08T00:15:00+09:00
 
 ### 2.8 共通型定義（[settings.ts](../src/types/settings.ts)）
 
-* 設定値や物理単位（`SpeedUnit`、`TempUnit` など）の文字列リテラル型を定義し、プラグイン全体の型安全性を保証。
+* 設定値や物理単位（`SpeedUnit`、`TempUnit`、`LapTimeMode` など）の文字列リテラル型を定義し、プラグイン全体の型安全性を保証。
