@@ -92,6 +92,7 @@ Forza HorizonからUDPテレメトリデータ（"Data Out"）を受信し、Elg
 │   │   ├── press-duration.ts       # 長押し・短押し判定付きアクションの基底クラス
 │   │   ├── speed-meter.ts          # 速度計のアクション実装
 │   │   ├── suspension-travel.ts    # サスペンション移動量のアクション実装
+│   │   ├── telemetry-action.ts     # 共通ベースクラス（テレメトリ受信/状態キャッシュ）
 │   │   └── tire-temp.ts            # タイヤ温度のアクション実装
 │   ├── constants/                  # 定数定義
 │   │   └── constants.ts            # アプリケーション共通の定数定義
@@ -101,8 +102,12 @@ Forza HorizonからUDPテレメトリデータ（"Data Out"）を受信し、Elg
 │   │   ├── manager.ts              # テレメトリの管理・配信処理
 │   │   ├── parser.ts               # テレメトリデータパケットの解析処理
 │   │   └── server.ts               # UDP受信サーバー
+│   ├── types/                      # 型定義ディレクトリ
+│   │   └── settings.ts             # 共通設定用・物理単位用型定義
 │   ├── utils/                      # ユーティリティ関数
-│   │   └── image.ts                # 画像・SVG描画ユーティリティ
+│   │   ├── format.ts               # 共通フォーマットユーティリティ
+│   │   ├── image.ts                # 画像・SVG描画ユーティリティ
+│   │   └── utils.ts                # 汎用演算ヘルパー（clamp）
 │   └── plugin.ts                   # プラグインのエントリポイント
 ├── tests/                          # テスト・シミュレーションスクリプト
 │   ├── simulate-telemetry.ts       # テレメトリ送信シミュレータ

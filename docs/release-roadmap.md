@@ -30,7 +30,7 @@ graph TD
 * **マニフェスト設定**: 対応済（`com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin/manifest.json` の `SDKVersion: 3`、および `Software.MinimumVersion: "7.1"` 設定済）
 * **UUID構成**: 対応済（逆DNS形式 `com.github.shiguruikai.streamdeck-forza-telemetry` を使用）
 * **検証コマンド**: 実行済（`pnpm lint:fix` による静的解析および `pnpm validate` によるマニフェスト適合テストをパス）
-* **リファクタリング・バグ修正（今回）**: 完了（サスペンション移動量とタイヤ温度アクションの共通描画ユーティリティへの移行、角丸処理の改善、静的状態における設定変更トグルバグおよびGメーターのトグルバグ修正完了）
+* **リファクタリング・状態のカプセル化（今回）**: 完了（共通ベースクラス `TelemetryAction` の導入による重複コードの削除とイベント・ライフサイクル管理の一元化、設定・テレメトリ Map キャッシュのカプセル化、`SuspensionTravelAction` の長押し機能の削除とシンプル化完了）
 
 ---
 
