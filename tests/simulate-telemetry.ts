@@ -43,6 +43,42 @@ interface CarState {
 }
 
 /**
+ * シンプルなパラメータによるシミュレーション値の計算
+ *
+ * @param timestampMs 経過時間（ミリ秒）
+ * @param base 基準値（例：70、0.5）
+ * @param amplitude 正弦波の振幅（0指定で波なし）
+ * @param periodMs 正弦波の周期（ミリ秒。0指定で波なし）
+ * @param noiseAmp ランダムノイズの振幅（値は -noiseAmp/2 ～ +noiseAmp/2 の範囲で変動）
+ * @param load 外部から加える荷重やGフォースの影響量
+ * @param min 最小クランプ値（オプション）
+ * @param max 最大クランプ値（オプション）
+ * @param useCosine trueの場合、正弦波の代わりに余弦波を使用（オプション）
+ */
+function simulateValue(
+  timestampMs: number,
+  base: number,
+  amplitude: number,
+  periodMs: number,
+  noiseAmp: number,
+  load: number = 0,
+  min?: number,
+  max?: number,
+  useCosine: boolean = false,
+): number {
+  const angle = periodMs > 0 ? (timestampMs / periodMs) * 2 * Math.PI : 0;
+  const wave = periodMs > 0 ? (useCosine ? Math.cos(angle) : Math.sin(angle)) : 0;
+  const noise = (Math.random() - 0.5) * noiseAmp;
+
+  let val = base + wave * amplitude + load + noise;
+
+  if (min !== undefined) val = Math.max(min, val);
+  if (max !== undefined) val = Math.min(max, val);
+
+  return val;
+}
+
+/**
  * 現在のエンジン回転数とギア比から車両速度を算出します。
  *
  * Args:
@@ -116,7 +152,7 @@ function buildTelemetryPacket(state: CarState): Buffer {
 
 // 初期状態のセットアップ
 const state: CarState = {
-  gear: 0,
+  gear: 1,
   rpm: IDLE_RPM,
   speed: 0,
   timestampMs: 0,
@@ -186,16 +222,18 @@ setInterval(() => {
   state.accelerationZ = currentAccelZ;
 
   // タイヤ温度のシミュレーション
-  const loadFL = state.accelerationX > 0 ? state.accelerationX * 1.2 : 0;
-  const loadFR = state.accelerationX < 0 ? -state.accelerationX * 1.2 : 0;
-  const loadRL = (state.accelerationX > 0 ? state.accelerationX * 0.8 : 0) + (state.accelerationZ > 0 ? state.accelerationZ * 0.5 : 0);
-  const loadRR = (state.accelerationX < 0 ? -state.accelerationX * 0.8 : 0) + (state.accelerationZ > 0 ? state.accelerationZ * 0.5 : 0);
+  // 走行荷重（Gフォース）による一時的な影響を算出
+  const loadFL = state.accelerationX > 0 ? state.accelerationX * 1.0 : 0;
+  const loadFR = state.accelerationX < 0 ? -state.accelerationX * 1.0 : 0;
+  const loadRL = (state.accelerationX > 0 ? state.accelerationX * 0.6 : 0) + (state.accelerationZ > 0 ? state.accelerationZ * 0.4 : 0);
+  const loadRR = (state.accelerationX < 0 ? -state.accelerationX * 0.6 : 0) + (state.accelerationZ > 0 ? state.accelerationZ * 0.4 : 0);
 
   // 摂氏でシミュレートしてから華氏に変換（テレメトリデータはネイティブで華氏のため）
-  const tempFL_C = 70 + Math.sin(state.timestampMs / 8000) * 5 + loadFL;
-  const tempFR_C = 70 + Math.cos(state.timestampMs / 8000) * 5 + loadFR;
-  const tempRL_C = 65 + Math.sin(state.timestampMs / 10000) * 4 + loadRL;
-  const tempRR_C = 65 + Math.cos(state.timestampMs / 10000) * 4 + loadRR;
+  // 加速リセット周期（約8秒）に合わせて周期を短縮し、40℃～130℃付近までダイナミックに全色域を変化させる
+  const tempFL_C = simulateValue(state.timestampMs, 80, 45, 8000, 4, loadFL, 20, 150);
+  const tempFR_C = simulateValue(state.timestampMs, 80, 45, 8000, 4, loadFR, 20, 150, true);
+  const tempRL_C = simulateValue(state.timestampMs, 80, 40, 10000, 4, loadRL, 20, 150);
+  const tempRR_C = simulateValue(state.timestampMs, 80, 40, 10000, 4, loadRR, 20, 150, true);
 
   state.tireTempFL = tempFL_C * 1.8 + 32;
   state.tireTempFR = tempFR_C * 1.8 + 32;
@@ -203,19 +241,15 @@ setInterval(() => {
   state.tireTempRR = tempRR_C * 1.8 + 32;
 
   // サスペンション移動量のシミュレーション
-  // ロール（左右Gによる傾き）、ピッチ（前後Gによる傾き）、路面凹凸（Y軸加速度）を反映
+  // ロール（左右Gによる傾き）、ピッチ（前後Gによる傾き）を反映
   const rollEffect = state.accelerationX * 0.05; // 左右Gで沈み込む
   const pitchEffect = state.accelerationZ * 0.03; // 前後Gでリア沈み・フロント浮き
-  const bumpFL = (Math.random() - 0.5) * 0.1;
-  const bumpFR = (Math.random() - 0.5) * 0.1;
-  const bumpRL = (Math.random() - 0.5) * 0.1;
-  const bumpRR = (Math.random() - 0.5) * 0.1;
 
-  // 0.0〜1.0 の範囲にクランプする
-  state.suspensionFL = Math.max(0.0, Math.min(1.0, 0.5 - rollEffect + pitchEffect + bumpFL));
-  state.suspensionFR = Math.max(0.0, Math.min(1.0, 0.5 + rollEffect + pitchEffect + bumpFR));
-  state.suspensionRL = Math.max(0.0, Math.min(1.0, 0.5 - rollEffect - pitchEffect + bumpRL));
-  state.suspensionRR = Math.max(0.0, Math.min(1.0, 0.5 + rollEffect - pitchEffect + bumpRR));
+  // 汎用シミュレーション関数を用いて、路面ノイズ（±0.05）とクランプ（0.0〜1.0）を適用
+  state.suspensionFL = simulateValue(0, 0.5, 0, 0, 0.1, -rollEffect + pitchEffect, 0.0, 1.0);
+  state.suspensionFR = simulateValue(0, 0.5, 0, 0, 0.1, rollEffect + pitchEffect, 0.0, 1.0);
+  state.suspensionRL = simulateValue(0, 0.5, 0, 0, 0.1, -rollEffect - pitchEffect, 0.0, 1.0);
+  state.suspensionRR = simulateValue(0, 0.5, 0, 0, 0.1, rollEffect - pitchEffect, 0.0, 1.0);
 
   // 速度の再計算とタイムスタンプ更新
   state.speed = calculateSpeed(state.rpm, state.gear);
@@ -262,5 +296,6 @@ setInterval(() => {
     state.gear = 1;
     state.rpm = IDLE_RPM;
     state.speed = 0;
+    state.timestampMs = 0; // 経過時間をリセットし、波形シミュレーションを再同期する
   }
 }, INTERVAL_MS);

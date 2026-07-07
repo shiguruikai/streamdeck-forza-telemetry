@@ -59,25 +59,41 @@ export function formatRpmBar(engineMaxRpm: number, currentEngineRpm: number): { 
 // タイヤ温度（Tire Temperature）用フォーマット
 // =============================================================================
 
+/**
+ * 華氏を摂氏に変換します。
+ */
+export function fahrenheitToCelsius(fahrenheit: number): number {
+  return (fahrenheit - 32) / 1.8;
+}
+
 export function formatTemp(tempF: number, unit?: TempUnit): string {
-  const value = unit === 'fahrenheit' ? tempF : (tempF - 32) / 1.8;
+  const value = unit === 'fahrenheit' ? tempF : fahrenheitToCelsius(tempF);
   const u = unit === 'fahrenheit' ? '°F' : '°C';
   return `${Math.round(value)}${u}`;
 }
 
+/**
+ * タイヤ温度に応じてメーターの表示色を決定します。
+ * - 70℃未満：冷えている（水色～緑のグラデーション）
+ * - 70℃～100℃：適正動作温度（緑色固定）
+ * - 100℃～120℃：警告・過熱状態（緑～黄～赤のグラデーション、120℃で完全に赤色）
+ */
 export function formatTireColor(tempF: number): string {
-  const temp = (tempF - 32) / 1.8;
+  const temp = fahrenheitToCelsius(tempF);
 
-  if (temp < 60) {
-    const ratio = clamp((temp - 40) / 20, 0, 1);
+  if (temp < 70) {
+    // 40℃～70℃の範囲で水色から緑色に変化させる
+    const ratio = clamp((temp - 40) / 30, 0, 1);
     const r = Math.round(0x00 * (1 - ratio) + 0x34 * ratio);
     const g = Math.round(0x7a * (1 - ratio) + 0xc7 * ratio);
     const b = Math.round(0xff * (1 - ratio) + 0x59 * ratio);
     return `rgb(${r},${g},${b})`;
-  } else if (temp <= 90) {
-    return '#34c759'; // 緑
+  } else if (temp <= 100) {
+    // 適正温度領域
+    return '#34c759';
   } else {
-    const ratio = clamp((temp - 90) / 20, 0, 1);
+    // 100℃～120℃の範囲で緑色から赤色に変化させる
+    const ratio = clamp((temp - 100) / 20, 0, 1);
     const r = Math.round(0x34 * (1 - ratio) + 0xff * ratio);
     const g = Math.round(0xc7 * (1 - ratio) + 0x3b * ratio);
     const b = Math.round(0x59 * (1 - ratio) + 0x30 * ratio);
