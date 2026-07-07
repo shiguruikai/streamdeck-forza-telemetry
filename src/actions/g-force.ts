@@ -2,6 +2,7 @@ import {
   action,
   DialAction,
   DialDownEvent,
+  DialRotateEvent,
   DialUpEvent,
   KeyAction,
   KeyDownEvent,
@@ -12,6 +13,7 @@ import {
 import { STANDARD_GRAVITY } from '../constants/constants';
 import { ForzaTelemetryData } from '../telemetry/parser';
 import { createGForceImage } from '../utils/image';
+import { clamp } from '../utils/utils';
 import { PressDurationAction } from './press-duration';
 
 const DEFAULT_SCALE = 2;
@@ -36,26 +38,19 @@ export class GForceAction extends PressDurationAction<GForceSettings> {
   // 長押し判定しきい値を 500ms に設定
   protected override longPressDurationMs = 500;
 
-  private async toggleScale(action: EventAction) {
-    const currentScale = this.getSettings(action.id)?.scale;
-    let nextScale: number;
-    if (currentScale === 1) {
-      nextScale = 2;
-    } else if (currentScale === 2) {
-      nextScale = 3;
-    } else {
-      nextScale = 1;
-    }
-
+  private async updateScale(action: EventAction, nextScale: number) {
     const newSettings = { scale: nextScale };
     this.setSettings(action.id, newSettings);
-
-    // 設定を永続化
     await action.setSettings(newSettings);
 
-    // 即座に再描画する
     const lastData = this.getLastTelemetryData(action.id);
     this.updateImage(action, lastData);
+  }
+
+  private async toggleScale(action: EventAction) {
+    const currentScale = this.getSettings(action.id)?.scale ?? DEFAULT_SCALE;
+    const nextScale = currentScale === 1 ? 2 : currentScale === 2 ? 3 : 1;
+    await this.updateScale(action, nextScale);
   }
 
   private resetPeakG(action: EventAction) {
@@ -132,6 +127,16 @@ export class GForceAction extends PressDurationAction<GForceSettings> {
     data?: ForzaTelemetryData,
   ): void {
     this.updateImage(action, data);
+  }
+
+  override async onDialRotate(ev: DialRotateEvent<GForceSettings>): Promise<void> {
+    if (!ev.action.isDial()) return;
+    const currentScale = this.getSettings(ev.action.id)?.scale ?? DEFAULT_SCALE;
+    const nextScale = clamp(currentScale + Math.sign(ev.payload.ticks), 1, 3);
+
+    if (nextScale !== currentScale) {
+      await this.updateScale(ev.action, nextScale);
+    }
   }
 
   protected override onDisappear(ev: WillDisappearEvent<GForceSettings>): Promise<void> | void {

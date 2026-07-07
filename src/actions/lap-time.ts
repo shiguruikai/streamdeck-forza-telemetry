@@ -1,9 +1,8 @@
 import {
   action,
   DialAction,
-  DialDownEvent,
+  DialRotateEvent,
   KeyAction,
-  TouchTapEvent,
 } from '@elgato/streamdeck';
 
 import { ForzaTelemetryData } from '../telemetry/parser';
@@ -75,12 +74,7 @@ export class LapTimeAction extends TelemetryAction<LapTimeSettings> {
     this.updateFeedback(action, data);
   }
 
-  override onDialDown(ev: DialDownEvent<LapTimeSettings>): Promise<void> | void {
-    if (!ev.action.isDial()) return;
-    this.toggleDisplayMode(ev.action);
-  }
-
-  override onTouchTap(ev: TouchTapEvent<LapTimeSettings>): Promise<void> | void {
+  override onDialRotate(ev: DialRotateEvent<LapTimeSettings>): Promise<void> | void {
     if (!ev.action.isDial()) return;
     this.toggleDisplayMode(ev.action);
   }

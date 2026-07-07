@@ -3,7 +3,7 @@ type: Reference
 title: プラグインの機能とアーキテクチャ
 description: Forza Horizonのテレメトリデータを表示するStream Deckプラグインの機能仕様およびシステム設計解説書
 tags: [architecture, design, streamdeck]
-timestamp: 2026-07-07T23:45:00+09:00
+timestamp: 2026-07-08T00:15:00+09:00
 ---
 
 # Forza Telemetry Stream Deck プラグイン 機能・アーキテクチャ設計書
@@ -24,6 +24,8 @@ timestamp: 2026-07-07T23:45:00+09:00
   * **デジタル速度表示**：液晶ディスプレイの右側に 55pt の巨大デジタルフォントで表示。プロパティインスペクタの設定で「KM/H」と「MPH」の切り替えが可能。
   * **現在のギア表示**：画面左側に緑色の円枠とギア文字（R、1、2...）で大きく描画。Forza Horizon 6の実車仕様（0 = Reverse、1 = 1速、2 = 2速...）に適合。
   * **RPMレベルバー**：ディスプレイ下部（Y: 80〜95）に配置。現在のRPM割合（0〜100%）を表示し、70%以上で黄、85%以上で赤（レブリミット）に自動変化。
+* **インタラクション**：
+  * **短押し（ダイヤルプッシュ） / キー短押し**：速度表示単位（KM/H <-> MPH）をトグル切り替え。
 * **UI安定化設計（チャタリング防止）**：
   * シフトチェンジ時の瞬間的なギア抜け値（値 11）を無効値（null）として検知し、直前の有効なギア表示を維持することで、画面の不快なチラつきを防止。
 
@@ -36,7 +38,7 @@ timestamp: 2026-07-07T23:45:00+09:00
   * **現在ラップタイム**：中央に現在のラップタイムを「分:秒.ミリ秒」形式で大きく描画。
   * **比較用ラップタイム**：下部に比較対象（自己ベストまたは前周ラップタイム）を表示。
 * **インタラクション**：
-  * ダイヤルプッシュまたは液晶ディスプレイタップにより、比較対象を「BEST（自己ベストラップ）」と「LAST（前周のラップタイム）」で交互に切り替え。
+  * **ダイヤル回転（Dial Rotate）**：比較対象を「BEST（自己ベストラップ）」と「LAST（前周のラップタイム）」で交互に切り替え。
 * **ステート（キャッシュ）維持設計**：
   * 画面切り替え（WillAppear / WillDisappear）時も直前のデータを破棄せず、ベースクラス内でキャッシュとして保持し、画面復帰時に即座に再現。
 
@@ -51,7 +53,8 @@ timestamp: 2026-07-07T23:45:00+09:00
   * **スケール表示**：液晶ディスプレイのみ、左下に現在の表示スケール上限（例：「2.0G」）を表示。
 * **インタラクション**：
   * [PressDurationAction](../src/actions/press-duration.ts#L16)基底クラスを活用し、キーとダイヤルの押し下げイベントを共通ハンドリング。
-  * **短押し（キー押下 / ダイヤルプッシュ）**：表示スケールを切り替え（1.0G / 2.0G / 3.0G）。
+  * **短押し（キー押下 / ダイヤルプッシュ）**：表示スケールを順次切り替え（1.0G -> 2.0G -> 3.0G -> 1.0G ...）。
+  * **ダイヤル回転（Dial Rotate）**：表示スケールを増減（右回転でスケール大、左回転でスケール小。1.0G〜3.0Gの範囲でクランプ）。
   * **長押し（キー押下 / ダイヤルプッシュ、500ms判定）**：ピークG値をリセット。リセット成功時は、画面中央に「RESET」（緑）を一時表示。
 * **ステート（キャッシュ）維持設計**：
   * 画面切り替え時もピークGデータを破棄せず維持。
@@ -65,6 +68,7 @@ timestamp: 2026-07-07T23:45:00+09:00
   * **単一表示（FL/FR/RL/RR）**：液晶キーなどの狭い画面向けに、選択した特定のタイヤ位置と温度のみを表示。
 * **インタラクションと設定**：
   * **短押し（キー押下 / ダイヤルプッシュ）**：表示単位を摂氏（°C）と華氏（°F）で切り替え（長押し機能は使用しないため、[TelemetryAction](../src/actions/telemetry-action.ts#L15)を直接継承）。
+  * **ダイヤル回転（Dial Rotate）**：表示対象を順次切り替え（All -> FL -> FR -> RL -> RR をループ。右回転で順方向、左回転で逆方向）。
   * **プロパティインスペクタ（設定画面）**：[ui/tire-temp.html](../com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin/ui/tire-temp.html)を通じて、表示位置（All / FL / FR / RL / RR）および表示単位を保存。
 
 ### 1.5 サスペンション移動量（Suspension Travel）
@@ -76,6 +80,7 @@ timestamp: 2026-07-07T23:45:00+09:00
   * **単一表示（FL/FR/RL/RR）**：選択したサスペンション位置の圧縮状態を、数値と横向きインジケーターで大きく表示。
 * **インタラクションと設定**：
   * **短押し（キー押下 / ダイヤルプッシュ）**：表示モードをパーセンテージ表示（%）と実数表示（0.0〜1.0）で切り替え（[TelemetryAction](../src/actions/telemetry-action.ts#L15)を直接継承）。
+  * **ダイヤル回転（Dial Rotate）**：表示対象を順次切り替え（All -> FL -> FR -> RL -> RR をループ。右回転で順方向、左回転で逆方向）。
   * **プロパティインスペクタ（設定画面）**：[ui/suspension-travel.html](../com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin/ui/suspension-travel.html)を通じて、表示位置および表示モードを保存。
 
 ---
@@ -116,11 +121,11 @@ timestamp: 2026-07-07T23:45:00+09:00
 * **SVG動的生成**：[createAllWheelsImage](../src/utils/image.ts#L13)、[createWheelImage](../src/utils/image.ts#L104)、[createGForceImage](../src/utils/image.ts#L152)などの共通関数を集約。
 * **相対的な角丸設計**：オブジェクトの角丸を物理ピクセルや固定値ではなく、描画するバーやタイヤの太さに対する比率（タイヤは `radius = 0.4`）で計算し、一貫した描画を実現。
 * **SVGデータの最適化**：[toSvgDataUri](../src/utils/image.ts#L9)内で改行や空白を除去（`replace(/>\s+</g, '><').trim()`）し、URLエンコードすることで、データ転送効率とメモリ効率を向上。
-* **ヘルパー関数**：[utils.ts](../src/utils/utils.ts)に数値を範囲内に収める [clamp](../src/utils/utils.ts#L1) を定義。
+* **ヘルパー関数**：[utils.ts](../src/utils/utils.ts)に数値を範囲内に収める [clamp](../src/utils/utils.ts#L1) や、ダイヤルの回転方向から次の車輪表示位置を算出する [getNextWheelPosition](../src/utils/utils.ts#L8) を定義。
 
 ### 2.7 共通フォーマットユーティリティ（[format.ts](../src/utils/format.ts)）
 
-* 文字列や数値の成形処理（`formatTime`、`formatLap`、`formatSpeed`、`formatGear` など）を一元化し、UIの表示形式統一とテスト容易性を確保。
+* 文字列や数値の成形処理（`formatTime`、`formatLap`、`formatSpeed`、`formatGear` など）および表示色の選択処理（`formatTravelColor`、`formatTireColor`）を一元化し、UIの表示形式統一とテスト容易性を確保。
 
 ### 2.8 共通型定義（[settings.ts](../src/types/settings.ts)）
 

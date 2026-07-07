@@ -2,14 +2,16 @@ import {
   action,
   DialAction,
   DialDownEvent,
+  DialRotateEvent,
   KeyAction,
   KeyDownEvent,
 } from '@elgato/streamdeck';
 
 import { ForzaTelemetryData } from '../telemetry/parser';
 import { TempUnit, WheelPosition } from '../types/settings';
-import { formatTemp } from '../utils/format';
+import { formatTemp, formatTireColor } from '../utils/format';
 import { createAllWheelsImage, createWheelImage } from '../utils/image';
+import { getNextWheelPosition } from '../utils/utils';
 import { TelemetryAction } from './telemetry-action';
 
 type TireTempSettings = {
@@ -18,31 +20,6 @@ type TireTempSettings = {
 };
 
 type EventAction = DialAction<TireTempSettings> | KeyAction<TireTempSettings>;
-
-// 温度に応じた色の取得（青＝冷、緑＝適温、赤＝過熱）
-// 引数はゲーム内テレメトリの華氏（Fahrenheit）
-function getTireColor(tempF: number): string {
-  // 判定基準（摂氏）に変換
-  const temp = (tempF - 32) / 1.8;
-
-  if (temp < 60) {
-    // 40度以下は完全な青、60度で完全な緑になるように補間
-    const ratio = Math.max(0, Math.min(1, (temp - 40) / 20));
-    const r = Math.round(0x00 * (1 - ratio) + 0x34 * ratio);
-    const g = Math.round(0x7a * (1 - ratio) + 0xc7 * ratio);
-    const b = Math.round(0xff * (1 - ratio) + 0x59 * ratio);
-    return `rgb(${r},${g},${b})`;
-  } else if (temp <= 90) {
-    return '#34c759'; // 緑
-  } else {
-    // 90度で完全な緑、110度以上で完全な赤になるように補間
-    const ratio = Math.max(0, Math.min(1, (temp - 90) / 20));
-    const r = Math.round(0x34 * (1 - ratio) + 0xff * ratio);
-    const g = Math.round(0xc7 * (1 - ratio) + 0x3b * ratio);
-    const b = Math.round(0x59 * (1 - ratio) + 0x30 * ratio);
-    return `rgb(${r},${g},${b})`;
-  }
-}
 
 @action({
   UUID: 'com.github.shiguruikai.streamdeck-forza-telemetry.tire-temp',
@@ -73,10 +50,10 @@ export class TireTempAction extends TelemetryAction<TireTempSettings> {
 
     const isDial = action.isDial();
 
-    const colorFL = getTireColor(tempFL);
-    const colorFR = getTireColor(tempFR);
-    const colorRL = getTireColor(tempRL);
-    const colorRR = getTireColor(tempRR);
+    const colorFL = formatTireColor(tempFL);
+    const colorFR = formatTireColor(tempFR);
+    const colorRL = formatTireColor(tempRL);
+    const colorRR = formatTireColor(tempRR);
 
     let image: string;
 
@@ -107,7 +84,7 @@ export class TireTempAction extends TelemetryAction<TireTempSettings> {
         position,
         1,
         formatTemp(value, unit),
-        getTireColor(value),
+        formatTireColor(value),
         0.4,
       );
     }
@@ -132,5 +109,18 @@ export class TireTempAction extends TelemetryAction<TireTempSettings> {
 
   override onDialDown(ev: DialDownEvent<TireTempSettings>): Promise<void> | void {
     this.toggleUnit(ev.action);
+  }
+
+  override async onDialRotate(ev: DialRotateEvent<TireTempSettings>): Promise<void> {
+    if (!ev.action.isDial()) return;
+    const currentSettings = this.getSettings(ev.action.id) ?? {};
+    const nextPos = getNextWheelPosition(currentSettings.position, ev.payload.ticks);
+    const newSettings = { ...currentSettings, position: nextPos };
+
+    this.setSettings(ev.action.id, newSettings);
+    await ev.action.setSettings(newSettings);
+
+    const lastData = this.getLastTelemetryData(ev.action.id);
+    this.updateImage(ev.action, lastData);
   }
 }

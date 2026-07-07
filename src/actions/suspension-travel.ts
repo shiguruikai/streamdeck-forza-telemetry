@@ -2,14 +2,16 @@ import {
   action,
   DialAction,
   DialDownEvent,
+  DialRotateEvent,
   KeyAction,
   KeyDownEvent,
 } from '@elgato/streamdeck';
 
 import { ForzaTelemetryData } from '../telemetry/parser';
 import { SuspensionMode, WheelPosition } from '../types/settings';
-import { formatTravel } from '../utils/format';
+import { formatTravel, formatTravelColor } from '../utils/format';
 import { createAllWheelsImage, createWheelImage } from '../utils/image';
+import { getNextWheelPosition } from '../utils/utils';
 import { TelemetryAction } from './telemetry-action';
 
 type SuspensionTravelSettings = {
@@ -18,13 +20,6 @@ type SuspensionTravelSettings = {
 };
 
 type EventAction = DialAction<SuspensionTravelSettings> | KeyAction<SuspensionTravelSettings>;
-
-// サスペンション移動量の状態に応じた色の取得（高圧縮＝赤、高伸長＝青、通常＝緑）
-function getTravelColor(travel: number): string {
-  if (travel > 0.8) return '#ff3b30';
-  if (travel < 0.2) return '#007aff';
-  return '#34c759';
-}
 
 const DEFAULT_TRAVEL_VALUE = 0.5;
 
@@ -61,7 +56,7 @@ export class SuspensionTravelAction extends TelemetryAction<SuspensionTravelSett
       // 全輪表示モード
       const values = [travelFL, travelFR, travelRL, travelRR];
       const texts = values.map((v) => formatTravel(v, mode));
-      const colors = values.map((v) => getTravelColor(v));
+      const colors = values.map((v) => formatTravelColor(v));
       image = createAllWheelsImage('SUSPENSION', isDial, values, texts, colors);
     } else {
       // 単一表示モード
@@ -81,7 +76,7 @@ export class SuspensionTravelAction extends TelemetryAction<SuspensionTravelSett
         position,
         value,
         formatTravel(value, mode),
-        getTravelColor(value),
+        formatTravelColor(value),
       );
     }
 
@@ -105,5 +100,19 @@ export class SuspensionTravelAction extends TelemetryAction<SuspensionTravelSett
 
   override onDialDown(ev: DialDownEvent<SuspensionTravelSettings>): Promise<void> | void {
     this.toggleMode(ev.action);
+  }
+
+  override async onDialRotate(ev: DialRotateEvent<SuspensionTravelSettings>): Promise<void> {
+    if (!ev.action.isDial()) return;
+
+    const currentSettings = this.getSettings(ev.action.id) ?? {};
+    const nextPos = getNextWheelPosition(currentSettings.position, ev.payload.ticks);
+    const newSettings = { ...currentSettings, position: nextPos };
+
+    this.setSettings(ev.action.id, newSettings);
+    await ev.action.setSettings(newSettings);
+
+    const lastData = this.getLastTelemetryData(ev.action.id);
+    this.updateImage(ev.action, lastData);
   }
 }

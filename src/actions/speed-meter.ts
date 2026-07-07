@@ -1,7 +1,9 @@
 import {
   action,
   DialAction,
+  DialDownEvent,
   KeyAction,
+  KeyDownEvent,
   WillDisappearEvent,
 } from '@elgato/streamdeck';
 
@@ -24,6 +26,20 @@ type SpeedMeterSettings = {
 })
 export class SpeedMeterAction extends TelemetryAction<SpeedMeterSettings> {
   private readonly previousGears = new Map<string, string>();
+
+  private async toggleUnit(action: DialAction<SpeedMeterSettings> | KeyAction<SpeedMeterSettings>) {
+    const currentSettings = this.getSettings(action.id) ?? {};
+    const nextUnit: SpeedUnit = currentSettings.unit === 'mph' ? 'kmh' : 'mph';
+    const newSettings = { ...currentSettings, unit: nextUnit };
+
+    this.setSettings(action.id, newSettings);
+    await action.setSettings(newSettings);
+
+    const lastData = this.getLastTelemetryData(action.id);
+    if (action.isDial()) {
+      this.updateFeedback(action, lastData);
+    }
+  }
 
   private updateFeedback(action: DialAction, data?: ForzaTelemetryData) {
     const unit = this.getSettings(action.id)?.unit;
@@ -58,6 +74,14 @@ export class SpeedMeterAction extends TelemetryAction<SpeedMeterSettings> {
   ): void {
     if (!action.isDial()) return;
     this.updateFeedback(action, data);
+  }
+
+  override onKeyDown(ev: KeyDownEvent<SpeedMeterSettings>): Promise<void> | void {
+    this.toggleUnit(ev.action);
+  }
+
+  override onDialDown(ev: DialDownEvent<SpeedMeterSettings>): Promise<void> | void {
+    this.toggleUnit(ev.action);
   }
 
   protected override onDisappear(ev: WillDisappearEvent<SpeedMeterSettings>): void {
