@@ -20,6 +20,7 @@ const DEFAULT_SCALE = 2;
 
 type GForceSettings = {
   scale?: number;
+  showTitle?: boolean;
 };
 
 type EventAction = DialAction<GForceSettings> | KeyAction<GForceSettings>;
@@ -39,7 +40,7 @@ export class GForceAction extends PressDurationAction<GForceSettings> {
   protected override longPressDurationMs = 500;
 
   private async updateScale(action: EventAction, nextScale: number) {
-    const newSettings = { scale: nextScale };
+    const newSettings = { ...this.getSettings(action.id), scale: nextScale };
     this.setSettings(action.id, newSettings);
     await action.setSettings(newSettings);
 
@@ -78,7 +79,9 @@ export class GForceAction extends PressDurationAction<GForceSettings> {
 
   private updateImage(action: EventAction, data?: ForzaTelemetryData) {
     let peak = this.peakGs.get(action.id) ?? { x: 0, z: 0, total: 0 };
-    const scale = this.getSettings(action.id)?.scale ?? DEFAULT_SCALE;
+    const settings = this.getSettings(action.id);
+    const scale = settings?.scale ?? DEFAULT_SCALE;
+    const showTitle = settings?.showTitle ?? true;
     const showResetText = this.showResetTexts.get(action.id) ?? false;
 
     let curX = 0;
@@ -106,6 +109,7 @@ export class GForceAction extends PressDurationAction<GForceSettings> {
 
     const isDial = action.isDial();
     const dataUri = createGForceImage(
+      showTitle ? 'G-FORCE' : null,
       isDial,
       scale,
       curX,
@@ -150,11 +154,11 @@ export class GForceAction extends PressDurationAction<GForceSettings> {
     this.peakGs.delete(ev.action.id);
   }
 
-  protected override onShortPress(ev: KeyUpEvent<GForceSettings> | DialUpEvent<GForceSettings>): void | Promise<void> {
+  protected override onShortPress(ev: KeyUpEvent<GForceSettings> | DialUpEvent<GForceSettings>): Promise<void> | void {
     this.toggleScale(ev.action);
   }
 
-  protected override onLongPress(ev: KeyDownEvent<GForceSettings> | DialDownEvent<GForceSettings>): void | Promise<void> {
+  protected override onLongPress(ev: KeyDownEvent<GForceSettings> | DialDownEvent<GForceSettings>): Promise<void> | void {
     this.resetPeakG(ev.action);
   }
 }

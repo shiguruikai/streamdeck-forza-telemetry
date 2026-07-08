@@ -1,3 +1,5 @@
+import { execa } from 'execa';
+
 import { WheelPosition } from '../types/settings';
 
 export function clamp(val: number, min: number, max: number) {
@@ -15,4 +17,19 @@ export function getNextWheelPosition(currentPos: WheelPosition | undefined, tick
   const step = Math.sign(ticks);
   index = (index + step + positions.length) % positions.length;
   return positions[index];
+}
+
+export type FontItem = {
+  name: string;
+};
+
+export async function getWindowsFonts(): Promise<FontItem[]> {
+  const { stdout } = await execa({ lines: true })(
+    'powershell', [
+      '-ExecutionPolicy', 'Bypass',
+      '-NoProfile',
+      '-Command',
+      "[System.Console]::OutputEncoding = [System.Text.Encoding]::UTF8; [void][System.Reflection.Assembly]::LoadWithPartialName('System.Drawing'); (New-Object System.Drawing.Text.InstalledFontCollection).Families.Name",
+    ]);
+  return stdout.map((name) => name.trim()).filter(Boolean).map((name) => ({ name } satisfies FontItem));
 }

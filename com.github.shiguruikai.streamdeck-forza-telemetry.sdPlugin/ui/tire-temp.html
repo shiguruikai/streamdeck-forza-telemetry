@@ -20,6 +20,18 @@
       <sdpi-item label="Port">
         <sdpi-textfield setting="port" pattern="^\d+$" required global></sdpi-textfield>
       </sdpi-item>
+
+      <sdpi-item label="Font">
+        <sdpi-select
+          setting="font"
+          datasource="getFonts"
+          loading="Fetching fonts..."
+          hot-reload
+          show-refresh
+          global
+        >
+        </sdpi-select>
+      </sdpi-item>
     </div>
 
     <div class="settings-group">
@@ -39,6 +51,10 @@
           <option value="celsius">Celsius (°C)</option>
           <option value="fahrenheit">Fahrenheit (°F)</option>
         </sdpi-select>
+      </sdpi-item>
+
+      <sdpi-item label="Show Title">
+        <sdpi-checkbox setting="showTitle" default="true"></sdpi-checkbox>
       </sdpi-item>
     </div>
   </body>

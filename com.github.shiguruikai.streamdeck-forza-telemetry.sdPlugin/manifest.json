@@ -12,7 +12,7 @@
       "Icon": "imgs/actions/speed-meter/icon",
       "Tooltip": "Show speed meter.",
       "PropertyInspectorPath": "ui/speed-meter.html",
-      "Controllers": [ "Encoder" ],
+      "Controllers": [ "Keypad", "Encoder" ],
       "Encoder": { "layout": "layouts/speed-meter-layout.json" },
       "States": [
         { "Image": "imgs/actions/speed-meter/key", "TitleAlignment": "middle" }
@@ -26,7 +26,7 @@
       "Icon": "imgs/actions/lap-time/icon",
       "Tooltip": "Show lap time.",
       "PropertyInspectorPath": "ui/lap-time.html",
-      "Controllers": [ "Encoder" ],
+      "Controllers": [ "Keypad", "Encoder" ],
       "Encoder": { "layout": "layouts/lap-time-layout.json" },
       "States": [
         { "Image": "imgs/actions/lap-time/key", "TitleAlignment": "middle" }

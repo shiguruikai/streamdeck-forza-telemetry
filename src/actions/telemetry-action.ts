@@ -1,21 +1,35 @@
 /* eslint-disable unused-imports/no-unused-vars */
-import {
+import streamDeck, {
   DialAction,
   DidReceiveSettingsEvent,
   KeyAction,
+  SendToPluginEvent,
   SingletonAction,
   WillAppearEvent,
   WillDisappearEvent,
 } from '@elgato/streamdeck';
-import { JsonObject } from '@elgato/utils';
+import { JsonObject, JsonValue } from '@elgato/utils';
 
+import { DataSourcePayload } from '../spdi';
 import { telemetryManager } from '../telemetry/manager';
 import { ForzaTelemetryData } from '../telemetry/parser';
+import { getWindowsFonts } from '../utils/utils';
 
 export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject> extends SingletonAction<TSettings> {
   private readonly settingsMap = new Map<string, TSettings>();
   private readonly lastTelemetryDataMap = new Map<string, ForzaTelemetryData>();
   private readonly handlers = new Map<string, (data: ForzaTelemetryData) => void>();
+  private readonly activeActions = new Map<string, DialAction<TSettings> | KeyAction<TSettings>>();
+
+  /**
+   * アクティブなすべてのアクションの {@link onTelemetryData} を呼び出します。
+   */
+  public refreshActiveActions(): void {
+    for (const action of this.activeActions.values()) {
+      const lastData = this.lastTelemetryDataMap.get(action.id);
+      this.onTelemetryData(action, lastData);
+    }
+  }
 
   /**
    * アクションインスタンスに対応する設定を取得します。
@@ -40,11 +54,12 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
 
   /**
    * テレメトリデータを受信した際、または初回表示・設定変更時に呼び出されます。
+   * このメソッドの中で表示を更新する必要性があります。
    */
   protected abstract onTelemetryData(
     action: DialAction<TSettings> | KeyAction<TSettings>,
     data?: ForzaTelemetryData,
-  ): void | Promise<void>;
+  ): Promise<void> | void;
 
   /**
    * 設定が変更された際に呼び出されます。
@@ -52,16 +67,35 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
   protected onSettingsUpdated(
     action: DialAction<TSettings> | KeyAction<TSettings>,
     settings: TSettings,
-  ): void | Promise<void> {}
+  ): Promise<void> | void {}
 
   /**
    * アクションが消える際（onWillAppear）に呼び出されます。
    */
-  protected onDisappear(ev: WillDisappearEvent<TSettings>): void | Promise<void> {}
+  protected onDisappear(ev: WillDisappearEvent<TSettings>): Promise<void> | void {}
+
+  override async onSendToPlugin(ev: SendToPluginEvent<JsonValue, TSettings>): Promise<void> {
+    if (!(ev.payload instanceof Object && 'event' in ev.payload)) return;
+
+    if (ev.payload.event === 'getFonts') {
+      const fonts = await getWindowsFonts();
+
+      const items = fonts.map((font) => ({
+        label: font.name,
+        value: font.name,
+      }));
+
+      streamDeck.ui.sendToPropertyInspector({
+        event: 'getFonts',
+        items: items,
+      } satisfies DataSourcePayload);
+    }
+  }
 
   override onWillAppear(ev: WillAppearEvent<TSettings>): Promise<void> | void {
     const action = ev.action;
     this.settingsMap.set(action.id, ev.payload.settings);
+    this.activeActions.set(action.id, action);
 
     // 初回描画
     const lastData = this.lastTelemetryDataMap.get(action.id);
@@ -96,6 +130,7 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
 
     this.settingsMap.delete(action.id);
     this.lastTelemetryDataMap.delete(action.id);
+    this.activeActions.delete(action.id);
 
     return this.onDisappear(ev);
   }

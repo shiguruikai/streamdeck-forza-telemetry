@@ -1,58 +1,11 @@
 {
-  "id"   : "LapTimeLayout",
+  "$schema": "https://schemas.elgato.com/streamdeck/plugins/layout.json",
+  "id": "LapTimeLayout",
   "items": [
     {
-      "key"      : "lap",
-      "type"     : "text",
-      "value"    : "LAP --",
-      "rect"     : [10, 5, 90, 15],
-      "font"     : {"size": 15, "weight": 800},
-      "alignment": "left",
-      "color"    : "#7f7f7f"
-    },
-    {
-      "key"      : "pos",
-      "type"     : "text",
-      "value"    : "POS --",
-      "rect"     : [100, 5, 90, 15],
-      "font"     : {"size": 15, "weight": 800},
-      "alignment": "right",
-      "color"    : "#7f7f7f"
-    },
-    {
-      "key"      : "curLabel",
-      "type"     : "text",
-      "value"    : "CUR",
-      "rect"     : [10, 25, 40, 35],
-      "font"     : {"size": 15, "weight": 800},
-      "alignment": "left",
-      "color"    : "#00ff7f"
-    },
-    {
-      "key"      : "current",
-      "type"     : "text",
-      "value"    : "--:--.---",
-      "rect"     : [50, 25, 140, 35],
-      "font"     : {"size": 32, "weight": 800},
-      "alignment": "right"
-    },
-    {
-      "key"      : "subLabel",
-      "type"     : "text",
-      "value"    : "BEST",
-      "rect"     : [10, 60, 40, 35],
-      "font"     : {"size": 15, "weight": 800},
-      "alignment": "left",
-      "color"    : "#ffcc00"
-    },
-    {
-      "key"      : "subValue",
-      "type"     : "text",
-      "value"    : "--:--.---",
-      "rect"     : [50, 60, 140, 35],
-      "font"     : {"size": 32, "weight": 800},
-      "alignment": "right",
-      "color"    : "#ffcc00"
+      "key": "canvas",
+      "type": "pixmap",
+      "rect": [0, 0, 200, 100]
     }
   ]
 }

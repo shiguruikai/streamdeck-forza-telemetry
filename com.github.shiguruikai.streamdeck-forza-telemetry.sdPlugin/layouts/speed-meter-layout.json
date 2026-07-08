@@ -1,48 +1,11 @@
 {
-  "id"   : "CustomLayout",
+  "$schema": "https://schemas.elgato.com/streamdeck/plugins/layout.json",
+  "id": "SpeedMeterLayout",
   "items": [
     {
-      "key"      : "unit",
-      "type"     : "text",
-      "value"    : "KM/H",
-      "rect"     : [110, 5, 80, 15],
-      "font"     : {"size": 15, "weight": 800},
-      "alignment": "right",
-      "color"    : "#7f7f7f"
-    },
-    {
-      "zOrder": 0,
-      "key"   : "gear-circle",
-      "type"  : "text",
-      "value" : "◯",
-      "rect"  : [10, 20, 50, 60],
-      "font"  : {"size": 45, "weight": 800},
-      "color" : "#00ff7f"
-    },
-    {
-      "zOrder": 1,
-      "key"   : "gear",
-      "type"  : "text",
-      "rect"  : [10, 20, 50, 60],
-      "font"  : {"size": 35, "weight": 800},
-      "color" : "#00ff7f"
-    },
-    {
-      "key"      : "speed",
-      "type"     : "text",
-      "rect"     : [60, 20, 130, 60],
-      "font"     : {"size": 55, "weight": 800},
-      "alignment": "right"
-    },
-    {
-      "key"       : "rpmBar",
-      "type"      : "bar",
-      "rect"      : [10, 80, 180, 15],
-      "value"     : 0,
-      "subtype"   : 0,
-      "bar_fill_c": "#333333",
-      "bar_bg_c"  : "#333333",
-      "border_w"  : 0
+      "key": "canvas",
+      "type": "pixmap",
+      "rect": [0, 0, 200, 100]
     }
   ]
 }

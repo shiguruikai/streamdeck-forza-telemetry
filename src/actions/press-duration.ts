@@ -68,7 +68,7 @@ export abstract class PressDurationAction<TSettings extends JsonObject = JsonObj
     this.pressTimers.set(ev.action.id, timer);
   }
 
-  private handleUp(ev: KeyUpEvent<TSettings> | DialUpEvent<TSettings>): void | Promise<void> {
+  private handleUp(ev: KeyUpEvent<TSettings> | DialUpEvent<TSettings>): Promise<void> | void {
     const existingTimer = this.pressTimers.get(ev.action.id);
     if (existingTimer) {
       clearTimeout(existingTimer);

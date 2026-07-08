@@ -17,6 +17,7 @@ import { TelemetryAction } from './telemetry-action';
 type SuspensionTravelSettings = {
   position?: WheelPosition;
   mode?: SuspensionMode;
+  showTitle?: boolean;
 };
 
 type EventAction = DialAction<SuspensionTravelSettings> | KeyAction<SuspensionTravelSettings>;
@@ -45,6 +46,7 @@ export class SuspensionTravelAction extends TelemetryAction<SuspensionTravelSett
     const currentSettings = this.getSettings(action.id) ?? {};
     const position = currentSettings.position ?? 'all';
     const mode = currentSettings.mode ?? 'percentage';
+    const showTitle = currentSettings.showTitle ?? true;
 
     const travelFL = data ? data.normalizedSuspensionTravelFrontLeft : DEFAULT_TRAVEL_VALUE;
     const travelFR = data ? data.normalizedSuspensionTravelFrontRight : DEFAULT_TRAVEL_VALUE;
@@ -57,7 +59,7 @@ export class SuspensionTravelAction extends TelemetryAction<SuspensionTravelSett
       const values = [travelFL, travelFR, travelRL, travelRR];
       const texts = values.map((v) => formatTravel(v, mode));
       const colors = values.map((v) => formatTravelColor(v));
-      image = createAllWheelsImage('SUSPENSION', isDial, values, texts, colors);
+      image = createAllWheelsImage(showTitle ? 'SUSPENSION' : null, isDial, values, texts, colors);
     } else {
       // 単一表示モード
       let value;
@@ -71,7 +73,7 @@ export class SuspensionTravelAction extends TelemetryAction<SuspensionTravelSett
         value = travelRR;
       }
       image = createWheelImage(
-        'SUSPENSION',
+        showTitle ? 'SUSPENSION' : null,
         isDial,
         position,
         value,

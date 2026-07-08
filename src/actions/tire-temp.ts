@@ -17,6 +17,7 @@ import { TelemetryAction } from './telemetry-action';
 type TireTempSettings = {
   position?: WheelPosition;
   unit?: TempUnit;
+  showTitle?: boolean;
 };
 
 type EventAction = DialAction<TireTempSettings> | KeyAction<TireTempSettings>;
@@ -42,6 +43,7 @@ export class TireTempAction extends TelemetryAction<TireTempSettings> {
     const currentSettings = this.getSettings(action.id);
     const position = currentSettings?.position ?? 'all';
     const unit = currentSettings?.unit ?? 'celsius';
+    const showTitle = currentSettings?.showTitle ?? true;
 
     const tempFL = data ? data.tireTempFrontLeft : 0;
     const tempFR = data ? data.tireTempFrontRight : 0;
@@ -66,7 +68,7 @@ export class TireTempAction extends TelemetryAction<TireTempSettings> {
         formatTemp(tempRR, unit),
       ];
       const colors = [colorFL, colorFR, colorRL, colorRR];
-      image = createAllWheelsImage('TIRES', isDial, values, texts, colors, 0.4);
+      image = createAllWheelsImage(showTitle ? 'TIRES' : null, isDial, values, texts, colors, 0.4);
     } else {
       let value: number;
       if (position === 'fl') {
@@ -79,7 +81,7 @@ export class TireTempAction extends TelemetryAction<TireTempSettings> {
         value = tempRR;
       }
       image = createWheelImage(
-        'TIRES',
+        showTitle ? 'TIRES' : null,
         isDial,
         position,
         1,

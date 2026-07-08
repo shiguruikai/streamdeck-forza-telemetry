@@ -7,20 +7,31 @@ import { SuspensionTravelAction } from './actions/suspension-travel';
 import { TireTempAction } from './actions/tire-temp';
 import { parseSettings } from './settings/settings';
 import { telemetryManager } from './telemetry/manager';
+import { setGlobalFont } from './utils/image';
 
 // We can enable "trace" logging so that all messages between the Stream Deck, and the plugin are recorded. When storing sensitive information
 streamDeck.logger.setLevel('trace');
 
+const actions = [
+  new SpeedMeterAction(),
+  new LapTimeAction(),
+  new GForceAction(),
+  new TireTempAction(),
+  new SuspensionTravelAction(),
+];
+
 // Register the action.
-streamDeck.actions.registerAction(new SpeedMeterAction());
-streamDeck.actions.registerAction(new LapTimeAction());
-streamDeck.actions.registerAction(new GForceAction());
-streamDeck.actions.registerAction(new TireTempAction());
-streamDeck.actions.registerAction(new SuspensionTravelAction());
+actions.forEach((action) => {
+  streamDeck.actions.registerAction(action);
+});
 
 // グローバル設定の適用処理
 function handleGlobalSettings(settingsObj: object) {
   const settings = parseSettings(settingsObj);
+
+  if (settings.font) {
+    setGlobalFont(settings.font);
+  }
 
   if (settings.port && settings.address) {
     telemetryManager.configure({
@@ -30,6 +41,11 @@ function handleGlobalSettings(settingsObj: object) {
   } else {
     telemetryManager.clearConfig();
   }
+
+  // すべてのアクションを再描画
+  actions.forEach((action) => {
+    action.refreshActiveActions();
+  });
 }
 
 // グローバル設定の変更を監視

@@ -15,6 +15,7 @@ import {
   formatSpeed,
   formatUnit,
 } from '../utils/format';
+import { createSpeedMeterImage } from '../utils/image';
 import { TelemetryAction } from './telemetry-action';
 
 type SpeedMeterSettings = {
@@ -36,35 +37,35 @@ export class SpeedMeterAction extends TelemetryAction<SpeedMeterSettings> {
     await action.setSettings(newSettings);
 
     const lastData = this.getLastTelemetryData(action.id);
-    if (action.isDial()) {
-      this.updateFeedback(action, lastData);
-    }
+    this.updateImage(action, lastData);
   }
 
-  private updateFeedback(action: DialAction, data?: ForzaTelemetryData) {
+  private updateImage(action: DialAction<SpeedMeterSettings> | KeyAction<SpeedMeterSettings>, data?: ForzaTelemetryData) {
     const unit = this.getSettings(action.id)?.unit;
+    let speedText = '0';
+    let gearText = 'N';
+    let rpmVal = 0;
+    let rpmColor = '#ffffff';
+    const unitText = formatUnit(unit);
 
     if (data) {
-      // ギアが有効範囲外の値の場合、前回のギアを表示する。
-      // 初期状態の場合、N を表示する。
+      speedText = formatSpeed(data.speed, unit);
       const gear = formatGear(data.gear) ?? this.previousGears.get(action.id) ?? 'N';
-
-      // 表示するギアを保存
       this.previousGears.set(action.id, gear);
+      gearText = gear;
 
-      action.setFeedback({
-        speed: formatSpeed(data.speed, unit),
-        gear,
-        rpmBar: formatRpmBar(data.engineMaxRpm, data.currentEngineRpm),
-        unit: formatUnit(unit),
-      });
+      const rpmInfo = formatRpmBar(data.engineMaxRpm, data.currentEngineRpm);
+      rpmVal = rpmInfo.value;
+      rpmColor = rpmInfo.bar_fill_c;
+    }
+
+    const isDial = action.isDial();
+    const image = createSpeedMeterImage(isDial, speedText, gearText, rpmVal, rpmColor, unitText);
+
+    if (isDial) {
+      action.setFeedback({ canvas: image });
     } else {
-      action.setFeedback({
-        speed: '0',
-        gear: 'N',
-        rpmBar: formatRpmBar(0, 0),
-        unit: formatUnit(unit),
-      });
+      action.setImage(image);
     }
   }
 
@@ -72,8 +73,7 @@ export class SpeedMeterAction extends TelemetryAction<SpeedMeterSettings> {
     action: DialAction<SpeedMeterSettings> | KeyAction<SpeedMeterSettings>,
     data?: ForzaTelemetryData,
   ): void {
-    if (!action.isDial()) return;
-    this.updateFeedback(action, data);
+    this.updateImage(action, data);
   }
 
   override onKeyDown(ev: KeyDownEvent<SpeedMeterSettings>): Promise<void> | void {

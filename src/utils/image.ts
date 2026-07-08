@@ -1,11 +1,19 @@
 import { clamp } from './utils';
 
-/**
- * SVG文字列をStream DeckのsetImage等で使用可能なData URI形式に変換します。
- *
- * @param svg SVGソース文字列
- * @returns Data URI形式の文字列
- */
+let globalFont = 'Courier New';
+
+export function getGlobalFont(): string {
+  return globalFont;
+}
+
+export function setGlobalFont(font: string): void {
+  globalFont = font;
+}
+
+function getCommonStyle(): string {
+  return `<style>text{font-family:"${globalFont}";}</style>`;
+}
+
 export function toSvgDataUri(svg: string): string {
   return `data:image/svg+xml,${encodeURIComponent(svg.replace(/>\s+</g, '><').trim())}`;
 }
@@ -73,6 +81,8 @@ export function createAllWheelsImage(
 
   const svg = `
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  ${getCommonStyle()}
+
   <rect x="${bodyX}" y="${bodyY}" width="${bodyW}" height="${bodyH}" rx="4" fill="#111111" stroke="#333333" stroke-width="2"/>
   <line x1="${axelX_Left}" y1="${axelY_Front}" x2="${axelX_Right}" y2="${axelY_Front}" stroke="#333333" stroke-width="2"/>
   <line x1="${axelX_Left}" y1="${axelY_Rear}" x2="${axelX_Right}" y2="${axelY_Rear}" stroke="#333333" stroke-width="2"/>
@@ -136,6 +146,8 @@ export function createWheelImage(
 
   const svg = `
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  ${getCommonStyle()}
+
   <rect x="${barX}" y="${barY}" width="${barW}" height="${barH}" fill="#333333" rx="${rx}"/>
   <rect x="${barX}" y="${barY_Value}" width="${barW}" height="${barH_Value}" fill="${color}" rx="${rx}"/>
 
@@ -150,6 +162,7 @@ export function createWheelImage(
 }
 
 export function createGForceImage(
+  title: string | null | undefined,
   isDial: boolean,
   scale: number,
   curX: number,
@@ -161,10 +174,11 @@ export function createGForceImage(
   const width = isDial ? 200 : 144;
   const height = isDial ? 100 : 144;
 
+  const offsetY = title ? (isDial ? 10 : 12) : 0;
   const cx = width / 2;
-  const cy = height / 2;
+  const cy = height / 2 + offsetY;
 
-  const maxRadius = isDial ? 42 : 56;
+  const maxRadius = isDial ? (title ? 35 : 42) : (title ? 50 : 56);
   const rOuter = maxRadius;
   const rInner = maxRadius / 2;
   const rBall = maxRadius / 7;
@@ -202,8 +216,14 @@ export function createGForceImage(
   const rightTextX = width - padding;
   const bottomTextY = height - padding;
 
+  const titleText = title
+    ? `<text x="${cx}" y="19" text-anchor="middle" font-size="14" font-weight="bold" fill="#7f7f7f">${title}</text>`
+    : '';
+
   const svg = `
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  ${getCommonStyle()}
+
   <rect width="${width}" height="${height}" fill="#000000"/>
   <line x1="${cx - maxRadius}" y1="${cy}" x2="${cx + maxRadius}" y2="${cy}" stroke="#333333" stroke-width="2" stroke-dasharray="2,4"/>
   <line x1="${cx}" y1="${cy - maxRadius}" x2="${cx}" y2="${cy + maxRadius}" stroke="#333333" stroke-width="2" stroke-dasharray="2,4"/>
@@ -220,8 +240,112 @@ export function createGForceImage(
   <text x="${rightTextX}" y="22" text-anchor="end" font-size="18" font-weight="bold" fill="#ffcc00">${peakText}</text>
   <text x="${rightTextX}" y="${bottomTextY}" text-anchor="end" font-size="18" font-weight="bold" fill="#ffffff">${currentGText}</text>
   ${centerDisplay}
+  ${titleText}
 </svg>
 `;
 
   return toSvgDataUri(svg);
+}
+
+export function createSpeedMeterImage(
+  isDial: boolean,
+  speed: string,
+  gear: string,
+  rpmVal: number,
+  rpmColor: string,
+  unit: string,
+): string {
+  const width = isDial ? 200 : 144;
+  const height = isDial ? 100 : 144;
+
+  if (isDial) {
+    // Dial (200x100px)
+    const rpmBarW = 180;
+    const rpmFillW = clamp(rpmBarW * (rpmVal / 100), 0, rpmBarW);
+    return toSvgDataUri(`
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  ${getCommonStyle()}
+
+  <rect width="${width}" height="${height}" fill="#000000"/>
+
+  <text x="190" y="20" font-size="15" font-weight="800" fill="#7f7f7f" text-anchor="end">${unit}</text>
+
+  <circle cx="35" cy="50" r="25" stroke="#00ff7f" stroke-width="3" fill="none"/>
+  <text x="35" y="61" font-size="32" font-weight="800" fill="#00ff7f" text-anchor="middle">${gear}</text>
+
+  <text x="190" y="66" font-size="52" font-weight="800" fill="#ffffff" text-anchor="end">${speed}</text>
+
+  <rect x="10" y="80" width="${rpmBarW}" height="12" fill="#333333"/>
+  <rect x="10" y="80" width="${rpmFillW}" height="12" fill="${rpmColor}"/>
+</svg>
+    `);
+  } else {
+    // Keypad (144x144px)
+    const rpmBarW = 120;
+    const rpmFillW = clamp(rpmBarW * (rpmVal / 100), 0, rpmBarW);
+    return toSvgDataUri(`
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  ${getCommonStyle()}
+
+  <rect width="${width}" height="${height}" fill="#000000"/>
+
+  <text x="72" y="32" font-size="22" font-weight="800" fill="#ffffff" text-anchor="middle">${speed} ${unit}</text>
+
+  <circle cx="72" cy="78" r="24" stroke="#00ff7f" stroke-width="3" fill="none"/>
+  <text x="72" y="87" font-size="28" font-weight="800" fill="#00ff7f" text-anchor="middle">${gear}</text>
+
+  <rect x="12" y="116" width="${rpmBarW}" height="12" fill="#333333"/>
+  <rect x="12" y="116" width="${rpmFillW}" height="12" fill="${rpmColor}"/>
+</svg>
+    `);
+  }
+}
+
+export function createLapTimeImage(
+  isDial: boolean,
+  lap: string,
+  pos: string,
+  current: string,
+  subLabel: string,
+  subValue: string,
+): string {
+  const width = isDial ? 200 : 144;
+  const height = isDial ? 100 : 144;
+
+  if (isDial) {
+    // Dial (200x100px)
+    return toSvgDataUri(`
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  ${getCommonStyle()}
+
+  <rect width="${width}" height="${height}" fill="#000000"/>
+
+  <text x="10" y="20" font-size="15" font-weight="800" fill="#7f7f7f" text-anchor="start">${lap}</text>
+  <text x="190" y="20" font-size="15" font-weight="800" fill="#7f7f7f" text-anchor="end">${pos}</text>
+
+  <text x="10" y="52" font-size="15" font-weight="800" fill="#00ff7f" text-anchor="start">CUR</text>
+  <text x="190" y="52" font-size="32" font-weight="800" fill="#ffffff" text-anchor="end">${current}</text>
+
+  <text x="10" y="85" font-size="15" font-weight="800" fill="#ffcc00" text-anchor="start">${subLabel}</text>
+  <text x="190" y="85" font-size="32" font-weight="800" fill="#ffcc00" text-anchor="end">${subValue}</text>
+</svg>
+    `);
+  } else {
+    // Keypad (144x144px)
+    return toSvgDataUri(`
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  ${getCommonStyle()}
+
+  <rect width="${width}" height="${height}" fill="#000000"/>
+
+  <text x="12" y="24" font-size="14" font-weight="800" fill="#7f7f7f" text-anchor="start">${lap}</text>
+  <text x="132" y="24" font-size="14" font-weight="800" fill="#7f7f7f" text-anchor="end">${pos}</text>
+
+  <text x="72" y="75" font-size="24" font-weight="800" fill="#ffffff" text-anchor="middle">${current}</text>
+
+  <text x="12" y="122" font-size="14" font-weight="800" fill="#ffcc00" text-anchor="start">${subLabel}</text>
+  <text x="132" y="122" font-size="20" font-weight="800" fill="#ffcc00" text-anchor="end">${subValue}</text>
+</svg>
+    `);
+  }
 }

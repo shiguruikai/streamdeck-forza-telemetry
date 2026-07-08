@@ -3,6 +3,7 @@ import net from 'node:net';
 export type GlobalSettings = {
   port?: number;
   address?: string;
+  font?: string;
 };
 
 export function parseSettings(jsonSettings: object): GlobalSettings {
@@ -16,12 +17,18 @@ export function parseSettings(jsonSettings: object): GlobalSettings {
     }
   }
 
-  if (
-    'address' in jsonSettings
-    && typeof jsonSettings['address'] === 'string'
-    && net.isIPv4(jsonSettings['address'])
-  ) {
-    result.address = jsonSettings['address'];
+  if ('address' in jsonSettings) {
+    const address = jsonSettings['address'];
+    if (typeof address === 'string' && net.isIPv4(address)) {
+      result.address = address;
+    }
+  }
+
+  if ('font' in jsonSettings) {
+    const font = jsonSettings['font'];
+    if (typeof font === 'string') {
+      result.font = font;
+    }
   }
 
   return result;

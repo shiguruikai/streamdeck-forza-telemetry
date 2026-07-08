@@ -3,11 +3,13 @@ import {
   DialAction,
   DialRotateEvent,
   KeyAction,
+  KeyDownEvent,
 } from '@elgato/streamdeck';
 
 import { ForzaTelemetryData } from '../telemetry/parser';
 import { LapTimeMode } from '../types/settings';
 import { formatLap, formatPosition, formatTime } from '../utils/format';
+import { createLapTimeImage } from '../utils/image';
 import { TelemetryAction } from './telemetry-action';
 
 type LapTimeSettings = {
@@ -22,7 +24,7 @@ export class LapTimeAction extends TelemetryAction<LapTimeSettings> {
     return this.getSettings(actionId)?.mode ?? 'best';
   }
 
-  private async toggleDisplayMode(action: DialAction) {
+  private async toggleDisplayMode(action: DialAction<LapTimeSettings> | KeyAction<LapTimeSettings>) {
     const currentMode = this.getDisplayMode(action.id);
     const newMode: LapTimeMode = currentMode === 'best' ? 'last' : 'best';
 
@@ -34,36 +36,31 @@ export class LapTimeAction extends TelemetryAction<LapTimeSettings> {
 
     // モード切り替え時に表示を即座に更新する
     const lastData = this.getLastTelemetryData(action.id);
-    if (lastData) {
-      this.updateFeedback(action, lastData);
-    } else {
-      // キャッシュデータがない場合はラベルのみ更新する
-      action.setFeedback({
-        subLabel: newMode.toUpperCase(),
-      });
-    }
+    this.updateImage(action, lastData);
   }
 
-  private updateFeedback(action: DialAction, data?: ForzaTelemetryData) {
+  private updateImage(action: DialAction<LapTimeSettings> | KeyAction<LapTimeSettings>, data?: ForzaTelemetryData) {
     const mode = this.getDisplayMode(action.id);
+    let lap = 'LAP --';
+    let pos = 'POS --';
+    let current = '--:--.---';
+    const subLabel = mode.toUpperCase();
+    let subValue = '--:--.---';
 
     if (data) {
-      action.setFeedback({
-        // Forza telemetryのlapNumberは完了した周回数（0から開始）なので、現在ラップ数は +1 する
-        lap: formatLap(data.lapNumber + 1),
-        pos: formatPosition(data.racePosition),
-        current: formatTime(data.currentLap),
-        subLabel: mode.toUpperCase(),
-        subValue: formatTime(mode === 'best' ? data.bestLap : data.lastLap),
-      });
+      lap = formatLap(data.lapNumber + 1);
+      pos = formatPosition(data.racePosition);
+      current = formatTime(data.currentLap);
+      subValue = formatTime(mode === 'best' ? data.bestLap : data.lastLap);
+    }
+
+    const isDial = action.isDial();
+    const image = createLapTimeImage(isDial, lap, pos, current, subLabel, subValue);
+
+    if (isDial) {
+      action.setFeedback({ canvas: image });
     } else {
-      action.setFeedback({
-        lap: 'LAP --',
-        pos: 'POS --',
-        current: '--:--.---',
-        subLabel: mode.toUpperCase(),
-        subValue: '--:--.---',
-      });
+      action.setImage(image);
     }
   }
 
@@ -71,8 +68,11 @@ export class LapTimeAction extends TelemetryAction<LapTimeSettings> {
     action: DialAction<LapTimeSettings> | KeyAction<LapTimeSettings>,
     data?: ForzaTelemetryData,
   ): void {
-    if (!action.isDial()) return;
-    this.updateFeedback(action, data);
+    this.updateImage(action, data);
+  }
+
+  override onKeyDown(ev: KeyDownEvent<LapTimeSettings>): Promise<void> | void {
+    this.toggleDisplayMode(ev.action);
   }
 
   override onDialRotate(ev: DialRotateEvent<LapTimeSettings>): Promise<void> | void {

@@ -60,6 +60,7 @@ Forza HorizonからUDPテレメトリデータ（"Data Out"）を受信し、Elg
 - コミットメッセージ: `Conventional Commits`の仕様に従った簡潔な文章（原則、日本語）
   - type: build, ci, docs, feat, fix, perf, refactor, style, test
 - コミットする前に、`pnpm lint:fix`を実行すること（Markdown等のドキュメントファイルのみを修正した場合は不要）。
+- エージェントは、ユーザーの明示的な指示がない限り、勝手にGitコミット（`git commit`）やプッシュを行ってはならない。コミットを行う前には必ずユーザーに変更内容を確認し、コミットの許可を求めること。
 
 ## ディレクトリ構造
 
