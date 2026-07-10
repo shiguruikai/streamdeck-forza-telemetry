@@ -98,13 +98,13 @@ Forza HorizonからUDPテレメトリデータを受信し、Elgato Stream Deck 
 │   │   ├── parser.ts                     # UDPパケットのパーサー
 │   │   └── server.ts                     # UDP受信サーバー
 │   ├── types/                            # 型定義
-│   │   └── settings.ts                   # 設定関連の型定義
+│   │   ├── settings.ts                   # 設定関連の型定義
+│   │   └── spdi.ts                       # SPDIの関連の型定義
 │   ├── utils/                            # 共通ユーティリティ
 │   │   ├── format.ts                     # 変換系の処理
 │   │   ├── image.ts                      # 動的SVG画像生成処理
 │   │   └── utils.ts                      # 汎用関数
-│   ├── plugin.ts                         # プラグインのエントリポイント
-│   └── spdi.ts                           # spdiの関係の型定義
+│   └── plugin.ts                         # プラグインのエントリポイント
 ├── tests/                                # テストコード
 │   ├── simulate-telemetry.ts             # 擬似テレメトリ送信シミュレータ
 │   └── tsconfig.json                     # テスト用TypeScript設定

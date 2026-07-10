@@ -10,9 +10,9 @@ import streamDeck, {
 } from '@elgato/streamdeck';
 import { JsonObject, JsonValue } from '@elgato/utils';
 
-import { DataSourcePayload } from '../spdi';
 import { telemetryManager } from '../telemetry/manager';
 import { ForzaTelemetryData } from '../telemetry/parser';
+import { DataSourcePayload } from '../types/spdi';
 import { getSystemFonts } from '../utils/utils';
 
 /**
