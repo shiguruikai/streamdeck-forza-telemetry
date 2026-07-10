@@ -57,12 +57,8 @@ Forza HorizonからUDPテレメトリデータを受信し、Elgato Stream Deck 
 │   ├── imgs/                             # 画像リソース
 │   │   ├── actions/                      # 各アクション用のアイコン画像
 │   │   └── plugin/                       # プラグインのアイコン画像
-│   ├── layouts/                          # 各アクションのレイアウト定義
-│   │   ├── g-force-layout.json
-│   │   ├── lap-time-layout.json
-│   │   ├── speed-meter-layout.json
-│   │   ├── suspension-travel-layout.json
-│   │   └── tire-temp-layout.json
+│   ├── layouts/                          # アクションのレイアウト定義
+│   │   └── canvas-layout.json            # 全アクション共通のキャンバスレイアウト
 │   ├── logs/                             # ログ出力先
 │   ├── ui/                               # 各アクションのProperty Inspector（設定画面）のUI定義
 │   │   ├── common.css                    # 共通スタイルシート
