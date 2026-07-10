@@ -29,9 +29,7 @@ actions.forEach((action) => {
 function handleGlobalSettings(settingsObj: object) {
   const settings = parseSettings(settingsObj);
 
-  if (settings.font) {
-    setGlobalFont(settings.font);
-  }
+  setGlobalFont(settings.font || '');
 
   if (settings.port && settings.address) {
     telemetryManager.configure({

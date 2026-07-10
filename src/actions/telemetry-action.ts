@@ -13,7 +13,7 @@ import { JsonObject, JsonValue } from '@elgato/utils';
 import { DataSourcePayload } from '../spdi';
 import { telemetryManager } from '../telemetry/manager';
 import { ForzaTelemetryData } from '../telemetry/parser';
-import { getWindowsFonts } from '../utils/utils';
+import { getSystemFonts } from '../utils/utils';
 
 export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject> extends SingletonAction<TSettings> {
   private readonly settingsMap = new Map<string, TSettings>();
@@ -78,7 +78,7 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
     if (!(ev.payload instanceof Object && 'event' in ev.payload)) return;
 
     if (ev.payload.event === 'getFonts') {
-      const fonts = await getWindowsFonts();
+      const fonts = await getSystemFonts();
 
       const items = fonts.map((font) => ({
         label: font.name,

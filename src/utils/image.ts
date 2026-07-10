@@ -1,11 +1,11 @@
 import { clamp } from './utils';
 
-const DEFAULT_FONT = 'BIZ UD ゴシック';
+const DEFAULT_FONT = '';
 
 let globalFont = DEFAULT_FONT;
 
 export function getGlobalFont(): string {
-  return globalFont || DEFAULT_FONT;
+  return globalFont;
 }
 
 export function setGlobalFont(font: string): void {
@@ -37,7 +37,8 @@ export function toSvgDataUri(svg: string): string {
 }
 
 function getCommonStyle(): string {
-  return `<style>text{font-family:"${globalFont}";font-weight:bold;}</style>`;
+  const fontFamily = globalFont ? `font-family:"${globalFont}";` : '';
+  return `<style>text{${fontFamily}font-weight:bold;}</style>`;
 }
 
 function getTitleText(title: string, x: number, anchor: 'start' | 'end' | 'middle' = 'middle'): string {

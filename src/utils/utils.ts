@@ -1,6 +1,9 @@
+import streamDeck from '@elgato/streamdeck';
 import { execa } from 'execa';
 
 import { WheelPosition } from '../types/settings';
+
+const logger = streamDeck.logger.createScope('utils');
 
 export function clamp(val: number, min: number, max: number) {
   return Math.max(min, Math.min(max, val));
@@ -44,13 +47,45 @@ export type FontItem = {
   name: string;
 };
 
-export async function getWindowsFonts(): Promise<FontItem[]> {
-  const { stdout } = await execa({ lines: true })(
-    'powershell', [
-      '-ExecutionPolicy', 'Bypass',
-      '-NoProfile',
-      '-Command',
-      "[System.Console]::OutputEncoding = [System.Text.Encoding]::UTF8; [void][System.Reflection.Assembly]::LoadWithPartialName('System.Drawing'); (New-Object System.Drawing.Text.InstalledFontCollection).Families.Name",
-    ]);
-  return stdout.map((name) => name.trim()).filter(Boolean).map((name) => ({ name } satisfies FontItem));
+export async function getSystemFonts(): Promise<FontItem[]> {
+  const platform = process.platform;
+  const fontNames = new Set<string>();
+
+  try {
+    if (platform === 'win32') {
+      const { stdout } = await execa({ lines: true })(
+        'powershell', [
+          '-ExecutionPolicy', 'Bypass',
+          '-NoProfile',
+          '-Command',
+          '[System.Console]::OutputEncoding = [System.Text.Encoding]::UTF8; Add-Type -AssemblyName PresentationCore; ([Windows.Media.Fonts]::SystemFontFamilies).Source',
+        ]);
+
+      stdout.forEach((name) => fontNames.add(name.trim()));
+    } else if (platform === 'darwin') {
+      const { stdout } = await execa({ lines: true })(
+        'osascript', [
+          '-e', 'use framework "Cocoa"',
+          '-e', 'set AppleScript\'s text item delimiters to linefeed',
+          '-e', 'return (current application\'s NSFontManager\'s sharedFontManager\'s availableFontFamilies) as list as string',
+        ]);
+      stdout.forEach((name) => fontNames.add(name.trim()));
+    } else if (platform === 'linux') {
+      const { stdout } = await execa({ lines: true })(
+        'fc-list', [
+          ':', 'family',
+        ]);
+      for (const line of stdout) {
+        line.split(',').forEach((name) => fontNames.add(name.trim()));
+      }
+    }
+
+    return [
+      '',
+      ...Array.from(fontNames).sort((a, b) => a.localeCompare(b)).filter(Boolean),
+    ].map((name) => ({ name } satisfies FontItem));
+  } catch (error) {
+    logger.error(`Failed to retrieve system fonts for platform: ${platform}`, error);
+    return [];
+  }
 }
