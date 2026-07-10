@@ -44,7 +44,7 @@ export class SpeedMeterAction extends TelemetryAction<SpeedMeterSettings> {
     const unit = this.getSettings(action.id)?.unit;
     let speedText = '0';
     let gearText = 'N';
-    let rpmVal = 0;
+    let rpmPct = 0;
     let rpmColor = '#ffffff';
     const unitText = formatUnit(unit);
 
@@ -54,13 +54,13 @@ export class SpeedMeterAction extends TelemetryAction<SpeedMeterSettings> {
       this.previousGears.set(action.id, gear);
       gearText = gear;
 
-      const rpmInfo = formatRpmBar(data.engineMaxRpm, data.currentEngineRpm);
-      rpmVal = rpmInfo.value;
-      rpmColor = rpmInfo.bar_fill_c;
+      const rpmInfo = formatRpmBar(data.currentEngineRpm, data.engineMaxRpm);
+      rpmPct = rpmInfo.rpmPct;
+      rpmColor = rpmInfo.rpmColor;
     }
 
     const isDial = action.isDial();
-    const image = createSpeedMeterImage(isDial, speedText, gearText, rpmVal, rpmColor, unitText);
+    const image = createSpeedMeterImage(isDial, speedText, gearText, rpmPct, rpmColor, unitText);
 
     if (isDial) {
       action.setFeedback({ canvas: image });

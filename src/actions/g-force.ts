@@ -21,6 +21,7 @@ const DEFAULT_SCALE = 2;
 type GForceSettings = {
   scale?: number;
   showTitle?: boolean;
+  showPeakG?: boolean;
 };
 
 type EventAction = DialAction<GForceSettings> | KeyAction<GForceSettings>;
@@ -78,15 +79,15 @@ export class GForceAction extends PressDurationAction<GForceSettings> {
   }
 
   private updateImage(action: EventAction, data?: ForzaTelemetryData) {
-    let peak = this.peakGs.get(action.id) ?? { x: 0, z: 0, total: 0 };
     const settings = this.getSettings(action.id);
-    const scale = settings?.scale ?? DEFAULT_SCALE;
     const showTitle = settings?.showTitle ?? true;
+    const showPeakG = settings?.showPeakG ?? true;
+    const scale = settings?.scale ?? DEFAULT_SCALE;
+
     const showResetText = this.showResetTexts.get(action.id) ?? false;
 
-    let curX = 0;
-    let curZ = 0;
-    let curTotal = 0;
+    const current = { x: 0, z: 0, total: 0 };
+    let peak = this.peakGs.get(action.id) ?? { x: 0, z: 0, total: 0 };
 
     if (showResetText) {
       // リセット表示中はピーク値を強制的にゼロにしておく
@@ -94,28 +95,27 @@ export class GForceAction extends PressDurationAction<GForceSettings> {
     } else if (data) {
       // テレメトリの加速度は m/s² なので、標準重力加速度で除算してG値（重力加速度）を算出
       // 左右慣性G（左カーブ・右方向加速度のときに慣性力は左に働くため、符号をマイナスに反転）
-      curX = -data.accelerationX / STANDARD_GRAVITY;
+      current.x = -data.accelerationX / STANDARD_GRAVITY;
       // 前後慣性G（加速・前方加速度のときに慣性力は後ろに働くため、符号は順方向。加速度正＝Gボールが後ろ／下へ）
-      curZ = data.accelerationZ / STANDARD_GRAVITY;
+      current.z = data.accelerationZ / STANDARD_GRAVITY;
 
-      curTotal = Math.hypot(curX, curZ);
+      current.total = Math.hypot(current.x, current.z);
 
       // ピークGを超えたら更新
-      if (curTotal > peak.total) {
-        peak = { x: curX, z: curZ, total: curTotal };
+      if (current.total > peak.total) {
+        peak = current;
         this.peakGs.set(action.id, peak);
       }
     }
 
     const isDial = action.isDial();
+
     const dataUri = createGForceImage(
       showTitle ? 'G-FORCE' : null,
       isDial,
       scale,
-      curX,
-      curZ,
-      curTotal,
-      peak,
+      current,
+      showPeakG ? peak : null,
       showResetText,
     );
 

@@ -1,5 +1,6 @@
 import { SpeedUnit, SuspensionMode, TempUnit } from '../types/settings';
-import { clamp } from './utils';
+import { Color } from './image';
+import { clamp, hslToRGB } from './utils';
 
 // =============================================================================
 // 汎用・レース情報フォーマット
@@ -42,17 +43,17 @@ export function formatGear(gear: number): string | null {
   return gear === 0 ? 'R' : gear.toString();
 }
 
-export function formatRpmBar(engineMaxRpm: number, currentEngineRpm: number): { value: number; bar_fill_c: string } {
-  const rpmPercent = engineMaxRpm > 0 ? clamp((currentEngineRpm / engineMaxRpm) * 100, 0, 100) : 0;
-
-  let barColor = '#ffffff';
-  if (rpmPercent >= 85) {
-    barColor = '#ff3b30'; // 赤（レッドゾーン）
-  } else if (rpmPercent >= 70) {
-    barColor = '#ffcc00'; // 黄
+export function formatRpmBar(currentEngineRpm: number, engineMaxRpm: number): { rpmPct: number; rpmColor: string } {
+  const rpmPct = engineMaxRpm > 0 ? clamp(currentEngineRpm / engineMaxRpm, 0, 1) : 0;
+  let rpmColor;
+  if (rpmPct >= 0.85) {
+    rpmColor = Color.RED;
+  } else if (rpmPct >= 0.7) {
+    rpmColor = Color.YELLOW;
+  } else {
+    rpmColor = Color.WHITE;
   }
-
-  return { value: rpmPercent, bar_fill_c: barColor };
+  return { rpmPct, rpmColor };
 }
 
 // =============================================================================
@@ -68,37 +69,49 @@ export function fahrenheitToCelsius(fahrenheit: number): number {
 
 export function formatTemp(tempF: number, unit?: TempUnit): string {
   const value = unit === 'fahrenheit' ? tempF : fahrenheitToCelsius(tempF);
-  const u = unit === 'fahrenheit' ? '°F' : '°C';
+  const u = unit === 'fahrenheit' ? '℉' : '℃';
   return `${Math.round(value)}${u}`;
 }
 
 /**
  * タイヤ温度に応じてメーターの表示色を決定します。
- * - 70℃未満：冷えている（水色～緑のグラデーション）
- * - 70℃～100℃：適正動作温度（緑色固定）
+ * - 80℃未満：冷えている（水色～緑のグラデーション）
+ * - 80℃～100℃：適正動作温度（緑色固定）
  * - 100℃～120℃：警告・過熱状態（緑～黄～赤のグラデーション、120℃で完全に赤色）
  */
-export function formatTireColor(tempF: number): string {
-  const temp = fahrenheitToCelsius(tempF);
 
-  if (temp < 70) {
-    // 40℃～70℃の範囲で水色から緑色に変化させる
-    const ratio = clamp((temp - 40) / 30, 0, 1);
-    const r = Math.round(0x00 * (1 - ratio) + 0x34 * ratio);
-    const g = Math.round(0x7a * (1 - ratio) + 0xc7 * ratio);
-    const b = Math.round(0xff * (1 - ratio) + 0x59 * ratio);
-    return `rgb(${r},${g},${b})`;
-  } else if (temp <= 100) {
-    // 適正温度領域
-    return '#34c759';
-  } else {
-    // 100℃～120℃の範囲で緑色から赤色に変化させる
-    const ratio = clamp((temp - 100) / 20, 0, 1);
-    const r = Math.round(0x34 * (1 - ratio) + 0xff * ratio);
-    const g = Math.round(0xc7 * (1 - ratio) + 0x3b * ratio);
-    const b = Math.round(0x59 * (1 - ratio) + 0x30 * ratio);
-    return `rgb(${r},${g},${b})`;
+const MIN_TIRE_COLORS_TEMP_C = 40;
+const MAX_TIRE_COLORS_TEMP_C = 120;
+
+// 40℃から120℃までのRGBカラー文字列を保持するキャッシュ配列
+const TIRE_COLORS: string[] = (function () {
+  const result = [];
+
+  for (let t = MIN_TIRE_COLORS_TEMP_C; t <= MAX_TIRE_COLORS_TEMP_C; t++) {
+    // デフォルト：緑（80℃〜100℃）
+    let hue = 120;
+
+    if (t < 80) {
+      // 40℃（青:240°）から 80℃（緑:120°）へ変化
+      const ratio = (t - 40) / (80 - 40);
+      hue = 240 - (240 - 120) * ratio;
+    } else if (t > 100) {
+      // 100℃（緑:120°）から 120℃（赤:0°）へ変化
+      const ratio = (t - 100) / (120 - 100);
+      hue = 120 - 120 * ratio;
+    }
+
+    const { r, g, b } = hslToRGB(hue, 100, 50);
+    result.push(`rgb(${r},${g},${b})`);
   }
+
+  return result;
+})();
+
+export function formatTireColor(tempF: number): string {
+  const tempC = Math.round(fahrenheitToCelsius(tempF)) - MIN_TIRE_COLORS_TEMP_C;
+  const index = clamp(tempC, 0, MAX_TIRE_COLORS_TEMP_C - MIN_TIRE_COLORS_TEMP_C);
+  return TIRE_COLORS[index];
 }
 
 // =============================================================================
@@ -109,8 +122,32 @@ export function formatTravel(travel: number, mode?: SuspensionMode): string {
   return mode === 'value' ? travel.toFixed(2) : `${Math.round(travel * 100)}%`;
 }
 
+// 0%から100%まで1%刻みのRGBカラー文字列を保持するキャッシュ配列
+const SUSPENSION_TRAVEL_COLORS: string[] = (function () {
+  const result = [];
+
+  for (let t = 0; t <= 100; t++) {
+    // デフォルト：緑（40%〜60%）
+    let hue = 120;
+
+    if (t < 40) {
+      // 0%（青:240°）から 40%（緑:120°）へ変化
+      const ratio = t / 40;
+      hue = 240 - (240 - 120) * ratio;
+    } else if (t > 60) {
+      // 60%（緑:120°）から 100%（赤:0°）へ変化
+      const ratio = (t - 60) / (100 - 60);
+      hue = 120 - 120 * ratio;
+    }
+
+    const { r, g, b } = hslToRGB(hue, 100, 50);
+    result.push(`rgb(${r},${g},${b})`);
+  }
+
+  return result;
+})();
+
 export function formatTravelColor(travel: number): string {
-  if (travel > 0.8) return '#ff3b30';
-  if (travel < 0.2) return '#007aff';
-  return '#34c759';
+  const index = clamp(Math.round(travel * 100), 0, 100);
+  return SUSPENSION_TRAVEL_COLORS[index];
 }

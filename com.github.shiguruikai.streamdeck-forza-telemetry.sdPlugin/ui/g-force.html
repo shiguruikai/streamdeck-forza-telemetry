@@ -36,16 +36,20 @@
 
     <div class="settings-group">
       <div class="settings-group-title">Action Settings</div>
+      <sdpi-item label="Show Title">
+        <sdpi-checkbox setting="showTitle" default="true"></sdpi-checkbox>
+      </sdpi-item>
+
+      <sdpi-item label="Show Peak G">
+        <sdpi-checkbox setting="showPeakG" default="true"></sdpi-checkbox>
+      </sdpi-item>
+
       <sdpi-item label="Display Scale">
         <sdpi-select setting="scale" value-type="number" default="2">
           <option value="1">1.0G</option>
           <option value="2">2.0G</option>
           <option value="3">3.0G</option>
         </sdpi-select>
-      </sdpi-item>
-
-      <sdpi-item label="Show Title">
-        <sdpi-checkbox setting="showTitle" default="true"></sdpi-checkbox>
       </sdpi-item>
     </div>
   </body>

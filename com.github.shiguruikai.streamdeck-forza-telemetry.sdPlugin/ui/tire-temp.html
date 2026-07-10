@@ -36,6 +36,10 @@
 
     <div class="settings-group">
       <div class="settings-group-title">Action Settings</div>
+      <sdpi-item label="Show Title">
+        <sdpi-checkbox setting="showTitle" default="true"></sdpi-checkbox>
+      </sdpi-item>
+
       <sdpi-item label="Display Position">
         <sdpi-select setting="position" default="all">
           <option value="all">All Wheels</option>
@@ -51,10 +55,6 @@
           <option value="celsius">Celsius (°C)</option>
           <option value="fahrenheit">Fahrenheit (°F)</option>
         </sdpi-select>
-      </sdpi-item>
-
-      <sdpi-item label="Show Title">
-        <sdpi-checkbox setting="showTitle" default="true"></sdpi-checkbox>
       </sdpi-item>
     </div>
   </body>
