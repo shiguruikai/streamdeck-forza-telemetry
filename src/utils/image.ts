@@ -1,15 +1,15 @@
 import { clamp } from './utils';
 
-const DEFAULT_FONT = '';
+const DEFAULT_GLOBAL_FONT = '';
 
-let globalFont = DEFAULT_FONT;
+let globalFont = DEFAULT_GLOBAL_FONT;
 
 export function getGlobalFont(): string {
   return globalFont;
 }
 
-export function setGlobalFont(font: string): void {
-  globalFont = font;
+export function setGlobalFont(font: string | null | undefined): void {
+  globalFont = font || DEFAULT_GLOBAL_FONT;
 }
 
 export const DIAL_WIDTH = 200;
@@ -32,10 +32,20 @@ export const enum Color {
   GREEN = '#00e567',
 }
 
+/**
+ * SVG文字列をURLエンコードされたデータURI（data:image/svg+xml,...）形式にシリアライズします。
+ *
+ * @note データ削減のため、SVG内のタグ間の改行および不要な空白文字を正規表現で除去する最適化を行います。
+ */
 export function toSvgDataUri(svg: string): string {
   return `data:image/svg+xml,${encodeURIComponent(svg.replace(/>\s+</g, '><').trim())}`;
 }
 
+/**
+ * すべてのSVGに共通して適用するCSSスタイルシートを取得します。
+ *
+ * @note Stream Deck の制約により、`font-family` でのカンマ区切りの複数指定（フォールバック指定）は、正しく解釈されず、描画されない現象が発生します。
+ */
 function getCommonStyle(): string {
   const fontFamily = globalFont ? `font-family:"${globalFont}";` : '';
   return `<style>text{${fontFamily}font-weight:bold;}</style>`;

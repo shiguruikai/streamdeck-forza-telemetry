@@ -12,6 +12,14 @@ type TelemetryManagerEvents = {
   removeListener: [eventName: string | symbol, listener: () => any];
 };
 
+/**
+ * テレメトリデータの受信制御、パース、および各アクションへのイベント配信を統括するマネージャー。
+ * 重複起動の防止とリソースの一元化のため、シングルトンとして設計されています。
+ *
+ * 画面上のアクションのアクティブ状態（表示・非表示）と連動して、UDP受信サーバーの
+ * 起動および停止を自動的に制御（省電力設計）し、不要なポート占有とCPU消費を解放します。
+ * また、描画・通信負荷を抑制するために、配信頻度を最大20FPS（50ms間隔）にスロットリングします。
+ */
 class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
   private readonly logger = streamDeck.logger.createScope(TelemetryManager.name);
 
@@ -48,6 +56,7 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
     });
 
     // dataイベントのリスナー追加・削除を監視してサーバーを自動制御
+    // アクションが画面に表示された（リスナーが登録された）ときにUDP受信サーバーを起動
     this.on('newListener', (eventName) => {
       if (eventName === 'data') {
         const count = this.listenerCount('data');
@@ -58,8 +67,13 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
       }
     });
 
+    // すべてのアクションが非表示になった（リスナーが解除された）ときにUDP受信サーバーを停止
     this.on('removeListener', (eventName) => {
       if (eventName === 'data') {
+        // removeListener イベントが発生した直後の時点では、まだリスナーオブジェクトが
+        // 登録リストから完全に削除されていない。そのため、process.nextTick を用いて
+        // 現在のコールスタックの処理（イベントループ）が完了した直後にリスナー数を評価し、
+        // 最終的に登録数が 0 になったことを担保した上で、安全にサーバーを停止する。
         process.nextTick(() => {
           const count = this.listenerCount('data');
           if (count === 0) {
@@ -71,6 +85,12 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
     });
   }
 
+  /**
+   * テレメトリサーバーの接続ポート・IPアドレスを設定します。
+   * すでにリスナーが存在する（アクティブなアクションがある）場合は、即時適用してサーバーを起動します。
+   *
+   * @param params - 接続先の設定（ポート、IPアドレス）
+   */
   public configure(params?: { port?: number; address?: string }) {
     this.startParams = params;
 
@@ -80,6 +100,9 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
     }
   }
 
+  /**
+   * 設定パラメータを初期化し、実行中のサーバーを停止します。
+   */
   public clearConfig() {
     this.startParams = undefined;
     this.server.stop();

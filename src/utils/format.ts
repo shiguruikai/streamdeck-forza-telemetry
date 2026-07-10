@@ -1,6 +1,6 @@
 import { SpeedUnit, SuspensionMode, TempUnit } from '../types/settings';
 import { Color } from './image';
-import { clamp, hslToRGB } from './utils';
+import { clamp, hslToRgb } from './utils';
 
 // =============================================================================
 // 汎用・レース情報フォーマット
@@ -101,7 +101,7 @@ const TIRE_COLORS: string[] = (function () {
       hue = 120 - 120 * ratio;
     }
 
-    const { r, g, b } = hslToRGB(hue, 100, 50);
+    const { r, g, b } = hslToRgb(hue, 100, 50);
     result.push(`rgb(${r},${g},${b})`);
   }
 
@@ -140,7 +140,7 @@ const SUSPENSION_TRAVEL_COLORS: string[] = (function () {
       hue = 120 - 120 * ratio;
     }
 
-    const { r, g, b } = hslToRGB(hue, 100, 50);
+    const { r, g, b } = hslToRgb(hue, 100, 50);
     result.push(`rgb(${r},${g},${b})`);
   }
 

@@ -15,6 +15,21 @@ import { telemetryManager } from '../telemetry/manager';
 import { ForzaTelemetryData } from '../telemetry/parser';
 import { getSystemFonts } from '../utils/utils';
 
+/**
+ * 本プラグインのアクションの共通ベースクラス。
+ *
+ * 各アクションにおけるボイラープレート（イベントリスナー登録・解除、ライフサイクル制御）を排除し、
+ * 以下の役割を一元的に担います：
+ *
+ * 1. **ライフサイクルの自動制御**:
+ *    アクションの表示（onWillAppear）および非表示（onWillDisappear）と連動して、`telemetryManager` へのデータ受信ハンドラの登録と解除を自動的に実行します。
+ * 2. **状態キャッシュのカプセル化**:
+ *    設定情報、直近の受信テレメトリデータ、および表示中のアクティブなアクション参照をカプセル化して保持します。
+ * 3. **Property Inspector との動的通信**:
+ *    Property Inspector からのローカルフォント一覧取得要求など、双方向通信の仲介を行います。
+ *
+ * @template TSettings - アクションが使用するローカル設定の型
+ */
 export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject> extends SingletonAction<TSettings> {
   private readonly settingsMap = new Map<string, TSettings>();
   private readonly lastTelemetryDataMap = new Map<string, ForzaTelemetryData>();
@@ -22,7 +37,10 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
   private readonly activeActions = new Map<string, DialAction<TSettings> | KeyAction<TSettings>>();
 
   /**
-   * アクティブなすべてのアクションの {@link onTelemetryData} を呼び出します。
+   * 現在画面に表示されているすべてのアクティブなアクションの再描画を実行します。
+   *
+   * @note このメソッドは、フォント変更などのグローバル設定が更新された際、
+   *       各アクションに対して最後のテレメトリデータキャッシュを用いて即時に描画を同期・再生成させるために呼び出されます。
    */
   public refreshActiveActions(): void {
     for (const action of this.activeActions.values()) {
@@ -32,29 +50,41 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
   }
 
   /**
-   * アクションインスタンスに対応する設定を取得します。
+   * 指定されたアクションインスタンスのローカル設定をキャッシュから取得します。
+   *
+   * @param actionId - アクションID
+   * @returns キャッシュされているアクションの設定
    */
   protected getSettings(actionId: string): TSettings | undefined {
     return this.settingsMap.get(actionId);
   }
 
   /**
-   * アクションインスタンスの設定を更新し、キャッシュに同期します。
+   * 指定されたアクションインスタンスのローカル設定を更新し、キャッシュに保存します。
+   *
+   * @param actionId - アクションID
+   * @param settings - 更新する設定オブジェクト
    */
   protected setSettings(actionId: string, settings: TSettings): void {
     this.settingsMap.set(actionId, settings);
   }
 
   /**
-   * アクションインスタンスの最新のテレメトリデータを取得します。
+   * 指定されたアクションインスタンスが最後に受信したテレメトリデータのキャッシュを取得します。
+   *
+   * @param actionId - アクションID
+   * @returns 最後にキャッシュされたテレメトリデータ
    */
   protected getLastTelemetryData(actionId: string): ForzaTelemetryData | undefined {
     return this.lastTelemetryDataMap.get(actionId);
   }
 
   /**
-   * テレメトリデータを受信した際、または初回表示・設定変更時に呼び出されます。
-   * このメソッドの中で表示を更新する必要性があります。
+   * テレメトリデータを受信した際、または初回表示・設定変更時に呼び出されるメソッド。
+   * サブクラスはこのメソッドを実装し、受信データに基づいたSVGの生成と画面描画（setImage / setFeedback）を行います。
+   *
+   * @param action - 対象の Key / Dial アクションインスタンス
+   * @param data - パースされたテレメトリデータ（未受信時は undefined）
    */
   protected abstract onTelemetryData(
     action: DialAction<TSettings> | KeyAction<TSettings>,
@@ -62,18 +92,30 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
   ): Promise<void> | void;
 
   /**
-   * 設定が変更された際に呼び出されます。
+   * アクションのローカル設定が変更された際に呼び出されます（必要に応じてサブクラスでオーバーライドします）。
+   *
+   * @param action - 対象のアクションインスタンス
+   * @param settings - 更新後の設定オブジェクト
    */
   protected onSettingsUpdated(
     action: DialAction<TSettings> | KeyAction<TSettings>,
     settings: TSettings,
-  ): Promise<void> | void {}
+  ): Promise<void> | void { }
 
   /**
-   * アクションが消える際（onWillAppear）に呼び出されます。
+   * アクションが画面から消える直前に呼び出されます（必要に応じてサブクラスでオーバーライドします）。
+   *
+   * @param ev - WillDisappearEvent オブジェクト
    */
-  protected onDisappear(ev: WillDisappearEvent<TSettings>): Promise<void> | void {}
+  protected onDisappear(ev: WillDisappearEvent<TSettings>): Promise<void> | void { }
 
+  /**
+   * Property Inspector（設定画面）から送信されたイベントを処理します。
+   *
+   * @note UI側の `sdpi-select`（データソース指定：datasource="getFonts"）からのフォント一覧要求をフックし、
+   *       システムにインストールされているフォントを非同期に取得して、UIが必要とする `DataSourcePayload` 構造
+   *       （label / value のリスト）に成形した上で、`sendToPropertyInspector` を介してUI側へ配信します。
+   */
   override async onSendToPlugin(ev: SendToPluginEvent<JsonValue, TSettings>): Promise<void> {
     if (!(ev.payload instanceof Object && 'event' in ev.payload)) return;
 
@@ -92,19 +134,25 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
     }
   }
 
+  /**
+   * アクションが画面に表示された際に呼び出されます。
+   * 設定とアクティブアクションのキャッシュへの保存、初回描画の実行、および
+   * `telemetryManager` からのテレメトリデータ配信イベントの自動購読を開始します。
+   */
   override onWillAppear(ev: WillAppearEvent<TSettings>): Promise<void> | void {
     const action = ev.action;
     this.settingsMap.set(action.id, ev.payload.settings);
     this.activeActions.set(action.id, action);
 
-    // 初回描画
+    // 画面切り替え時の表示遅延（黒画面の発生）を防ぐため、
+    // キャッシュされている最後のデータを使って即時初回描画を行います。
     const lastData = this.lastTelemetryDataMap.get(action.id);
     this.onTelemetryData(action, lastData);
 
-    // 既存のハンドラがあれば解除
+    // 同一IDのアクションで既存のイベント購読が残っている場合は二重購読を防ぐため解除します。
     this.unsubscribeTelemetry(action.id);
 
-    // 新しいハンドラを登録
+    // データ受信時に、最新データのキャッシュ更新とアクション固有の描画処理をトリガーするハンドラを登録します。
     const dataHandler = (data: ForzaTelemetryData) => {
       this.lastTelemetryDataMap.set(action.id, data);
       this.onTelemetryData(action, data);
@@ -114,6 +162,10 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
     telemetryManager.on('data', dataHandler);
   }
 
+  /**
+   * アクションのローカル設定が変更された際に呼び出されます。
+   * 新しい設定でキャッシュを更新し、直近のデータを用いて画面を即時再描画します。
+   */
   override onDidReceiveSettings(ev: DidReceiveSettingsEvent<TSettings>): Promise<void> | void {
     const action = ev.action;
     this.settingsMap.set(action.id, ev.payload.settings);
@@ -124,6 +176,10 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
     this.onTelemetryData(action, lastData);
   }
 
+  /**
+   * アクションが画面から非表示になった際（別ページへの切り替えやプラグイン終了時）に呼び出されます。
+   * イベント購読の解除と、そのアクションインスタンスに関わるメモリキャッシュを解放します。
+   */
   override onWillDisappear(ev: WillDisappearEvent<TSettings>): Promise<void> | void {
     const action = ev.action;
     this.unsubscribeTelemetry(action.id);
@@ -135,6 +191,9 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
     return this.onDisappear(ev);
   }
 
+  /**
+   * telemetryManager からのデータ購読ハンドラを安全に解除します。
+   */
   private unsubscribeTelemetry(actionId: string): void {
     const existingHandler = this.handlers.get(actionId);
     if (existingHandler) {
