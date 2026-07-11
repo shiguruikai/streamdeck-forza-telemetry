@@ -1,0 +1,126 @@
+---
+type: Guide
+title: "Upgrading to Version 2.x"
+description: "This documentation will guide you through upgrading your Stream Deck plugin, using @elgato/streamdeck, to version 2. Terminal"
+resource: https://docs.elgato.com/streamdeck/sdk/releases/upgrading/v2/
+tags: [sdk, upgrade]
+timestamp: 2026-07-11T20:01:18.335676+09:00
+---
+
+# Upgrading to Version 2.x
+This documentation will guide you through upgrading your Stream Deck plugin, using `@elgato/streamdeck`, to version 2.
+Terminal
+
+```
+npm i @elgato/streamdeck@latest
+```
+
+## Breaking Changes
+  * [UI namespace](upgrading-v2.md#ui-communication) has been simplified.
+  * [Dependencies](upgrading-v2.md#dependencies) have been decoupled.
+  * [Manifest namespace](upgrading-v2.md#manifest) has been removed.
+  * [Browser import](upgrading-v2.md#browser-import) has been removed.
+
+## UI Communication
+The UI namespace responsible for communicating with the property inspector has been streamlined; these improvements come with two breaking changes.
+### Send to Property Inspector
+Sending payloads to the property inspector has now been streamlined, and no longer requires `.current?`.
+  * Before
+  * Now
+
+```
+import streamDeck from "@elgato/streamdeck";
+
+streamDeck.ui.current?.sendToPropertyInspector({
+	message: "Hello world",
+});
+```
+
+```
+import streamDeck from "@elgato/streamdeck";
+
+streamDeck.ui.sendToPropertyInspector({
+	message: "Hello world",
+});
+```
+
+### Property Inspector Action
+Accessing the action for current property inspector is now achieved using the `.action` property.
+  * Before
+  * Now
+
+```
+import streamDeck from "@elgato/streamdeck";
+
+streamDeck.ui.current;
+```
+
+```
+import streamDeck from "@elgato/streamdeck";
+
+streamDeck.ui.action;
+```
+
+## Dependencies
+Previously when publishing `@elgato/streamdeck` the package was bundled into a single file making dependency resolution difficult, and prone to conflicts.
+Starting with version 2.0, `@elgato/streamdeck` is no longer pre-bundle; this allows more functionality, previously isolated to the Stream Deck SDK, to become accessible, starting with `@elgato/utils`.
+### JSON
+  * Before
+  * Now
+
+```
+import type {
+	JsonObject,
+	JsonPrimitive,
+	JsonValue
+} from "@elgato/streamdeck";
+```
+
+```
+import type {
+	JsonObject,
+	JsonPrimitive,
+	JsonValue
+} from "@elgato/utils";
+```
+
+### Logging
+  * Before
+  * Now
+
+```
+import streamDeck, { LogLevel } from "@elgato/streamdeck";
+
+streamDeck.logger.setLevel(LogLevel.TRACE);
+```
+
+```
+import streamDeck from "@elgato/streamdeck";
+
+streamDeck.logger.setLevel("trace");
+```
+
+### Miscellaneous
+  * Before
+  * Now
+
+```
+import {
+	Enumerable,
+	EventEmitter,
+	type EventsOf,
+} from "@elgato/streamdeck";
+```
+
+```
+import {
+	Enumerable,
+	EventEmitter,
+	type EventsOf,
+} from "@elgato/utils";
+```
+
+## Manifest
+With the introduction of DRM protection, the manifest is now considered a protected resource, and access to `streamDeck.manifest` at runtime has been removed. Learn more about [DRM protection](../distribution/distribution.md#drm-protection).
+## Browser Import
+The ability to import `@elgato/streamdeck` into the browser (property inspector) has been removed.

@@ -1,0 +1,16 @@
+# Property Inspector UI Components
+
+Guides and UI elements of the SDPI Components library to build rich Property Inspectors easily.
+
+## Subcategories
+
+* [UI Components Library](components/index.md) - Individual UI component references provided by the SDPI Components library.
+
+## Documents
+
+* [Components](components.md) - The objective of sdpi-components is to provide an easy-to-user wrapper for all common HTML input elements, whilst also providing additional helpers for commo...
+* [Data Source](data-source.md) - Sometimes it might be necessary to dynamically populate a component with a data source, e.g. when showing connected devices in a <sdpi-select> input. Thankfu...
+* [Get Started](getting-started.md) - Getting started is easy; simply download the latest version of sdpi-components.js and reference the file within your property inspector. Property Inspector HTML
+* [Introduction](introduction.md) - Designed to complement Stream Deck plugins; sdpi-components provides a collection of web components that focuses on the plugin's property inspector, and make...
+* [Localization](localization.md) - Available from version 2.1.0 onwards. Localization support is available for all components that render text, including components that rely on dynamic data s...
+* [Stream Deck Client](stream-deck-client.md) - The streamDeckClient provides a wrapper for sending and receiving messages to and from the Stream Deck. It can be accessed under the SDPIComponents namespace...

@@ -2,10 +2,9 @@
 type: Guide
 title: "Your First Changes"
 description: "In this article you'll make changes to your newly generated Stream Deck plugin, and apply those changes in Stream Deck."
-resource: "https://docs.elgato.com/streamdeck/sdk/introduction/your-first-changes"
-tags: ['streamdeck', 'sdk', 'your-first-changes']
-timestamp: "2026-07-05T18:29:48.267537+09:00"
-version: "2.0.0"
+resource: https://docs.elgato.com/streamdeck/sdk/introduction/your-first-changes/
+tags: [sdk, getting-started]
+timestamp: 2026-07-11T20:01:18.323623+09:00
 ---
 
 # Your First Changes
@@ -53,13 +52,11 @@ The `IncrementCounter` class implements two virtual methods, these are:
     * Occurs when the user presses the key down on Stream Deck
     * In this example, increments the count and shows the new count.
 
-
 tip
 Actions extend the `SingletonAction` class which provides virtual methods for intercepting events, for example:
   * `onWillDisappear`
   * `onKeyDown`
   * `onDialRotate`
-
 
 Scenario: Change request
 "The counter action currently increments the count by 1 and then displays the new count. Instead, we want the counter to be a binary counter, which doubles the count each time the key is pressed."
@@ -106,7 +103,6 @@ With these changes saved, build the plugin with the following command in a termi
   * yarn
   * pnpm
 
-
 Terminal
 
 ```
@@ -147,12 +143,10 @@ In the previous chapter, the changes to the `IncrementCounter` were applied usin
   1. The `build` script.
   2. `streamdeck restart <plugin_uuid>`
 
-
 An alternative approach to applying changes in real-time is hot-reloading, or live-reloading. Plugins generated from `streamdeck create` come with hot-reload as standard; to begin watching for changes to files, run the following command in a terminal:
   * npm
   * yarn
   * pnpm
-
 
 Terminal
 
@@ -222,7 +216,6 @@ Attaching to your Stream Deck plugin in VS Code can be achieved with the followi
   1. In VS Code, open the "Quick Open" panel (`Ctrl+P` / `Cmd+P`)
   2. Enter `> Debug: Attach to Node Process`, and press `Return`.
   3. Select the `node20` process.
-
 
 ![VS Code attach to node process window, listing the node20 process](https://docs.elgato.com/img/streamdeck/sdk/attach-to-node-process.png)
 tip

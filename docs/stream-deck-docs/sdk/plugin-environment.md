@@ -1,11 +1,10 @@
 ---
-type: Guide
+type: Reference
 title: "Plugin Environment"
 description: "In this article you'll learn more about how Stream Deck plugins built with the Stream Deck SDK are executed, and the different runtime environments."
-resource: "https://docs.elgato.com/streamdeck/sdk/introduction/plugin-environment"
-tags: ['streamdeck', 'sdk', 'plugin-environment']
-timestamp: "2026-07-05T18:29:48.267537+09:00"
-version: "2.0.0"
+resource: https://docs.elgato.com/streamdeck/sdk/introduction/plugin-environment/
+tags: [sdk, architecture, lifecycle]
+timestamp: 2026-07-11T20:01:18.322557+09:00
 ---
 
 # Plugin Environment
@@ -21,7 +20,7 @@ Similar to a web app, the layers of a plugin use separate JavaScript runtimes.
 | Layer  | Runtime  | Responsibilities  |  
 | --- | --- | --- |  
 | Application-layer (backend)  | Node.js  | The main logic that drives a plugin, responsible for handling events received from Stream Deck, for example a key press.  |  
-| Presentation-layer (frontend), aka a "[property inspector](/sdk/guides/ui.md)"  | Chromium, with DOM access  | Views, in the form of HTML, rendered in the Stream Deck app, allowing a user to configure an action.  |  
+| Presentation-layer (frontend), aka a "[property inspector](property-inspector.md)"  | Chromium, with DOM access  | Views, in the form of HTML, rendered in the Stream Deck app, allowing a user to configure an action.  |  
 ### Runtime Versions
 The latest JavaScript runtime versions are:  
 | Stream Deck   | Node.js (application)  | Chromium (UI)  |  
@@ -49,7 +48,6 @@ The manifest defines the metadata of a Stream Deck plugin, in the form of a JSON
   * General information about the plugin, for example the name, author, description, etc.
   * Actions, and their metadata, available to the user.
   * Version compatibility with Stream Deck, Node.js, and operating systems.
-
 
 Example manifest JSON file
 
@@ -114,7 +112,7 @@ Example manifest JSON file
 }
 ```
 
-For more information about the manifest, please refer to the [manifest API reference](/sdk/references/manifest.md).
+For more information about the manifest, please refer to the [manifest API reference](manifest.md).
 ## Plugin Lifecycle
 Stream Deck is responsible for managing your plugin's lifecycle, and provides automatic failure recovery in the event an unexpected error occurs. An overview of the plugin lifecycle is as follows:
 ![Overview of a Stream Deck plugin lifecycle](https://docs.elgato.com/img/streamdeck/sdk/plugin-lifecycle.svg)

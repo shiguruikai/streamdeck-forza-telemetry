@@ -2,10 +2,9 @@
 type: Guide
 title: "Getting Started"
 description: "In this article you'll learn how to setup your development environment, create your first Stream Deck plugin, and test your plugin in Stream Deck."
-resource: "https://docs.elgato.com/streamdeck/sdk/introduction/getting-started"
-tags: ['streamdeck', 'sdk', 'getting-started']
-timestamp: "2026-07-05T18:29:48.267537+09:00"
-version: "2.0.0"
+resource: https://docs.elgato.com/streamdeck/sdk/introduction/getting-started/
+tags: [sdk, getting-started, setup]
+timestamp: 2026-07-11T20:01:18.321516+09:00
 ---
 
 # Getting Started
@@ -19,12 +18,10 @@ Developing plugins with the Stream Deck SDK requires:
   * Text editor, [VS Code](https://code.visualstudio.com/) is recommended.
   * Terminal for accessing the Stream Deck command line interface (CLI).
 
-
 Learn more about installing Node.js.
 Installing Node.js is best achieved with a Node version manager, such as:
   * [nvm](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating) for macOS
   * [nvm-windows](https://github.com/coreybutler/nvm-windows/releases) for Windows
-
 
 With one of the aforementioned nvm(-windows) installed, run the following commands:
   1. Install Node.js:
@@ -48,19 +45,16 @@ Terminal
 node -v
 ```
 
-
-
 info
 For more information on installing Node.js on Windows, we recommend Microsoft's how-to [Install Node.js on Windows](https://learn.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-windows#install-nvm-windows-nodejs-and-npm), or Node.js' [download page](https://nodejs.org/en/download/package-manager).
 Stream Deck
 If you do not own a Stream Deck device, you can try [Stream Deck Mobile](https://www.elgato.com/stream-deck-mobile) for free.
 ### Setup Wizard
-The Stream Deck SDK is supported by a CLI, called the [Stream Deck CLI](/cli/intro.md). As part of the Stream Deck CLI, there is a command line plugin creation wizard for easily scaffolding a basic Stream Deck plugin.
+The Stream Deck SDK is supported by a CLI, called the [Stream Deck CLI](../cli/cli-intro.md). As part of the Stream Deck CLI, there is a command line plugin creation wizard for easily scaffolding a basic Stream Deck plugin.
 First, install the Stream Deck CLI by running the following command.
   * npm
   * yarn
   * pnpm
-
 
 Terminal
 
@@ -88,7 +82,7 @@ Set PowerShell's execution policy
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
-Then, run the [`create`](/cli/commands/create.md) command:
+Then, run the [`create`](../cli/streamdeck-create.md) command:
 Terminal
 
 ```
@@ -101,7 +95,6 @@ Your plugin's UUID is a [reverse-DNS](https://en.wikipedia.org/wiki/Reverse_doma
   * com.obsproject.obs-studio
   * com.youtube.live
   * tv.twitch.studio
-
 
 Plugin UUIDs must only contain lowercase alphanumeric characters (`a-z`, `0-9`), hyphens (`-`), and periods (`.`). Once published on Marketplace, your plugin's UUID cannot be changed.
 ## File Structure
@@ -128,18 +121,16 @@ Plugin file structure
 
 ### .sdPlugin
 The `./*.sdPlugin` directory _is_ your compiled plugin, and contains:
-  * `bin`, compiled output files from your [`./src`](/sdk/getting-started.md#src) directory.
+  * `bin`, compiled output files from your [`./src`](getting-started.md#src) directory.
   * `imgs`, supporting images distributed with your plugin.
-  * `logs`, logs generated with a [logger](/sdk/guides/logging.md).
-  * `ui`, [property inspectors](/sdk/guides/ui.md), allowing users to configure actions in Stream Deck.
-  * `manifest.json`, that defines the metadata of your plugin, [learn more about the manifest](/sdk/references/manifest.md).
-
+  * `logs`, logs generated with a [logger](logging.md).
+  * `ui`, [property inspectors](property-inspector.md), allowing users to configure actions in Stream Deck.
+  * `manifest.json`, that defines the metadata of your plugin, [learn more about the manifest](manifest.md).
 
 ### src
 The `./src` directory contains the source file for your Stream Deck plugin and is configured to a Node.js environment. As part of the scaffolded plugin, the directory contains:
   * `index.ts`, the entry point of your plugin.
   * `actions/increment-counter.ts`, an example action that displays a count.
-
 
 ## Running Your Plugin
 In addition to your plugin files, the setup wizard will have pre-populated npm scripts in `package.json` to assist with building and developing your plugin:
@@ -169,7 +160,7 @@ Congratulations, you've just created your first Stream Deck plugin! 🎉
 Plugin not showing in Stream Deck
 If your plugin is not showing within Stream Deck, this may be due to the app running with elevated privileges. This occurs after a fresh install, or update, of the Stream Deck app; restarting the app should resolve the issue. For further help, our community [Marketplace Makers Discord](https://discord.gg/GehBUcu627) is also available.
 ## What's Next?
-  * Make [your first changes](/sdk/your-first-changes.md).
-  * Learn more about [actions](/sdk/guides/actions.md) and how you can expand your plugin's functionality.
-  * Discover [property inspectors](/sdk/guides/ui.md), allowing users to configure your plugin in Stream Deck.
-  * Explore more commands available within the [Stream Deck CLI](/cli/intro.md).
+  * Make [your first changes](your-first-changes.md).
+  * Learn more about [actions](actions.md) and how you can expand your plugin's functionality.
+  * Discover [property inspectors](property-inspector.md), allowing users to configure your plugin in Stream Deck.
+  * Explore more commands available within the [Stream Deck CLI](../cli/cli-intro.md).
