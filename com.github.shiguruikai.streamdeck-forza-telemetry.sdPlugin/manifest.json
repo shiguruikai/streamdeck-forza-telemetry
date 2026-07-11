@@ -12,10 +12,18 @@
       "Icon": "imgs/actions/speed-meter/icon",
       "Tooltip": "Show speed meter.",
       "PropertyInspectorPath": "ui/speed-meter.html",
-      "Controllers": [ "Keypad", "Encoder" ],
-      "Encoder": { "layout": "layouts/canvas-layout.json" },
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "Encoder": {
+        "layout": "layouts/canvas-layout.json"
+      },
       "States": [
-        { "Image": "imgs/actions/speed-meter/key", "TitleAlignment": "middle" }
+        {
+          "Image": "imgs/actions/speed-meter/key",
+          "TitleAlignment": "middle"
+        }
       ]
     },
     {
@@ -26,10 +34,18 @@
       "Icon": "imgs/actions/lap-time/icon",
       "Tooltip": "Show lap time.",
       "PropertyInspectorPath": "ui/lap-time.html",
-      "Controllers": [ "Keypad", "Encoder" ],
-      "Encoder": { "layout": "layouts/canvas-layout.json" },
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "Encoder": {
+        "layout": "layouts/canvas-layout.json"
+      },
       "States": [
-        { "Image": "imgs/actions/lap-time/key", "TitleAlignment": "middle" }
+        {
+          "Image": "imgs/actions/lap-time/key",
+          "TitleAlignment": "middle"
+        }
       ]
     },
     {
@@ -40,10 +56,18 @@
       "Icon": "imgs/actions/g-force/icon",
       "Tooltip": "Show G-Force meter.",
       "PropertyInspectorPath": "ui/g-force.html",
-      "Controllers": [ "Keypad", "Encoder" ],
-      "Encoder": { "layout": "layouts/canvas-layout.json" },
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "Encoder": {
+        "layout": "layouts/canvas-layout.json"
+      },
       "States": [
-        { "Image": "imgs/actions/g-force/key", "TitleAlignment": "middle" }
+        {
+          "Image": "imgs/actions/g-force/key",
+          "TitleAlignment": "middle"
+        }
       ]
     },
     {
@@ -54,10 +78,18 @@
       "Icon": "imgs/actions/tire-temp/icon",
       "Tooltip": "Show tire temperature.",
       "PropertyInspectorPath": "ui/tire-temp.html",
-      "Controllers": [ "Keypad", "Encoder" ],
-      "Encoder": { "layout": "layouts/canvas-layout.json" },
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "Encoder": {
+        "layout": "layouts/canvas-layout.json"
+      },
       "States": [
-        { "Image": "imgs/actions/tire-temp/key", "TitleAlignment": "middle" }
+        {
+          "Image": "imgs/actions/tire-temp/key",
+          "TitleAlignment": "middle"
+        }
       ]
     },
     {
@@ -68,10 +100,18 @@
       "Icon": "imgs/actions/suspension-travel/icon",
       "Tooltip": "Show normalized suspension travel.",
       "PropertyInspectorPath": "ui/suspension-travel.html",
-      "Controllers": [ "Keypad", "Encoder" ],
-      "Encoder": { "layout": "layouts/canvas-layout.json" },
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "Encoder": {
+        "layout": "layouts/canvas-layout.json"
+      },
       "States": [
-        { "Image": "imgs/actions/suspension-travel/key", "TitleAlignment": "middle" }
+        {
+          "Image": "imgs/actions/suspension-travel/key",
+          "TitleAlignment": "middle"
+        }
       ]
     }
   ],
@@ -81,11 +121,22 @@
   "Description": "Displays Forza Horizon telemetry data on Stream Deck.",
   "Icon": "imgs/plugin/marketplace",
   "SDKVersion": 3,
-  "Software": { "MinimumVersion": "7.1" },
+  "Software": {
+    "MinimumVersion": "7.1"
+  },
   "OS": [
-    { "Platform": "mac", "MinimumVersion": "12" },
-    { "Platform": "windows", "MinimumVersion": "10" }
+    {
+      "Platform": "mac",
+      "MinimumVersion": "12"
+    },
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    }
   ],
-  "Nodejs": { "Version": "24", "Debug": "enabled" },
+  "Nodejs": {
+    "Version": "24",
+    "Debug": "enabled"
+  },
   "UUID": "com.github.shiguruikai.streamdeck-forza-telemetry"
 }
