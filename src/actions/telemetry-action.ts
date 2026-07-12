@@ -16,17 +16,12 @@ import { DataSourcePayload } from '../types/spdi';
 import { getSystemFonts } from '../utils/utils';
 
 /**
- * 本プラグインのアクションの共通ベースクラス。
+ * 各アクションの基底クラス。ライフサイクル制御やイベント購読などの共通処理を隠蔽します。
  *
- * 各アクションにおけるボイラープレート（イベントリスナー登録・解除、ライフサイクル制御）を排除し、
- * 以下の役割を一元的に担います：
- *
- * 1. **ライフサイクルの自動制御**:
- *    アクションの表示（onWillAppear）および非表示（onWillDisappear）と連動して、`telemetryManager` へのデータ受信ハンドラの登録と解除を自動的に実行します。
- * 2. **状態キャッシュのカプセル化**:
- *    設定情報、直近の受信テレメトリデータ、および表示中のアクティブなアクション参照をカプセル化して保持します。
- * 3. **Property Inspector との動的通信**:
- *    Property Inspector からのローカルフォント一覧取得要求など、双方向通信の仲介を行います。
+ * - **ライフサイクル管理**: 表示・非表示（onWillAppear / onWillDisappear）に応じたデータ受信ハンドラの自動登録と解除。
+ * - **キャッシュ**: ローカル設定、最終受信データ、アクティブアクションの参照を保持。
+ * - **Property Inspector連携**: システムフォント一覧の取得要求など、設定画面との双方向通信の仲介。
+ * - **エラー・タイムアウト監視**: サーバーエラーや受信タイムアウト（3秒）発生時に、アクティブアクションへ一斉に警告（showAlert）を表示。
  *
  * @template TSettings - アクションが使用するローカル設定の型
  */
@@ -35,6 +30,19 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
   private readonly lastTelemetryDataMap = new Map<string, ForzaTelemetryData>();
   private readonly handlers = new Map<string, (data: ForzaTelemetryData) => void>();
   private readonly activeActions = new Map<string, DialAction<TSettings> | KeyAction<TSettings>>();
+
+  private isListeningErrors = false;
+  private readonly errorHandler = (err: Error) => this.triggerAlertForActiveActions();
+  private readonly timeoutHandler = () => this.triggerAlertForActiveActions();
+
+  /**
+   * 現在表示されているすべてのアクションに対して警告（showAlert）を表示します。
+   */
+  private triggerAlertForActiveActions() {
+    for (const action of this.activeActions.values()) {
+      action.showAlert();
+    }
+  }
 
   /**
    * 現在画面に表示されているすべてのアクティブなアクションの再描画を実行します。
@@ -158,6 +166,8 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
       this.onTelemetryData(action, data);
     };
 
+    this.subscribeErrors();
+
     this.handlers.set(action.id, dataHandler);
     telemetryManager.on('data', dataHandler);
   }
@@ -188,12 +198,30 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
     this.lastTelemetryDataMap.delete(action.id);
     this.activeActions.delete(action.id);
 
+    // アクティブなアクションがなくなった場合、エラーイベントの購読を解除
+    if (this.activeActions.size === 0) {
+      this.unsubscribeErrors();
+    }
+
     return this.onDisappear(ev);
   }
 
-  /**
-   * telemetryManager からのデータ購読ハンドラを安全に解除します。
-   */
+  private subscribeErrors() {
+    if (!this.isListeningErrors) {
+      telemetryManager.on('error', this.errorHandler);
+      telemetryManager.on('timeout', this.timeoutHandler);
+      this.isListeningErrors = true;
+    }
+  }
+
+  private unsubscribeErrors() {
+    if (this.isListeningErrors) {
+      telemetryManager.off('error', this.errorHandler);
+      telemetryManager.off('timeout', this.timeoutHandler);
+      this.isListeningErrors = false;
+    }
+  }
+
   private unsubscribeTelemetry(actionId: string): void {
     const existingHandler = this.handlers.get(actionId);
     if (existingHandler) {
