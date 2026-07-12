@@ -86,7 +86,7 @@ flowchart LR
 ### [TelemetryServer](../src/telemetry/server.ts)
 
 - **役割**: `node:dgram` の `udp4` を用いてテレメトリデータを受信するUDPサーバー。受信した生パケットは、イベントとして上位（`TelemetryManager`）へ通知する。
-- **エラー制御**: エラー検知時（ポート競合等）は自動でソケットをクローズし、エラーイベントを上位へ通知する。
+- **エラー制御**: ソケットのバインドエラー（ポート競合など）や受信時エラーが発生した場合、自動でソケットをクローズし、エラーイベントを上位（TelemetryManager）へ通知する。
 
 ### [TelemetryManager](../src/telemetry/manager.ts)
 
@@ -96,6 +96,7 @@ flowchart LR
 - **リソースの自動管理**: `data` イベントの購読数でアクティブなアクションの増減を監視し、ソケットの開閉を自動制御する。
   - アクションが画面に表示されたとき、`TelemetryServer` を自動起動。
   - すべてのアクションが画面から消えたとき、`TelemetryServer` を自動停止。
+- **タイムアウト監視**: UDPサーバー起動後、テレメトリデータが3秒間受信されなかった場合にタイムアウトイベントを発生させ、接続障害やゲーム未起動状態を上位（TelemetryAction）へ通知する。
 
 ### [TelemetryAction](../src/actions/telemetry-action.ts)（アクションの共通ベースクラス）
 
@@ -103,6 +104,7 @@ flowchart LR
 - **データキャッシュ**: 直近のテレメトリデータを保持し、画面の切り替わりや設定変更時、直近のデータで画面を再表示可能。
 - **一斉再描画**: グローバル設定（フォント等）の変更時、登録済みのアクティブアクションに対して `refreshActiveActions()` を呼び出し、即時再描画を実行。
 - **動的データソース**: `onSendToPlugin` で、Property Inspectorからのデータソース要求（`getFonts` イベント）をフックし、OSのローカルフォント一覧を動的に取得してUIへ配信する。
+- **エラー・タイムアウトハンドリング**: TelemetryManagerからのエラーイベント（ポート競合など）やタイムアウトイベント（3秒間データ未受信）を受信した際、現在アクティブなすべてのアクションに対してSDKの `showAlert()` を呼び出して警告を表示する。
 
 ## Property Inspector（設定画面）
 
