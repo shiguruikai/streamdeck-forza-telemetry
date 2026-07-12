@@ -7,8 +7,8 @@ import {
   WillDisappearEvent,
 } from '@elgato/streamdeck';
 
+import { SpeedUnit } from '../settings/settings';
 import { ForzaTelemetryData } from '../telemetry/parser';
-import { SpeedUnit } from '../types/settings';
 import {
   formatGear,
   formatRpmBar,

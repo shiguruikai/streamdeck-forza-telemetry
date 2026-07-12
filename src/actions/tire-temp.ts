@@ -7,8 +7,8 @@ import {
   KeyDownEvent,
 } from '@elgato/streamdeck';
 
+import { TempUnit, WheelPosition } from '../settings/settings';
 import { ForzaTelemetryData } from '../telemetry/parser';
-import { TempUnit, WheelPosition } from '../types/settings';
 import { formatTemp, formatTireColor } from '../utils/format';
 import { createAllWheelsImage, createWheelImage } from '../utils/image';
 import { getNextWheelPosition } from '../utils/utils';

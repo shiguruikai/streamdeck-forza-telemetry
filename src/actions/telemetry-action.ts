@@ -12,7 +12,7 @@ import { JsonObject, JsonValue } from '@elgato/utils';
 
 import { telemetryManager } from '../telemetry/manager';
 import { ForzaTelemetryData } from '../telemetry/parser';
-import { DataSourcePayload } from '../types/spdi';
+import { DataSourcePayload } from '../types/sdpi';
 import { getSystemFonts } from '../utils/utils';
 
 /**

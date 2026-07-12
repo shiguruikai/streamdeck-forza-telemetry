@@ -10,12 +10,12 @@ import {
   WillDisappearEvent,
 } from '@elgato/streamdeck';
 
-import { STANDARD_GRAVITY } from '../constants/constants';
 import { ForzaTelemetryData } from '../telemetry/parser';
 import { createGForceImage } from '../utils/image';
 import { clamp } from '../utils/utils';
 import { PressDurationAction } from './press-duration';
 
+const STANDARD_GRAVITY = 9.80665;
 const DEFAULT_SCALE = 2;
 
 type GForceSettings = {

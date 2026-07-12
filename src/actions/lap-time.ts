@@ -6,8 +6,8 @@ import {
   KeyDownEvent,
 } from '@elgato/streamdeck';
 
+import { LapTimeMode } from '../settings/settings';
 import { ForzaTelemetryData } from '../telemetry/parser';
-import { LapTimeMode } from '../types/settings';
 import { formatLap, formatPosition, formatTime } from '../utils/format';
 import { createLapTimeImage } from '../utils/image';
 import { TelemetryAction } from './telemetry-action';

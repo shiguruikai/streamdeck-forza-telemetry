@@ -1,4 +1,4 @@
-import { SpeedUnit, SuspensionMode, TempUnit } from '../types/settings';
+import { SpeedUnit, SuspensionMode, TempUnit } from '../settings/settings';
 import { Color } from './image';
 import { clamp, hslToRgb } from './utils';
 
