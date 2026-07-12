@@ -14,7 +14,7 @@ export class TelemetryServer extends EventEmitter<TelemetryServerEvents> {
   private readonly logger = streamDeck.logger.createScope(TelemetryServer.name);
 
   private server?: dgram.Socket;
-  private port = 5300;
+  private port = 24000;
   private address = '127.0.0.1';
 
   public start(params?: { port?: number; address?: string }): void {

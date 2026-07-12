@@ -1,7 +1,7 @@
 import { Buffer } from 'node:buffer';
 import * as dgram from 'node:dgram';
 
-const PORT: number = 5300;
+const PORT: number = 24000;
 const HOST: string = '127.0.0.1';
 const INTERVAL_MS: number = 20;
 
