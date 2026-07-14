@@ -1,7 +1,7 @@
 import streamDeck from '@elgato/streamdeck';
 
 import { GForceAction } from './actions/g-force';
-import { LapTimeAction } from './actions/lap-time';
+import { RaceInfoAction } from './actions/race-info';
 import { SpeedMeterAction } from './actions/speed-meter';
 import { SuspensionTravelAction } from './actions/suspension-travel';
 import { TireTempAction } from './actions/tire-temp';
@@ -14,7 +14,7 @@ streamDeck.logger.setLevel('trace');
 
 const actions = [
   new SpeedMeterAction(),
-  new LapTimeAction(),
+  new RaceInfoAction(),
   new GForceAction(),
   new TireTempAction(),
   new SuspensionTravelAction(),

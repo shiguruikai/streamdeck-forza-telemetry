@@ -1,4 +1,5 @@
 import { EventEmitter } from 'node:events';
+import { isNativeError } from 'node:util/types';
 
 import streamDeck from '@elgato/streamdeck';
 
@@ -7,7 +8,7 @@ import { TelemetryServer } from './server';
 
 type TelemetryManagerEvents = {
   data: [data: ForzaTelemetryData];
-  error: [err: Error];
+  error: [error: Error];
   timeout: [];
   newListener: [eventName: string | symbol, listener: () => any];
   removeListener: [eventName: string | symbol, listener: () => any];
@@ -24,8 +25,8 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
   private readonly logger = streamDeck.logger.createScope(TelemetryManager.name);
 
   private readonly server: TelemetryServer;
-  private lastUpdate: number = 0;
-  private readonly updateIntervalMs: number = 50;
+  private lastUpdate = 0;
+  private readonly updateIntervalMs = 50;
 
   private startParams?: { port?: number; address?: string };
 
@@ -57,12 +58,10 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
 
       try {
         const data = parseToForzaTelemetryData(msg);
-        if (data) {
-          this.lastUpdate = now;
-          this.emit('data', data);
-        }
-      } catch (err) {
-        this.logger.error(`Failed to parse telemetry data: ${err}`);
+        this.lastUpdate = now;
+        this.emit('data', data);
+      } catch (error) {
+        this.emit('error', isNativeError(error) ? error : new Error(`Failed to parse telemetry data. ${String(error)}`));
       }
     });
 

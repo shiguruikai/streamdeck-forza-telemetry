@@ -1,23 +1,22 @@
 import {
   action,
   DialAction,
-  DialDownEvent,
   DialRotateEvent,
+  DialUpEvent,
   KeyAction,
-  KeyDownEvent,
+  KeyUpEvent,
 } from '@elgato/streamdeck';
 
-import { TempUnit, WheelPosition } from '../settings/settings';
+import { TempUnit, WHEEL_POSITIONS, WheelPosition } from '../settings/settings';
 import { ForzaTelemetryData } from '../telemetry/parser';
 import { formatTemp, formatTireColor } from '../utils/format';
 import { createAllWheelsImage, createWheelImage } from '../utils/image';
 import { getNextWheelPosition } from '../utils/utils';
-import { TelemetryAction } from './telemetry-action';
+import { PressDurationAction } from './press-duration';
 
 type TireTempSettings = {
   position?: WheelPosition;
   unit?: TempUnit;
-  showTitle?: boolean;
 };
 
 type EventAction = DialAction<TireTempSettings> | KeyAction<TireTempSettings>;
@@ -25,25 +24,9 @@ type EventAction = DialAction<TireTempSettings> | KeyAction<TireTempSettings>;
 @action({
   UUID: 'com.github.shiguruikai.streamdeck-forza-telemetry.tire-temp',
 })
-export class TireTempAction extends TelemetryAction<TireTempSettings> {
-  // 表示単位の切り替え
-  private async toggleUnit(action: EventAction) {
-    const currentSettings = this.getSettings(action.id) ?? {};
-    const nextUnit: TempUnit = currentSettings.unit === 'fahrenheit' ? 'celsius' : 'fahrenheit';
-    const newSettings = { ...currentSettings, unit: nextUnit };
-
-    this.setSettings(action.id, newSettings);
-    await action.setSettings(newSettings);
-
-    const lastData = this.getLastTelemetryData(action.id);
-    this.updateImage(action, lastData);
-  }
-
-  private updateImage(action: EventAction, data?: ForzaTelemetryData) {
-    const currentSettings = this.getSettings(action.id);
-    const position = currentSettings?.position ?? 'all';
-    const unit = currentSettings?.unit ?? 'celsius';
-    const showTitle = currentSettings?.showTitle ?? true;
+export class TireTempAction extends PressDurationAction<TireTempSettings> {
+  private async updateImage(action: EventAction, data?: ForzaTelemetryData): Promise<void> {
+    const { position = WHEEL_POSITIONS[0], unit = 'celsius' } = this.getSettings(action.id) ?? {};
 
     const tempFL = data ? data.tireTempFrontLeft : 0;
     const tempFR = data ? data.tireTempFrontRight : 0;
@@ -51,15 +34,14 @@ export class TireTempAction extends TelemetryAction<TireTempSettings> {
     const tempRR = data ? data.tireTempRearRight : 0;
 
     const isDial = action.isDial();
-
-    const colorFL = formatTireColor(tempFL);
-    const colorFR = formatTireColor(tempFR);
-    const colorRL = formatTireColor(tempRL);
-    const colorRR = formatTireColor(tempRR);
-
+    const titleInfo = this.getTitleInfo(action.id);
     let image: string;
-
     if (position === 'all') {
+      const colorFL = formatTireColor(tempFL);
+      const colorFR = formatTireColor(tempFR);
+      const colorRL = formatTireColor(tempRL);
+      const colorRR = formatTireColor(tempRR);
+
       const values = [1, 1, 1, 1]; // タイヤは常にフルサイズ（比率1）で表示するため
       const texts = [
         formatTemp(tempFL, unit),
@@ -68,7 +50,7 @@ export class TireTempAction extends TelemetryAction<TireTempSettings> {
         formatTemp(tempRR, unit),
       ];
       const colors = [colorFL, colorFR, colorRL, colorRR];
-      image = createAllWheelsImage(showTitle ? 'TIRES' : null, isDial, values, texts, colors, 0.4);
+      image = createAllWheelsImage(isDial, values, texts, colors, 0.4, titleInfo);
     } else {
       let value: number;
       if (position === 'fl') {
@@ -81,48 +63,51 @@ export class TireTempAction extends TelemetryAction<TireTempSettings> {
         value = tempRR;
       }
       image = createWheelImage(
-        showTitle ? 'TIRES' : null,
         isDial,
         position,
         1,
         formatTemp(value, unit),
         formatTireColor(value),
         0.4,
+        titleInfo,
       );
     }
 
     if (isDial) {
-      action.setFeedback({ canvas: image });
+      await action.setFeedback({ canvas: image });
     } else {
-      action.setImage(image);
+      await action.setImage(image);
     }
   }
 
-  protected override onTelemetryData(
-    action: DialAction<TireTempSettings> | KeyAction<TireTempSettings>,
-    data?: ForzaTelemetryData,
-  ): void {
-    this.updateImage(action, data);
+  protected override onTelemetryData(action: EventAction, data?: ForzaTelemetryData): Promise<void> {
+    return this.updateImage(action, data);
   }
 
-  override onKeyDown(ev: KeyDownEvent<TireTempSettings>): Promise<void> | void {
-    this.toggleUnit(ev.action);
-  }
-
-  override onDialDown(ev: DialDownEvent<TireTempSettings>): Promise<void> | void {
-    this.toggleUnit(ev.action);
-  }
-
-  override async onDialRotate(ev: DialRotateEvent<TireTempSettings>): Promise<void> {
-    if (!ev.action.isDial()) return;
+  /**
+   * キーまたはダイヤル短押しで表示モードを切り替える。
+   */
+  protected override async onShortPress(ev: KeyUpEvent<TireTempSettings> | DialUpEvent<TireTempSettings>): Promise<void> {
     const currentSettings = this.getSettings(ev.action.id) ?? {};
-    const nextPos = getNextWheelPosition(currentSettings.position, ev.payload.ticks);
-    const newSettings = { ...currentSettings, position: nextPos };
+    const nextUnit: TempUnit = currentSettings.unit === 'fahrenheit' ? 'celsius' : 'fahrenheit';
+    const newSettings = { ...currentSettings, unit: nextUnit };
 
-    this.setSettings(ev.action.id, newSettings);
-    await ev.action.setSettings(newSettings);
+    await this.setSettings(ev.action.id, newSettings);
+    await this.updateImage(ev.action, this.getLastTelemetryData(ev.action.id));
+  }
 
-    const lastData = this.getLastTelemetryData(ev.action.id);
-    this.updateImage(ev.action, lastData);
+  /**
+   * ダイヤル回転で表示対象のタイヤを切り替える。
+   */
+  override async onDialRotate(ev: DialRotateEvent<TireTempSettings>): Promise<void> {
+    const currentSettings = ev.payload.settings;
+    const currentPos = currentSettings.position ?? WHEEL_POSITIONS[0];
+    const nextPos = getNextWheelPosition(currentPos, ev.payload.ticks);
+
+    if (currentPos !== nextPos) {
+      const newSettings = { ...currentSettings, position: nextPos };
+      await this.setSettings(ev.action.id, newSettings);
+      await this.updateImage(ev.action, this.getLastTelemetryData(ev.action.id));
+    }
   }
 }

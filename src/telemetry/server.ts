@@ -6,7 +6,7 @@ import streamDeck from '@elgato/streamdeck';
 
 type TelemetryServerEvents = {
   listening: [];
-  message: [msg: Buffer<ArrayBufferLike>, rinfo: dgram.RemoteInfo];
+  message: [msg: Buffer, rinfo: dgram.RemoteInfo];
   error: [err: Error];
 };
 

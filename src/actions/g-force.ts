@@ -20,7 +20,6 @@ const DEFAULT_SCALE = 2;
 
 type GForceSettings = {
   scale?: number;
-  showTitle?: boolean;
   showPeakG?: boolean;
 };
 
@@ -37,52 +36,8 @@ export class GForceAction extends PressDurationAction<GForceSettings> {
   // 画面切り替えを跨いでも値を保持しておく
   private readonly peakGs = new Map<string, { x: number; z: number; total: number }>();
 
-  // 長押し判定しきい値を 500ms に設定
-  protected override longPressDurationMs = 500;
-
-  private async updateScale(action: EventAction, nextScale: number) {
-    const newSettings = { ...this.getSettings(action.id), scale: nextScale };
-    this.setSettings(action.id, newSettings);
-    await action.setSettings(newSettings);
-
-    const lastData = this.getLastTelemetryData(action.id);
-    this.updateImage(action, lastData);
-  }
-
-  private async toggleScale(action: EventAction) {
-    const currentScale = this.getSettings(action.id)?.scale ?? DEFAULT_SCALE;
-    const nextScale = currentScale === 1 ? 2 : currentScale === 2 ? 3 : 1;
-    await this.updateScale(action, nextScale);
-  }
-
-  private resetPeakG(action: EventAction) {
-    this.peakGs.set(action.id, { x: 0, z: 0, total: 0 });
-
-    this.showResetTexts.set(action.id, true);
-
-    const lastData = this.getLastTelemetryData(action.id);
-    this.updateImage(action, lastData);
-
-    const existingFeedbackTimer = this.resetFeedbackTimers.get(action.id);
-    if (existingFeedbackTimer) {
-      clearTimeout(existingFeedbackTimer);
-    }
-
-    const feedbackTimer = setTimeout(() => {
-      this.showResetTexts.set(action.id, false);
-      this.resetFeedbackTimers.delete(action.id);
-      const lastData = this.getLastTelemetryData(action.id);
-      this.updateImage(action, lastData);
-    }, 1000);
-
-    this.resetFeedbackTimers.set(action.id, feedbackTimer);
-  }
-
-  private updateImage(action: EventAction, data?: ForzaTelemetryData) {
-    const settings = this.getSettings(action.id);
-    const showTitle = settings?.showTitle ?? true;
-    const showPeakG = settings?.showPeakG ?? true;
-    const scale = settings?.scale ?? DEFAULT_SCALE;
+  private async updateImage(action: EventAction, data?: ForzaTelemetryData): Promise<void> {
+    const { showPeakG = true, scale = DEFAULT_SCALE } = this.getSettings(action.id) ?? {};
 
     const showResetText = this.showResetTexts.get(action.id) ?? false;
 
@@ -109,38 +64,27 @@ export class GForceAction extends PressDurationAction<GForceSettings> {
     }
 
     const isDial = action.isDial();
-
     const dataUri = createGForceImage(
-      showTitle ? 'G-FORCE' : null,
       isDial,
       scale,
       current,
       showPeakG ? peak : null,
       showResetText,
+      this.getTitleInfo(action.id),
     );
 
     if (isDial) {
-      action.setFeedback({ canvas: dataUri });
+      await action.setFeedback({ canvas: dataUri });
     } else {
-      action.setImage(dataUri);
+      await action.setImage(dataUri);
     }
   }
 
-  protected override onTelemetryData(
+  protected override async onTelemetryData(
     action: DialAction<GForceSettings> | KeyAction<GForceSettings>,
     data?: ForzaTelemetryData,
-  ): void {
-    this.updateImage(action, data);
-  }
-
-  override async onDialRotate(ev: DialRotateEvent<GForceSettings>): Promise<void> {
-    if (!ev.action.isDial()) return;
-    const currentScale = this.getSettings(ev.action.id)?.scale ?? DEFAULT_SCALE;
-    const nextScale = clamp(currentScale + Math.sign(ev.payload.ticks), 1, 3);
-
-    if (nextScale !== currentScale) {
-      await this.updateScale(ev.action, nextScale);
-    }
+  ): Promise<void> {
+    await this.updateImage(action, data);
   }
 
   protected override onDisappear(ev: WillDisappearEvent<GForceSettings>): Promise<void> | void {
@@ -151,14 +95,60 @@ export class GForceAction extends PressDurationAction<GForceSettings> {
 
     this.resetFeedbackTimers.delete(ev.action.id);
     this.showResetTexts.delete(ev.action.id);
-    this.peakGs.delete(ev.action.id);
   }
 
-  protected override onShortPress(ev: KeyUpEvent<GForceSettings> | DialUpEvent<GForceSettings>): Promise<void> | void {
-    this.toggleScale(ev.action);
+  /**
+   * キーまたはダイヤル短押し時でスケールを切り替える。
+   */
+  protected override async onShortPress(ev: KeyUpEvent<GForceSettings> | DialUpEvent<GForceSettings>): Promise<void> {
+    const currentSettings = ev.payload.settings;
+    const currentScale = currentSettings.scale ?? DEFAULT_SCALE;
+    const nextScale = currentScale === 1 ? 2 : currentScale === 2 ? 3 : 1;
+    const newSettings = { ...currentSettings, scale: nextScale };
+    await this.setSettings(ev.action.id, newSettings);
+    await this.updateImage(ev.action, this.getLastTelemetryData(ev.action.id));
   }
 
-  protected override onLongPress(ev: KeyDownEvent<GForceSettings> | DialDownEvent<GForceSettings>): Promise<void> | void {
-    this.resetPeakG(ev.action);
+  /**
+   * キーまたはダイヤル長押し時でピークGをリセットする。
+   */
+  protected override async onLongPress(ev: KeyDownEvent<GForceSettings> | DialDownEvent<GForceSettings>): Promise<void> {
+    const { action } = ev;
+
+    this.peakGs.set(action.id, { x: 0, z: 0, total: 0 });
+
+    this.showResetTexts.set(action.id, true);
+
+    const lastData = this.getLastTelemetryData(action.id);
+    await this.updateImage(action, lastData);
+
+    const existingFeedbackTimer = this.resetFeedbackTimers.get(action.id);
+    if (existingFeedbackTimer) {
+      clearTimeout(existingFeedbackTimer);
+    }
+
+    const feedbackTimer = setTimeout(() => {
+      this.showResetTexts.set(action.id, false);
+      this.resetFeedbackTimers.delete(action.id);
+      const lastData = this.getLastTelemetryData(action.id);
+      void this.updateImage(action, lastData);
+    }, 1000);
+
+    this.resetFeedbackTimers.set(action.id, feedbackTimer);
+  }
+
+  /**
+   * ダイヤル回転でレイアウトを切り替える。
+   */
+  override async onDialRotate(ev: DialRotateEvent<GForceSettings>): Promise<void> {
+    const currentSettings = ev.payload.settings;
+    const currentScale = ev.payload.settings.scale ?? DEFAULT_SCALE;
+    const nextScale = clamp(currentScale + ev.payload.ticks, 1, 3);
+
+    if (currentScale !== nextScale) {
+      const newSettings = { ...currentSettings, scale: nextScale };
+      await this.setSettings(ev.action.id, newSettings);
+      await this.updateImage(ev.action, this.getLastTelemetryData(ev.action.id));
+    }
   }
 }

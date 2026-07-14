@@ -1,7 +1,7 @@
 import streamDeck from '@elgato/streamdeck';
 import { execa } from 'execa';
 
-import { WheelPosition } from '../settings/settings';
+import { WHEEL_POSITIONS, WheelPosition } from '../settings/settings';
 
 const logger = streamDeck.logger.createScope('utils');
 
@@ -31,17 +31,10 @@ export function hslToRgb(h: number, s: number, l: number): { r: number; g: numbe
   return { r, g, b };
 }
 
-/**
- * 現在の車輪表示位置とダイヤルの回転方向（ticks）から、次の車輪表示位置を算出します。
- */
 export function getNextWheelPosition(currentPos: WheelPosition | undefined, ticks: number): WheelPosition {
-  const positions: WheelPosition[] = ['all', 'fl', 'fr', 'rl', 'rr'];
-  let index = positions.indexOf(currentPos ?? 'all');
-  if (index === -1) index = 0;
-
-  const step = Math.sign(ticks);
-  index = (index + step + positions.length) % positions.length;
-  return positions[index];
+  const currentIndex = WHEEL_POSITIONS.indexOf(currentPos ?? WHEEL_POSITIONS[0]);
+  const nextIndex = clamp(currentIndex + ticks, 0, WHEEL_POSITIONS.length - 1);
+  return WHEEL_POSITIONS[nextIndex];
 }
 
 export type FontItem = {

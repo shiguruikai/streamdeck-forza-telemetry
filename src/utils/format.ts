@@ -6,8 +6,8 @@ import { clamp, hslToRgb } from './utils';
 // 汎用・レース情報フォーマット
 // =============================================================================
 
-export function formatTime(seconds: number): string {
-  if (!Number.isFinite(seconds) || seconds <= 0) {
+export function formatTime(seconds?: number): string {
+  if (seconds === undefined || !Number.isFinite(seconds) || seconds <= 0) {
     return '--:--.---';
   }
   const mins = Math.floor(seconds / 60);
@@ -16,12 +16,12 @@ export function formatTime(seconds: number): string {
   return `${mins}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`;
 }
 
-export function formatLap(lap: number): string {
-  return lap > 0 ? `LAP ${lap}` : 'LAP --';
+export function formatLap(lap?: number): string {
+  return lap === undefined ? 'LAP --' : `LAP ${(lap + 1).toString().padStart(2, ' ')}`;
 }
 
-export function formatPosition(pos: number): string {
-  return pos > 0 ? `POS ${pos}` : 'POS --';
+export function formatPosition(pos?: number): string {
+  return pos === undefined ? 'POS --' : `POS ${pos.toString().padStart(2, ' ')}`;
 }
 
 // =============================================================================
@@ -43,7 +43,11 @@ export function formatGear(gear: number): string | null {
   return gear === 0 ? 'R' : gear.toString();
 }
 
-export function formatRpmBar(currentEngineRpm: number, engineMaxRpm: number): { rpmPct: number; rpmColor: string } {
+export function formatRpmBar(
+  currentEngineRpm: number | null | undefined, engineMaxRpm: number | null | undefined,
+): { rpm: number; rpmPct: number; rpmColor: string } {
+  currentEngineRpm ??= 0;
+  engineMaxRpm ??= 0;
   const rpmPct = engineMaxRpm > 0 ? clamp(currentEngineRpm / engineMaxRpm, 0, 1) : 0;
   let rpmColor;
   if (rpmPct >= 0.85) {
@@ -53,7 +57,7 @@ export function formatRpmBar(currentEngineRpm: number, engineMaxRpm: number): { 
   } else {
     rpmColor = Color.WHITE;
   }
-  return { rpmPct, rpmColor };
+  return { rpm: currentEngineRpm, rpmPct, rpmColor };
 }
 
 // =============================================================================

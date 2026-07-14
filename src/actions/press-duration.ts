@@ -14,6 +14,8 @@ import { TelemetryAction } from './telemetry-action';
  * キーボタン（Keypad）およびダイヤルプッシュ（Encoder）の両方のイベントに対応しています。
  */
 export abstract class PressDurationAction<TSettings extends JsonObject = JsonObject> extends TelemetryAction<TSettings> {
+  /* eslint-disable unused-imports/no-unused-vars */
+
   private readonly pressTimers = new Map<string, NodeJS.Timeout>();
   private readonly longPressedFlags = new Set<string>();
 
@@ -26,32 +28,32 @@ export abstract class PressDurationAction<TSettings extends JsonObject = JsonObj
   /**
    * 短押し（キーまたはダイヤルが離された際に、長押しが発生していなかった場合）のコールバック。
    */
-  protected abstract onShortPress(ev: KeyUpEvent<TSettings> | DialUpEvent<TSettings>): Promise<void> | void;
+  protected onShortPress(ev: KeyUpEvent<TSettings> | DialUpEvent<TSettings>): Promise<void> | void { /* pass */ }
 
   /**
    * 長押し（キーまたはダイヤルが押されてから規定時間が経過した瞬間）のコールバック。
    */
-  protected abstract onLongPress(ev: KeyDownEvent<TSettings> | DialDownEvent<TSettings>): Promise<void> | void;
+  protected onLongPress(ev: KeyDownEvent<TSettings> | DialDownEvent<TSettings>): Promise<void> | void { /* pass */ }
 
   override onKeyDown(ev: KeyDownEvent<TSettings>): Promise<void> | void {
     this.handleDown(ev);
   }
 
-  override onKeyUp(ev: KeyUpEvent<TSettings>): Promise<void> | void {
-    this.handleUp(ev);
+  override async onKeyUp(ev: KeyUpEvent<TSettings>): Promise<void> {
+    await this.handleUp(ev);
   }
 
   override onDialDown(ev: DialDownEvent<TSettings>): Promise<void> | void {
     this.handleDown(ev);
   }
 
-  override onDialUp(ev: DialUpEvent<TSettings>): Promise<void> | void {
-    this.handleUp(ev);
+  override async onDialUp(ev: DialUpEvent<TSettings>): Promise<void> {
+    await this.handleUp(ev);
   }
 
-  override onWillDisappear(ev: WillDisappearEvent<TSettings>): Promise<void> | void {
+  override async onWillDisappear(ev: WillDisappearEvent<TSettings>): Promise<void> {
     this.cancelTimer(ev.action.id);
-    return super.onWillDisappear(ev);
+    await super.onWillDisappear(ev);
   }
 
   private handleDown(ev: KeyDownEvent<TSettings> | DialDownEvent<TSettings>): void {
@@ -60,9 +62,9 @@ export abstract class PressDurationAction<TSettings extends JsonObject = JsonObj
       return;
     }
 
-    const timer = setTimeout(async () => {
+    const timer = setTimeout(() => {
       this.longPressedFlags.add(ev.action.id);
-      await this.onLongPress(ev);
+      void this.onLongPress(ev);
     }, this.longPressDurationMs);
 
     this.pressTimers.set(ev.action.id, timer);

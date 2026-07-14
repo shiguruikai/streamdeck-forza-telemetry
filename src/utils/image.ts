@@ -1,3 +1,4 @@
+import { formatLap, formatPosition, formatRpmBar, formatTime } from './format';
 import { clamp } from './utils';
 
 const DEFAULT_GLOBAL_FONT = '';
@@ -9,18 +10,14 @@ export function getGlobalFont(): string {
 }
 
 export function setGlobalFont(font: string | null | undefined): void {
-  globalFont = font || DEFAULT_GLOBAL_FONT;
+  globalFont = font ?? DEFAULT_GLOBAL_FONT;
 }
 
 export const DIAL_WIDTH = 200;
 export const DIAL_HEIGHT = 100;
 export const KEY_WIDTH = 144;
 export const KEY_HEIGHT = 144;
-
-const DIAL_PADDING = 8;
-const KEY_PADDING = 10;
-
-const CENTER_OFFSET_Y = 10;
+const PADDING = 8;
 
 export const enum Color {
   WHITE = '#dedede',
@@ -41,6 +38,42 @@ export function toSvgDataUri(svg: string): string {
   return `data:image/svg+xml,${encodeURIComponent(svg.replace(/>\s+</g, '><').trim())}`;
 }
 
+export type TitleInfo = {
+  text: string;
+  titleAlignment: 'top' | 'middle' | 'bottom';
+  titleColor: string;
+};
+
+type LayoutAdjustments = {
+  offsetY: number;
+  titleElement: string;
+};
+
+function getLayoutAdjustments(
+  isDial: boolean,
+  titleInfo?: TitleInfo,
+): LayoutAdjustments {
+  if (!titleInfo) {
+    return {
+      offsetY: 0,
+      titleElement: '',
+    };
+  }
+
+  if (isDial) {
+    // ダイヤルは高さが100pxと狭いため、常に上寄せ（top）で描画します。
+    return {
+      offsetY: 0,
+      titleElement: `<text x="${PADDING}" y="20" font-size="16" fill="${titleInfo.titleColor}" text-anchor="start">${titleInfo.text}</text>`,
+    };
+  }
+
+  return {
+    offsetY: titleInfo.titleAlignment === 'bottom' ? -12 : 12,
+    titleElement: '',
+  };
+}
+
 /**
  * すべてのSVGに共通して適用するCSSスタイルシートを取得します。
  *
@@ -51,21 +84,19 @@ function getCommonStyle(): string {
   return `<style>text{${fontFamily}font-weight:bold;}</style>`;
 }
 
-function getTitleText(title: string, x: number, anchor: 'start' | 'end' | 'middle' = 'middle'): string {
-  return `<text x="${x}" y="16" font-size="14" text-anchor="${anchor}" fill="${Color.GREY}">${title}</text>`;
-}
-
 export function createAllWheelsImage(
-  title: string | null | undefined,
   isDial: boolean,
   values: readonly number[],
   texts: readonly string[],
   colors: readonly string[],
-  radius: number = 0,
+  radius = 0,
+  titleInfo?: TitleInfo,
 ): string {
   if (values.length !== 4 || texts.length !== 4 || colors.length !== 4) {
     throw new Error('values, texts and colors length must be 4');
   }
+
+  const adj = getLayoutAdjustments(isDial, titleInfo);
 
   const width = isDial ? DIAL_WIDTH : KEY_WIDTH;
   const height = isDial ? DIAL_HEIGHT : KEY_HEIGHT;
@@ -73,12 +104,10 @@ export function createAllWheelsImage(
   const cx = width / 2;
   const cy = height / 2;
 
-  const offsetBodY = title ? CENTER_OFFSET_Y : 0;
-
   const bodyW = 24;
-  const bodyH = bodyW * (title ? 2.5 : 3);
+  const bodyH = bodyW * 3;
   const bodyX = cx - bodyW / 2;
-  const bodyY = cy - bodyH / 2 + offsetBodY;
+  const bodyY = cy - bodyH / 2 + adj.offsetY;
 
   const barOffsetX = bodyW;
   const barOffsetY = bodyH * 0.32;
@@ -86,8 +115,8 @@ export function createAllWheelsImage(
   const barW = barH * 0.5;
   const barX_Left = cx - barW - barOffsetX;
   const barX_Right = cx + barOffsetX;
-  const barY_Front = cy - barH / 2 - barOffsetY + offsetBodY;
-  const barY_Rear = cy - barH / 2 + barOffsetY + offsetBodY;
+  const barY_Front = cy - barH / 2 - barOffsetY + adj.offsetY;
+  const barY_Rear = cy - barH / 2 + barOffsetY + adj.offsetY;
 
   const axelX_Left = cx - barOffsetX;
   const axelX_Right = cx + barOffsetX;
@@ -117,10 +146,9 @@ export function createAllWheelsImage(
     const textY_Rear = barY_Rear + barH + textOffsetY;
 
     return toSvgDataUri(`
-<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none">
   ${getCommonStyle()}
-
-  ${title ? getTitleText(title, cx) : ''}
+  ${adj.titleElement}
 
   <rect x="${bodyX}" y="${bodyY}" width="${bodyW}" height="${bodyH}" fill="${Color.BLACK}" stroke="${Color.DARK_GREY}" rx="4" stroke-width="2"/>
   <line x1="${axelX_Left}" y1="${axelY_Front}" x2="${axelX_Right}" y2="${axelY_Front}" stroke="${Color.DARK_GREY}" stroke-width="2"/>
@@ -153,10 +181,8 @@ export function createAllWheelsImage(
     const textY_Rear = barY_Rear + barH + 22;
 
     return toSvgDataUri(`
-<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none">
   ${getCommonStyle()}
-
-  ${title ? getTitleText(title, cx) : ''}
 
   <rect x="${bodyX}" y="${bodyY}" width="${bodyW}" height="${bodyH}" fill="${Color.BLACK}" stroke="${Color.DARK_GREY}" rx="4" stroke-width="2"/>
   <line x1="${axelX_Left}" y1="${axelY_Front}" x2="${axelX_Right}" y2="${axelY_Front}" stroke="${Color.DARK_GREY}" stroke-width="2"/>
@@ -184,14 +210,16 @@ export function createAllWheelsImage(
 }
 
 export function createWheelImage(
-  title: string | null | undefined,
   isDial: boolean,
   position: 'fl' | 'fr' | 'rl' | 'rr',
   value: number,
   text: string,
   color: string,
-  radius: number = 0,
+  radius = 0,
+  titleInfo?: TitleInfo,
 ): string {
+  const adj = getLayoutAdjustments(isDial, titleInfo);
+
   const width = isDial ? DIAL_WIDTH : KEY_WIDTH;
   const height = isDial ? DIAL_HEIGHT : KEY_HEIGHT;
 
@@ -199,16 +227,15 @@ export function createWheelImage(
   const cy = height / 2;
 
   const offsetBarX = width * 0.05;
-  const offsetBarY = title ? CENTER_OFFSET_Y : 0;
-  const barH = height * (title ? 0.65 : 0.75);
+  const barH = height * 0.75;
   const barW = barH / 2;
   const barX = cx + offsetBarX;
-  const barY = cy - barH / 2 + offsetBarY;
+  const barY = cy - barH / 2 + adj.offsetY;
 
   const barH_Value = clamp(barH * value, 0, barH);
   const barY_Value = barY + barH - barH_Value;
 
-  const fontSize = title ? 25 : 30;
+  const fontSize = 30;
   const textOffsetX = 6;
   const textOffsetY = 3;
   const textX = barX - textOffsetX;
@@ -217,10 +244,9 @@ export function createWheelImage(
   const rx = barW * radius;
 
   return toSvgDataUri(`
-<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none">
   ${getCommonStyle()}
-
-  ${title ? getTitleText(title, cx) : ''}
+  ${adj.titleElement}
 
   <rect x="${barX}" y="${barY}" width="${barW}" height="${barH}" fill="${Color.DARK_GREY}" rx="${rx}"/>
   <rect x="${barX}" y="${barY_Value}" width="${barW}" height="${barH_Value}" fill="${color}" rx="${rx}"/>
@@ -232,18 +258,20 @@ export function createWheelImage(
 }
 
 export function createGForceImage(
-  title: string | null | undefined,
   isDial: boolean,
   scale: number,
   current: { x: number; z: number; total: number },
   peak: { x: number; z: number; total: number } | null | undefined,
   showResetText: boolean,
+  titleInfo?: TitleInfo,
 ): string {
+  const adj = getLayoutAdjustments(isDial, titleInfo);
+
   const width = isDial ? DIAL_WIDTH : KEY_WIDTH;
   const height = isDial ? DIAL_HEIGHT : KEY_HEIGHT;
 
   const cx = width / 2;
-  const cy = height / 2;
+  const cy = height / 2 + adj.offsetY;
 
   const maxRadius = isDial ? 44 : 52;
   const rOuter = maxRadius;
@@ -260,21 +288,16 @@ export function createGForceImage(
     currentPlotY = cy + (current.z / scale) * maxRadius;
   }
 
-  let peakPlotX: number | undefined = undefined;
-  let peakPlotY: number | undefined = undefined;
-  if (peak) {
-    if (peak.total > scale) {
-      peakPlotX = cx + (peak.x / peak.total) * maxRadius;
-      peakPlotY = cy + (peak.z / peak.total) * maxRadius;
-    } else {
-      peakPlotX = cx + (peak.x / scale) * maxRadius;
-      peakPlotY = cy + (peak.z / scale) * maxRadius;
-    }
+  let peakCircle = '';
+  if (peak && peak.total > 0) {
+    const peakPlotX = cx + peak.x / Math.min(peak.total, scale) * maxRadius;
+    const peakPlotY = cy + peak.z / Math.min(peak.total, scale) * maxRadius;
+    peakCircle = `<circle cx="${peakPlotX}" cy="${peakPlotY}" r="${rBall}" fill="${Color.YELLOW}" opacity="0.5"/>`;
   }
 
   const scaleText = `${scale.toFixed(1)}G`;
-  const peakText = peak?.total.toFixed(2);
-  const currentGText = current.total.toFixed(2);
+  const peakText = peak?.total.toFixed(isDial ? 2 : 1);
+  const currentGText = current.total.toFixed(isDial ? 2 : 1);
 
   const resetText = showResetText
     ? `<text x="${cx}" y="${cy + 10}" text-anchor="middle" font-size="24" fill="${Color.GREEN}">RESET</text>`
@@ -282,30 +305,28 @@ export function createGForceImage(
 
   const fontSize = isDial ? 20 : 18;
 
-  const padding = isDial ? DIAL_PADDING : KEY_PADDING;
-  const leftTextX = padding;
-  const rightTextX = width - padding;
-  const bottomTextY = height - padding;
+  const leftTextX = PADDING;
+  const rightTextX = width - PADDING;
+  const bottomTextY = height - PADDING;
 
   return toSvgDataUri(`
-<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none">
   ${getCommonStyle()}
-
-  ${title ? getTitleText(title, padding, 'start') : ''}
+  ${adj.titleElement}
 
   <line x1="${cx - maxRadius}" y1="${cy}" x2="${cx + maxRadius}" y2="${cy}" stroke="${Color.DARK_GREY}" stroke-width="2" stroke-dasharray="2 4"/>
   <line x1="${cx}" y1="${cy - maxRadius}" x2="${cx}" y2="${cy + maxRadius}" stroke="${Color.DARK_GREY}" stroke-width="2" stroke-dasharray="2 4"/>
 
-  <circle cx="${cx}" cy="${cy}" r="${rInner}" fill="none" stroke="${Color.DARK_GREY}" stroke-width="2" stroke-dasharray="4"/>
-  <circle cx="${cx}" cy="${cy}" r="${rOuter}" fill="none" stroke="${Color.DARK_GREY}" stroke-width="3"/>
+  <circle cx="${cx}" cy="${cy}" r="${rInner}" stroke="${Color.DARK_GREY}" stroke-width="2" stroke-dasharray="4"/>
+  <circle cx="${cx}" cy="${cy}" r="${rOuter}" stroke="${Color.DARK_GREY}" stroke-width="3"/>
 
-  ${peak ? `<circle cx="${peakPlotX}" cy="${peakPlotY}" r="${rBall}" fill="${Color.YELLOW}" opacity="0.5"/>` : ''}
-  <circle cx="${currentPlotX}" cy="${currentPlotY}" r="${rBall}" fill="${Color.RED}"/>
+  ${peakCircle}
 
   <line x1="${cx}" y1="${cy}" x2="${currentPlotX}" y2="${currentPlotY}" stroke="${Color.RED}" stroke-width="6" opacity="0.5"/>
+  <circle cx="${currentPlotX}" cy="${currentPlotY}" r="${rBall}" fill="${Color.RED}"/>
 
+  <text x="${rightTextX}" y="${22 + adj.offsetY * 2}" text-anchor="end" font-size="${fontSize}" fill="${Color.YELLOW}">${peakText}</text>
   <text x="${leftTextX}" y="${bottomTextY}" font-size="${fontSize}" fill="${Color.GREY}">${scaleText}</text>
-  ${peak ? `<text x="${rightTextX}" y="22" text-anchor="end" font-size="${fontSize}" fill="${Color.YELLOW}">${peakText}</text>` : ''}
   <text x="${rightTextX}" y="${bottomTextY}" text-anchor="end" font-size="${fontSize}" fill="${Color.WHITE}">${currentGText}</text>
 
   ${resetText}
@@ -320,49 +341,59 @@ export function createSpeedMeterImage(
   rpmPct: number,
   rpmColor: string,
   unit: string,
+  titleInfo?: TitleInfo,
 ): string {
+  const adj = getLayoutAdjustments(isDial, titleInfo);
+
   const width = isDial ? DIAL_WIDTH : KEY_WIDTH;
   const height = isDial ? DIAL_HEIGHT : KEY_HEIGHT;
 
-  const rpmBarPaddingX = (isDial ? DIAL_PADDING : KEY_PADDING) * 2;
+  const rpmBarPaddingX = PADDING * 2;
   const rpmBarW = width - rpmBarPaddingX;
   const rpmFillW = clamp(rpmBarW * rpmPct, 0, rpmBarW);
   const rpmBarH = 20;
 
   if (isDial) {
-    const rpmBarX = DIAL_PADDING;
-    const rpmBarY = DIAL_HEIGHT - rpmBarH - DIAL_PADDING;
-    const speedY = 60;
+    const rpmBarX = PADDING;
+    const rpmBarY = height - rpmBarH - PADDING;
+    const speedY = 64;
+    const gearCircleY = 47;
+    const gearTextY = 61;
 
     return toSvgDataUri(`
-<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none">
   ${getCommonStyle()}
-  <text x="152" y="${speedY}" font-size="54" text-anchor="end" fill="${Color.WHITE}">${speed}</text>
-  <text x="${DIAL_WIDTH - DIAL_PADDING}" y="${speedY}" font-size="14" fill="${Color.GREY}" text-anchor="end">${unit}</text>
+  ${adj.titleElement}
 
-  <circle cx="32" cy="40" r="20" stroke="${Color.GREEN}" stroke-width="3"/>
-  <text x="32" y="54" font-size="36" text-anchor="middle" fill="${Color.GREEN}">${gear}</text>
+  <text x="152" y="${speedY}" font-size="54" text-anchor="end" fill="${Color.WHITE}">${speed}</text>
+  <text x="${width - PADDING}" y="${speedY}" font-size="14" fill="${Color.GREY}" text-anchor="end">${unit}</text>
+
+  <circle cx="32" cy="${gearCircleY}" r="20" stroke="${Color.GREEN}" stroke-width="3"/>
+  <text x="32" y="${gearTextY}" font-size="36" text-anchor="middle" fill="${Color.GREEN}">${gear}</text>
 
   <rect x="${rpmBarX}" y="${rpmBarY}" width="${rpmBarW}" height="${rpmBarH}" fill="${Color.DARK_GREY}"/>
   <rect x="${rpmBarX}" y="${rpmBarY}" width="${rpmFillW}" height="${rpmBarH}" fill="${rpmColor}"/>
 </svg>
 `);
   } else {
-    const cx = KEY_WIDTH / 2;
-    const cy = KEY_HEIGHT / 2;
+    const cx = width / 2;
+    const cy = height / 2;
 
-    const speedY = 44;
-    const rpmBarX = KEY_PADDING;
-    const rpmBarY = KEY_HEIGHT - rpmBarH - KEY_PADDING;
+    const speedY = 44 + adj.offsetY;
+    const gearCircleY = cy + 8 + adj.offsetY;
+    const gearTextY = cy + 24 + adj.offsetY;
+    const rpmBarX = PADDING;
+    const rpmBarY = height - rpmBarH - PADDING + adj.offsetY;
 
     return toSvgDataUri(`
-<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none">
   ${getCommonStyle()}
+
   <text x="${cx + 12}" y="${speedY}" font-size="44" fill="${Color.WHITE}" text-anchor="end">${speed}</text>
   <text x="${cx + 64}" y="${speedY}" font-size="18" fill="${Color.GREY}" text-anchor="end">${unit}</text>
 
-  <circle cx="${cx}" cy="${cy + 8}" r="24" stroke="${Color.GREEN}" stroke-width="3"/>
-  <text x="${cx}" y="${cy + 24}" font-size="42" fill="${Color.GREEN}" text-anchor="middle">${gear}</text>
+  <circle cx="${cx}" cy="${gearCircleY}" r="24" stroke="${Color.GREEN}" stroke-width="3"/>
+  <text x="${cx}" y="${gearTextY}" font-size="42" fill="${Color.GREEN}" text-anchor="middle">${gear}</text>
 
   <rect x="${rpmBarX}" y="${rpmBarY}" width="${rpmBarW}" height="${rpmBarH}" fill="${Color.DARK_GREY}"/>
   <rect x="${rpmBarX}" y="${rpmBarY}" width="${rpmFillW}" height="${rpmBarH}" fill="${rpmColor}"/>
@@ -371,51 +402,176 @@ export function createSpeedMeterImage(
   }
 }
 
+export function createRaceTimeImage(
+  isDial: boolean,
+  racePosition?: number,
+  currentRaceTime?: number,
+  titleInfo?: TitleInfo,
+): string {
+  const adj = getLayoutAdjustments(isDial, titleInfo);
+
+  const width = isDial ? DIAL_WIDTH : KEY_WIDTH;
+  const height = isDial ? DIAL_HEIGHT : KEY_HEIGHT;
+
+  const x = width - PADDING;
+  const cy = height / 2 + adj.offsetY;
+  const fontSize = isDial ? 34 : 26;
+
+  return toSvgDataUri(`
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none">
+  ${getCommonStyle()}
+  ${adj.titleElement}
+
+  <text x="${x}" y="${cy - 20}" font-size="20" text-anchor="end" fill="${Color.WHITE}">${formatPosition(racePosition)}</text>
+  <text x="${x}" y="${cy + 25}" font-size="${fontSize}" text-anchor="end" fill="${Color.WHITE}">${formatTime(currentRaceTime)}</text>
+</svg>
+`);
+}
+
 export function createLapTimeImage(
   isDial: boolean,
-  lap: string,
-  pos: string,
-  current: string,
-  subLabel: string,
-  subValue: string,
+  lapNumber?: number,
+  racePosition?: number,
+  currentTime?: number,
+  bestTime?: number,
+  titleInfo?: TitleInfo,
 ): string {
-  if (isDial) {
-    const x1 = DIAL_PADDING;
-    const x2 = DIAL_WIDTH - DIAL_PADDING;
-    const y1 = DIAL_HEIGHT / 3 - DIAL_PADDING;
-    const y2 = DIAL_HEIGHT / 3 * 2 - DIAL_PADDING;
-    const y3 = DIAL_HEIGHT - DIAL_PADDING;
+  const adj = getLayoutAdjustments(isDial, titleInfo);
 
-    return toSvgDataUri(`
-<svg xmlns="http://www.w3.org/2000/svg" width="${DIAL_WIDTH}" height="${DIAL_HEIGHT}" viewBox="0 0 ${DIAL_WIDTH} ${DIAL_HEIGHT}">
+  const width = isDial ? DIAL_WIDTH : KEY_WIDTH;
+  const height = isDial ? DIAL_HEIGHT : KEY_HEIGHT;
+
+  const cy = height / 2 + adj.offsetY;
+
+  const x1 = isDial ? 65 : PADDING;
+  const x2 = width - PADDING;
+
+  const fontSize = isDial ? 34 : 26;
+  const y1 = cy - 26;
+  const y2 = cy + 10;
+  const y3 = cy + 43;
+
+  return toSvgDataUri(`
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none">
   ${getCommonStyle()}
-  <text x="${x1}" y="${y1}" font-size="18" text-anchor="start" fill="${Color.WHITE}">${lap}</text>
-  <text x="${x1}" y="${y2 - 3}" font-size="18" text-anchor="start" fill="${Color.GREEN}">CUR</text>
-  <text x="${x1}" y="${y3 - 3}" font-size="18" text-anchor="start" fill="${Color.YELLOW}">${subLabel}</text>
-  <text x="${x2}" y="${y1}" font-size="18" text-anchor="end" fill="${Color.WHITE}">${pos}</text>
-  <text x="${x2}" y="${y2}" font-size="28" text-anchor="end" fill="${Color.WHITE}">${current}</text>
-  <text x="${x2}" y="${y3}" font-size="28" text-anchor="end" fill="${Color.YELLOW}">${subValue}</text>
+  ${adj.titleElement}
+
+  <text x="${x1}" y="${y1}" font-size="18" text-anchor="start" fill="${Color.WHITE}">${formatLap(lapNumber)}</text>
+  <text x="${x2}" y="${y1}" font-size="18" text-anchor="end" fill="${Color.WHITE}">${formatPosition(racePosition)}</text>
+  <text x="${x2}" y="${y2}" font-size="${fontSize}" text-anchor="end" fill="${Color.WHITE}">${formatTime(currentTime)}</text>
+  <text x="${x2}" y="${y3}" font-size="${fontSize}" text-anchor="end" fill="${Color.YELLOW}">${formatTime(bestTime)}</text>
 </svg>
 `);
-  } else {
-    const x1 = KEY_PADDING;
-    const x2 = KEY_WIDTH - KEY_PADDING;
-    const y1 = KEY_HEIGHT / 5 - KEY_PADDING;
-    const y2 = KEY_HEIGHT / 5 * 2 - KEY_PADDING;
-    const y3 = KEY_HEIGHT / 5 * 3 - KEY_PADDING;
-    const y4 = KEY_HEIGHT / 5 * 4 - KEY_PADDING;
-    const y5 = KEY_HEIGHT - KEY_PADDING;
+}
 
-    return toSvgDataUri(`
-<svg xmlns="http://www.w3.org/2000/svg" width="${KEY_WIDTH}" height="${KEY_HEIGHT}" viewBox="0 0 ${KEY_WIDTH} ${KEY_HEIGHT}">
+export function createTimeImage(
+  isDial: boolean,
+  time?: number,
+  titleInfo?: TitleInfo,
+): string {
+  const adj = getLayoutAdjustments(isDial, titleInfo);
+
+  const width = isDial ? DIAL_WIDTH : KEY_WIDTH;
+  const height = isDial ? DIAL_HEIGHT : KEY_HEIGHT;
+
+  const cy = height / 2 + adj.offsetY;
+
+  const fontSize = isDial ? 34 : 26;
+  const textX = width - PADDING;
+  const textY = cy + fontSize * 0.38;
+
+  return toSvgDataUri(`
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none">
   ${getCommonStyle()}
-  <text x="${x1}" y="${y1}" font-size="18" text-anchor="start" fill="${Color.WHITE}">${lap}</text>
-  <text x="${x2}" y="${y1}" font-size="18" text-anchor="end" fill="${Color.WHITE}">${pos}</text>
-  <text x="${x1}" y="${y2}" font-size="18" text-anchor="start" fill="${Color.GREEN}">CUR</text>
-  <text x="${x2}" y="${y3}" font-size="24" text-anchor="end" fill="${Color.WHITE}">${current}</text>
-  <text x="${x1}" y="${y4}" font-size="18" text-anchor="start" fill="${Color.YELLOW}">${subLabel}</text>
-  <text x="${x2}" y="${y5}" font-size="24" text-anchor="end" fill="${Color.YELLOW}">${subValue}</text>
+  ${adj.titleElement}
+
+  <text x="${textX}" y="${textY}" font-size="${fontSize}" text-anchor="end" fill="${Color.WHITE}">${formatTime(time)}</text>
 </svg>
 `);
-  }
+}
+
+export function createSingleValueImage(
+  isDial: boolean,
+  value: string | null | undefined,
+  unit: string | null | undefined,
+  titleInfo?: TitleInfo,
+): string {
+  const adj = getLayoutAdjustments(isDial, titleInfo);
+
+  const width = isDial ? DIAL_WIDTH : KEY_WIDTH;
+  const height = isDial ? DIAL_HEIGHT : KEY_HEIGHT;
+
+  const cx = width / 2;
+  const cy = height / 2 + adj.offsetY;
+
+  const unitX = width - PADDING;
+  const unitY = titleInfo?.titleAlignment === 'bottom' ? PADDING + 12 : height - PADDING;
+
+  return toSvgDataUri(`
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none">
+  ${getCommonStyle()}
+  ${adj.titleElement}
+
+  <text x="${cx}" y="${cy + 21}" font-size="56" text-anchor="middle" fill="${Color.WHITE}">${value ?? ''}</text>
+  ${unit ? `<text x="${unitX}" y="${unitY}" font-size="20" text-anchor="end" fill="${Color.GREY}">${unit}</text>` : ''}
+</svg>
+`);
+}
+
+export function createGearImage(
+  isDial: boolean,
+  gear: string,
+  titleInfo?: TitleInfo,
+): string {
+  const adj = getLayoutAdjustments(isDial, titleInfo);
+
+  const width = isDial ? DIAL_WIDTH : KEY_WIDTH;
+  const height = isDial ? DIAL_HEIGHT : KEY_HEIGHT;
+
+  const cx = width / 2;
+  const cy = height / 2 + adj.offsetY;
+
+  const fontSize = isDial ? 50 : 60;
+  const r = fontSize * 0.7;
+  const textY = cy + fontSize * 0.38;
+
+  return toSvgDataUri(`
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none">
+  ${getCommonStyle()}
+  ${adj.titleElement}
+
+  <circle cx="${cx}" cy="${cy}" r="${r}" stroke="${Color.GREEN}" stroke-width="4"/>
+  <text x="${cx}" y="${textY}" font-size="${fontSize}" text-anchor="middle" fill="${Color.GREEN}">${gear}</text>
+</svg>
+`);
+}
+
+export function createRpmImage(
+  isDial: boolean,
+  currentEngineRpm: number | null | undefined,
+  engineMaxRpm: number | null | undefined,
+  titleInfo?: TitleInfo,
+): string {
+  const adj = getLayoutAdjustments(isDial, titleInfo);
+
+  const width = isDial ? DIAL_WIDTH : KEY_WIDTH;
+  const height = isDial ? DIAL_HEIGHT : KEY_HEIGHT;
+
+  const cx = width / 2;
+  const cy = height / 2 + adj.offsetY;
+
+  const unitX = width - PADDING;
+  const unitY = titleInfo?.titleAlignment === 'bottom' ? PADDING + 12 : height - PADDING;
+
+  const { rpm, rpmColor } = formatRpmBar(currentEngineRpm, engineMaxRpm);
+
+  return toSvgDataUri(`
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none">
+  ${getCommonStyle()}
+  ${adj.titleElement}
+
+  <text x="${cx}" y="${cy + 19}" font-size="50" text-anchor="middle" fill="${rpmColor}">${rpm.toFixed(0)}</text>
+  <text x="${unitX}" y="${unitY}" font-size="20" text-anchor="end" fill="${Color.GREY}">RPM</text>
+</svg>
+`);
 }

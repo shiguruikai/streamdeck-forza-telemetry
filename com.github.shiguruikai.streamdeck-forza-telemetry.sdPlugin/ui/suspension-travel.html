@@ -7,6 +7,26 @@
   </head>
   <body>
     <div class="settings-group">
+      <div class="settings-group-title">Action Settings</div>
+      <sdpi-item label="Display Position">
+        <sdpi-select setting="position" default="all">
+          <option value="all">All Wheels</option>
+          <option value="fl">Front Left (FL)</option>
+          <option value="fr">Front Right (FR)</option>
+          <option value="rl">Rear Left (RL)</option>
+          <option value="rr">Rear Right (RR)</option>
+        </sdpi-select>
+      </sdpi-item>
+
+      <sdpi-item label="Display Mode">
+        <sdpi-select setting="mode" default="percentage">
+          <option value="percentage">Percentage (%)</option>
+          <option value="value">Raw Value (0.0-1.0)</option>
+        </sdpi-select>
+      </sdpi-item>
+    </div>
+
+    <div class="settings-group">
       <div class="settings-group-title">Global Settings</div>
       <sdpi-item label="IP Address">
         <sdpi-textfield
@@ -30,30 +50,6 @@
           show-refresh
           global
         >
-        </sdpi-select>
-      </sdpi-item>
-    </div>
-
-    <div class="settings-group">
-      <div class="settings-group-title">Action Settings</div>
-      <sdpi-item label="Show Title">
-        <sdpi-checkbox setting="showTitle" default="true"></sdpi-checkbox>
-      </sdpi-item>
-
-      <sdpi-item label="Display Position">
-        <sdpi-select setting="position" default="all">
-          <option value="all">All Wheels</option>
-          <option value="fl">Front Left (FL)</option>
-          <option value="fr">Front Right (FR)</option>
-          <option value="rl">Rear Left (RL)</option>
-          <option value="rr">Rear Right (RR)</option>
-        </sdpi-select>
-      </sdpi-item>
-
-      <sdpi-item label="Display Mode">
-        <sdpi-select setting="mode" default="percentage">
-          <option value="percentage">Percentage (%)</option>
-          <option value="value">Raw Value (0.0-1.0)</option>
         </sdpi-select>
       </sdpi-item>
     </div>

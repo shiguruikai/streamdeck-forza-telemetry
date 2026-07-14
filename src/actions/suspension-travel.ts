@@ -1,23 +1,22 @@
 import {
   action,
   DialAction,
-  DialDownEvent,
   DialRotateEvent,
+  DialUpEvent,
   KeyAction,
-  KeyDownEvent,
+  KeyUpEvent,
 } from '@elgato/streamdeck';
 
-import { SuspensionMode, WheelPosition } from '../settings/settings';
+import { SuspensionMode, WHEEL_POSITIONS, WheelPosition } from '../settings/settings';
 import { ForzaTelemetryData } from '../telemetry/parser';
 import { formatTravel, formatTravelColor } from '../utils/format';
 import { createAllWheelsImage, createWheelImage } from '../utils/image';
 import { getNextWheelPosition } from '../utils/utils';
-import { TelemetryAction } from './telemetry-action';
+import { PressDurationAction } from './press-duration';
 
 type SuspensionTravelSettings = {
   position?: WheelPosition;
   mode?: SuspensionMode;
-  showTitle?: boolean;
 };
 
 type EventAction = DialAction<SuspensionTravelSettings> | KeyAction<SuspensionTravelSettings>;
@@ -27,39 +26,24 @@ const DEFAULT_TRAVEL_VALUE = 0.5;
 @action({
   UUID: 'com.github.shiguruikai.streamdeck-forza-telemetry.suspension-travel',
 })
-export class SuspensionTravelAction extends TelemetryAction<SuspensionTravelSettings> {
-  // 表示モードの切り替え
-  private async toggleMode(action: EventAction) {
-    const currentSettings = this.getSettings(action.id) ?? {};
-    const nextMode: SuspensionMode = currentSettings.mode === 'value' ? 'percentage' : 'value';
-    const newSettings = { ...currentSettings, mode: nextMode };
-
-    this.setSettings(action.id, newSettings);
-    await action.setSettings(newSettings);
-
-    const lastData = this.getLastTelemetryData(action.id);
-    this.updateImage(action, lastData);
-  }
-
-  private updateImage(action: EventAction, data?: ForzaTelemetryData) {
-    const isDial = action.isDial();
-    const currentSettings = this.getSettings(action.id) ?? {};
-    const position = currentSettings.position ?? 'all';
-    const mode = currentSettings.mode ?? 'percentage';
-    const showTitle = currentSettings.showTitle ?? true;
+export class SuspensionTravelAction extends PressDurationAction<SuspensionTravelSettings> {
+  private async updateImage(action: EventAction, data?: ForzaTelemetryData): Promise<void> {
+    const { position = WHEEL_POSITIONS[0], mode = 'percentage' } = this.getSettings(action.id) ?? {};
 
     const travelFL = data ? data.normalizedSuspensionTravelFrontLeft : DEFAULT_TRAVEL_VALUE;
     const travelFR = data ? data.normalizedSuspensionTravelFrontRight : DEFAULT_TRAVEL_VALUE;
     const travelRL = data ? data.normalizedSuspensionTravelRearLeft : DEFAULT_TRAVEL_VALUE;
     const travelRR = data ? data.normalizedSuspensionTravelRearRight : DEFAULT_TRAVEL_VALUE;
 
+    const isDial = action.isDial();
+    const titleInfo = this.getTitleInfo(action.id);
     let image;
     if (position === 'all') {
       // 全輪表示モード
       const values = [travelFL, travelFR, travelRL, travelRR];
       const texts = values.map((v) => formatTravel(v, mode));
       const colors = values.map((v) => formatTravelColor(v));
-      image = createAllWheelsImage(showTitle ? 'SUSPENSION' : null, isDial, values, texts, colors);
+      image = createAllWheelsImage(isDial, values, texts, colors, 0, titleInfo);
     } else {
       // 単一表示モード
       let value;
@@ -73,48 +57,50 @@ export class SuspensionTravelAction extends TelemetryAction<SuspensionTravelSett
         value = travelRR;
       }
       image = createWheelImage(
-        showTitle ? 'SUSPENSION' : null,
         isDial,
         position,
         value,
         formatTravel(value, mode),
         formatTravelColor(value),
+        0,
+        titleInfo,
       );
     }
 
     if (isDial) {
-      action.setFeedback({ canvas: image });
+      await action.setFeedback({ canvas: image });
     } else {
-      action.setImage(image);
+      await action.setImage(image);
     }
   }
 
-  protected override onTelemetryData(
-    action: DialAction<SuspensionTravelSettings> | KeyAction<SuspensionTravelSettings>,
-    data?: ForzaTelemetryData,
-  ): void {
-    this.updateImage(action, data);
+  protected override onTelemetryData(action: EventAction, data?: ForzaTelemetryData): Promise<void> {
+    return this.updateImage(action, data);
   }
 
-  override onKeyDown(ev: KeyDownEvent<SuspensionTravelSettings>): Promise<void> | void {
-    this.toggleMode(ev.action);
-  }
-
-  override onDialDown(ev: DialDownEvent<SuspensionTravelSettings>): Promise<void> | void {
-    this.toggleMode(ev.action);
-  }
-
-  override async onDialRotate(ev: DialRotateEvent<SuspensionTravelSettings>): Promise<void> {
-    if (!ev.action.isDial()) return;
-
+  /**
+   * キーまたはダイヤル短押しで表示モードを切り替える。
+   */
+  protected override async onShortPress(ev: KeyUpEvent<SuspensionTravelSettings> | DialUpEvent<SuspensionTravelSettings>): Promise<void> {
     const currentSettings = this.getSettings(ev.action.id) ?? {};
-    const nextPos = getNextWheelPosition(currentSettings.position, ev.payload.ticks);
-    const newSettings = { ...currentSettings, position: nextPos };
+    const nextMode: SuspensionMode = currentSettings.mode === 'value' ? 'percentage' : 'value';
+    const newSettings = { ...currentSettings, mode: nextMode };
+    await this.setSettings(ev.action.id, newSettings);
+    await this.updateImage(ev.action, this.getLastTelemetryData(ev.action.id));
+  }
 
-    this.setSettings(ev.action.id, newSettings);
-    await ev.action.setSettings(newSettings);
+  /**
+   * ダイヤル回転で表示対象のサスペンションを切り替える。
+   */
+  override async onDialRotate(ev: DialRotateEvent<SuspensionTravelSettings>): Promise<void> {
+    const currentSettings = ev.payload.settings;
+    const currentPos = currentSettings.position ?? WHEEL_POSITIONS[0];
+    const nextPos = getNextWheelPosition(currentPos, ev.payload.ticks);
 
-    const lastData = this.getLastTelemetryData(ev.action.id);
-    this.updateImage(ev.action, lastData);
+    if (currentPos !== nextPos) {
+      const newSettings = { ...currentSettings, position: nextPos };
+      await this.setSettings(ev.action.id, newSettings);
+      await this.updateImage(ev.action, this.getLastTelemetryData(ev.action.id));
+    }
   }
 }

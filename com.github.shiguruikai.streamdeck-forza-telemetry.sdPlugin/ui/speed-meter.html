@@ -7,6 +7,25 @@
   </head>
   <body>
     <div class="settings-group">
+      <div class="settings-group-title">Action Settings</div>
+      <sdpi-item label="Display Layout">
+        <sdpi-select setting="layout" default="full">
+          <option value="full">Full (Speed, Gear, RPM)</option>
+          <option value="speed">Speed Only</option>
+          <option value="gear">Gear Only</option>
+          <option value="rpm">RPM Only</option>
+        </sdpi-select>
+      </sdpi-item>
+
+      <sdpi-item label="Speed Unit" id="unit-item">
+        <sdpi-select setting="unit" default="kmh">
+          <option value="kmh">KM/H</option>
+          <option value="mph">MPH</option>
+        </sdpi-select>
+      </sdpi-item>
+    </div>
+
+    <div class="settings-group">
       <div class="settings-group-title">Global Settings</div>
       <sdpi-item label="IP Address">
         <sdpi-textfield
@@ -30,16 +49,6 @@
           show-refresh
           global
         >
-        </sdpi-select>
-      </sdpi-item>
-    </div>
-
-    <div class="settings-group">
-      <div class="settings-group-title">Action Settings</div>
-      <sdpi-item label="Speed Unit">
-        <sdpi-select setting="unit" default="kmh">
-          <option value="kmh">KM/H</option>
-          <option value="mph">MPH</option>
         </sdpi-select>
       </sdpi-item>
     </div>

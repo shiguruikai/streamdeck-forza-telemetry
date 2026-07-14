@@ -1,10 +1,10 @@
-/* eslint-disable unused-imports/no-unused-vars */
 import streamDeck, {
   DialAction,
   DidReceiveSettingsEvent,
   KeyAction,
   SendToPluginEvent,
   SingletonAction,
+  TitleParametersDidChangeEvent,
   WillAppearEvent,
   WillDisappearEvent,
 } from '@elgato/streamdeck';
@@ -13,6 +13,7 @@ import { JsonObject, JsonValue } from '@elgato/utils';
 import { telemetryManager } from '../telemetry/manager';
 import { ForzaTelemetryData } from '../telemetry/parser';
 import { DataSourcePayload } from '../types/sdpi';
+import { TitleInfo } from '../utils/image';
 import { getSystemFonts } from '../utils/utils';
 
 /**
@@ -26,21 +27,33 @@ import { getSystemFonts } from '../utils/utils';
  * @template TSettings - アクションが使用するローカル設定の型
  */
 export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject> extends SingletonAction<TSettings> {
+  /* eslint-disable unused-imports/no-unused-vars */
+
+  private readonly logger = streamDeck.logger.createScope(TelemetryAction.name);
+
   private readonly settingsMap = new Map<string, TSettings>();
   private readonly lastTelemetryDataMap = new Map<string, ForzaTelemetryData>();
   private readonly handlers = new Map<string, (data: ForzaTelemetryData) => void>();
   private readonly activeActions = new Map<string, DialAction<TSettings> | KeyAction<TSettings>>();
+  private readonly titleInfoMap = new Map<string, TitleInfo>();
 
   private isListeningErrors = false;
-  private readonly errorHandler = (err: Error) => this.triggerAlertForActiveActions();
-  private readonly timeoutHandler = () => this.triggerAlertForActiveActions();
+
+  private readonly errorHandler = (error: Error) => {
+    this.logger.error(error.message);
+    this.triggerAlertForActiveActions();
+  };
+
+  private readonly timeoutHandler = () => {
+    this.triggerAlertForActiveActions();
+  };
 
   /**
    * 現在表示されているすべてのアクションに対して警告（showAlert）を表示します。
    */
-  private triggerAlertForActiveActions() {
+  private triggerAlertForActiveActions(): void {
     for (const action of this.activeActions.values()) {
-      action.showAlert();
+      void action.showAlert();
     }
   }
 
@@ -52,8 +65,7 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
    */
   public refreshActiveActions(): void {
     for (const action of this.activeActions.values()) {
-      const lastData = this.lastTelemetryDataMap.get(action.id);
-      this.onTelemetryData(action, lastData);
+      void this.onTelemetryData(action, this.lastTelemetryDataMap.get(action.id));
     }
   }
 
@@ -73,8 +85,20 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
    * @param actionId - アクションID
    * @param settings - 更新する設定オブジェクト
    */
-  protected setSettings(actionId: string, settings: TSettings): void {
+  protected async setSettings(actionId: string, settings: TSettings): Promise<void> {
     this.settingsMap.set(actionId, settings);
+    await this.activeActions.get(actionId)?.setSettings(settings);
+  }
+
+  /**
+   * 指定されたアクションIDに対応するタイトル情報を取得します。
+   * タイトルが空文字、または非表示設定の場合は `undefined` を返します。
+   *
+   * @param actionId - アクションID
+   * @returns タイトル情報、または `undefined`
+   */
+  protected getTitleInfo(actionId: string): TitleInfo | undefined {
+    return this.titleInfoMap.get(actionId);
   }
 
   /**
@@ -108,14 +132,14 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
   protected onSettingsUpdated(
     action: DialAction<TSettings> | KeyAction<TSettings>,
     settings: TSettings,
-  ): Promise<void> | void { }
+  ): Promise<void> | void { /* pass */ }
 
   /**
    * アクションが画面から消える直前に呼び出されます（必要に応じてサブクラスでオーバーライドします）。
    *
    * @param ev - WillDisappearEvent オブジェクト
    */
-  protected onDisappear(ev: WillDisappearEvent<TSettings>): Promise<void> | void { }
+  protected onDisappear(ev: WillDisappearEvent<TSettings>): Promise<void> | void { /* pass */ }
 
   /**
    * Property Inspector（設定画面）から送信されたイベントを処理します。
@@ -135,7 +159,7 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
         value: font.name,
       }));
 
-      streamDeck.ui.sendToPropertyInspector({
+      await streamDeck.ui.sendToPropertyInspector({
         event: 'getFonts',
         items: items,
       } satisfies DataSourcePayload);
@@ -147,15 +171,15 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
    * 設定とアクティブアクションのキャッシュへの保存、初回描画の実行、および
    * `telemetryManager` からのテレメトリデータ配信イベントの自動購読を開始します。
    */
-  override onWillAppear(ev: WillAppearEvent<TSettings>): Promise<void> | void {
-    const action = ev.action;
-    this.settingsMap.set(action.id, ev.payload.settings);
+  override async onWillAppear(ev: WillAppearEvent<TSettings>): Promise<void> {
+    const { action, payload } = ev;
+
+    this.settingsMap.set(action.id, payload.settings);
     this.activeActions.set(action.id, action);
 
     // 画面切り替え時の表示遅延（黒画面の発生）を防ぐため、
     // キャッシュされている最後のデータを使って即時初回描画を行います。
-    const lastData = this.lastTelemetryDataMap.get(action.id);
-    this.onTelemetryData(action, lastData);
+    await this.onTelemetryData(action, this.lastTelemetryDataMap.get(action.id));
 
     // 同一IDのアクションで既存のイベント購読が残っている場合は二重購読を防ぐため解除します。
     this.unsubscribeTelemetry(action.id);
@@ -163,7 +187,7 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
     // データ受信時に、最新データのキャッシュ更新とアクション固有の描画処理をトリガーするハンドラを登録します。
     const dataHandler = (data: ForzaTelemetryData) => {
       this.lastTelemetryDataMap.set(action.id, data);
-      this.onTelemetryData(action, data);
+      void this.onTelemetryData(action, data);
     };
 
     this.subscribeErrors();
@@ -176,22 +200,22 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
    * アクションのローカル設定が変更された際に呼び出されます。
    * 新しい設定でキャッシュを更新し、直近のデータを用いて画面を即時再描画します。
    */
-  override onDidReceiveSettings(ev: DidReceiveSettingsEvent<TSettings>): Promise<void> | void {
-    const action = ev.action;
-    this.settingsMap.set(action.id, ev.payload.settings);
+  override async onDidReceiveSettings(ev: DidReceiveSettingsEvent<TSettings>): Promise<void> {
+    const { action, payload } = ev;
 
-    this.onSettingsUpdated(action, ev.payload.settings);
+    this.settingsMap.set(action.id, payload.settings);
 
-    const lastData = this.lastTelemetryDataMap.get(action.id);
-    this.onTelemetryData(action, lastData);
+    await this.onSettingsUpdated(action, payload.settings);
+    await this.onTelemetryData(action, this.lastTelemetryDataMap.get(action.id));
   }
 
   /**
    * アクションが画面から非表示になった際（別ページへの切り替えやプラグイン終了時）に呼び出されます。
    * イベント購読の解除と、そのアクションインスタンスに関わるメモリキャッシュを解放します。
    */
-  override onWillDisappear(ev: WillDisappearEvent<TSettings>): Promise<void> | void {
-    const action = ev.action;
+  override async onWillDisappear(ev: WillDisappearEvent<TSettings>): Promise<void> {
+    const { action } = ev;
+
     this.unsubscribeTelemetry(action.id);
 
     this.settingsMap.delete(action.id);
@@ -203,7 +227,29 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
       this.unsubscribeErrors();
     }
 
-    return this.onDisappear(ev);
+    await this.onDisappear(ev);
+  }
+
+  /**
+   * アクションのタイトルまたはタイトルパラメータが変更された際に呼び出されます。
+   * 新しいタイトル情報をキャッシュに保存（非表示または空文字時はキャッシュから削除）し、直近のデータを用いて画面を即時再描画します。
+   *
+   * @param ev - TitleParametersDidChangeEvent オブジェクト
+   */
+  override async onTitleParametersDidChange(ev: TitleParametersDidChangeEvent<TSettings>): Promise<void> {
+    const { action, payload } = ev;
+
+    if (payload.title && payload.titleParameters.showTitle) {
+      this.titleInfoMap.set(action.id, {
+        text: payload.title,
+        titleAlignment: payload.titleParameters.titleAlignment,
+        titleColor: payload.titleParameters.titleColor,
+      });
+    } else {
+      this.titleInfoMap.delete(action.id);
+    }
+
+    await this.onTelemetryData(action, this.lastTelemetryDataMap.get(action.id));
   }
 
   private subscribeErrors() {

@@ -5,7 +5,7 @@
   "Author": "shiguruikai",
   "Actions": [
     {
-      "UserTitleEnabled": false,
+      "UserTitleEnabled": true,
       "DisableCaching": true,
       "Name": "Speed Meter",
       "UUID": "com.github.shiguruikai.streamdeck-forza-telemetry.speed-meter",
@@ -27,13 +27,13 @@
       ]
     },
     {
-      "UserTitleEnabled": false,
+      "UserTitleEnabled": true,
       "DisableCaching": true,
-      "Name": "Lap Time",
-      "UUID": "com.github.shiguruikai.streamdeck-forza-telemetry.lap-time",
-      "Icon": "imgs/actions/lap-time/icon",
-      "Tooltip": "Show lap time.",
-      "PropertyInspectorPath": "ui/lap-time.html",
+      "Name": "Race Info",
+      "UUID": "com.github.shiguruikai.streamdeck-forza-telemetry.race-info",
+      "Icon": "imgs/actions/race-info/icon",
+      "Tooltip": "Show race information and lap times.",
+      "PropertyInspectorPath": "ui/race-info.html",
       "Controllers": [
         "Keypad",
         "Encoder"
@@ -43,13 +43,13 @@
       },
       "States": [
         {
-          "Image": "imgs/actions/lap-time/key",
+          "Image": "imgs/actions/race-info/key",
           "TitleAlignment": "middle"
         }
       ]
     },
     {
-      "UserTitleEnabled": false,
+      "UserTitleEnabled": true,
       "DisableCaching": true,
       "Name": "G-Force Meter",
       "UUID": "com.github.shiguruikai.streamdeck-forza-telemetry.g-force",
@@ -71,7 +71,7 @@
       ]
     },
     {
-      "UserTitleEnabled": false,
+      "UserTitleEnabled": true,
       "DisableCaching": true,
       "Name": "Tire Temperature",
       "UUID": "com.github.shiguruikai.streamdeck-forza-telemetry.tire-temp",
@@ -93,7 +93,7 @@
       ]
     },
     {
-      "UserTitleEnabled": false,
+      "UserTitleEnabled": true,
       "DisableCaching": true,
       "Name": "Suspension Travel",
       "UUID": "com.github.shiguruikai.streamdeck-forza-telemetry.suspension-travel",

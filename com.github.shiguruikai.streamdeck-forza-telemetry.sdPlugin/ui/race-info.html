@@ -7,6 +7,21 @@
   </head>
   <body>
     <div class="settings-group">
+      <div class="settings-group-title">Action Settings</div>
+      <sdpi-item label="Display Layout">
+        <sdpi-select setting="layout" default="lap-time">
+          <option value="lap-time">Lap Time</option>
+          <option value="race-time">Race Time</option>
+          <option value="race-time-only">Race Time Only</option>
+          <option value="current-time-only">Current Lap Time Only</option>
+          <option value="best-time-only">Best Lap Time Only</option>
+          <option value="lap-only">Lap Number Only</option>
+          <option value="position-only">Position Only</option>
+        </sdpi-select>
+      </sdpi-item>
+    </div>
+
+    <div class="settings-group">
       <div class="settings-group-title">Global Settings</div>
       <sdpi-item label="IP Address">
         <sdpi-textfield
@@ -30,16 +45,6 @@
           show-refresh
           global
         >
-        </sdpi-select>
-      </sdpi-item>
-    </div>
-
-    <div class="settings-group">
-      <div class="settings-group-title">Action Settings</div>
-      <sdpi-item label="Display Mode">
-        <sdpi-select setting="mode" default="best">
-          <option value="best">BEST (Best Lap)</option>
-          <option value="last">LAST (Last Lap)</option>
         </sdpi-select>
       </sdpi-item>
     </div>

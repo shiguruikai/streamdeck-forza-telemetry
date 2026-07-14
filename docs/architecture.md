@@ -15,7 +15,7 @@
 │   ├── ui/                               # 各アクションのProperty Inspector（設定画面）のUI定義
 │   │   ├── common.css                    # 共通スタイルシート
 │   │   ├── g-force.html
-│   │   ├── lap-time.html
+│   │   ├── race-info.html
 │   │   ├── sdpi-components.js            # 公式のUIライブラリ
 │   │   ├── speed-meter.html
 │   │   ├── suspension-travel.html
@@ -29,10 +29,9 @@
 │   ├── design-rules.md                   # UIデザインルール
 │   └── release-roadmap.md                # リリースロードマップおよび進捗管理
 ├── src/                                  # ソースコード
-│   ├── actions/                          # 各アクションの実装
 │   │   ├── g-force.ts                    # Gフォースメーター
-│   │   ├── lap-time.ts                   # ラップタイム
 │   │   ├── press-duration.ts             # 長押し判定付きベースクラス
+│   │   ├── race-info.ts                  # レース情報（ラップ・順位・タイム）
 │   │   ├── speed-meter.ts                # 速度計
 │   │   ├── suspension-travel.ts          # サスペンション
 │   │   ├── telemetry-action.ts           # 共通ベースクラス
