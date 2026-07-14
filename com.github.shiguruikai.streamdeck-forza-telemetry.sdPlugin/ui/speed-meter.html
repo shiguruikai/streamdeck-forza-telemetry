@@ -6,51 +6,59 @@
     <script src="sdpi-components.js"></script>
   </head>
   <body>
-    <div class="settings-group">
-      <div class="settings-group-title">Action Settings</div>
-      <sdpi-item label="Display Layout">
-        <sdpi-select setting="layout" default="full">
-          <option value="full">Full (Speed, Gear, RPM)</option>
-          <option value="speed">Speed Only</option>
-          <option value="gear">Gear Only</option>
-          <option value="rpm">RPM Only</option>
-        </sdpi-select>
-      </sdpi-item>
+    <div class="tab-container">
+      <input type="radio" id="tab-action-select" class="tab-input" name="pi-tabs" checked />
+      <input type="radio" id="tab-global-select" class="tab-input" name="pi-tabs" />
 
-      <sdpi-item label="Speed Unit" id="unit-item">
-        <sdpi-select setting="unit" default="kmh">
-          <option value="kmh">KM/H</option>
-          <option value="mph">MPH</option>
-        </sdpi-select>
-      </sdpi-item>
-    </div>
+      <div class="tab-headers">
+        <label for="tab-action-select" class="tab-button">Action</label>
+        <label for="tab-global-select" class="tab-button">Global</label>
+      </div>
 
-    <div class="settings-group">
-      <div class="settings-group-title">Global Settings</div>
-      <sdpi-item label="IP Address">
-        <sdpi-textfield
-          setting="address"
-          pattern="^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])){3}$"
-          required
-          global
-        ></sdpi-textfield>
-      </sdpi-item>
+      <div class="tab-content" id="content-action">
+        <sdpi-item label="Display Layout">
+          <sdpi-select setting="layout" default="full">
+            <option value="full">Full (Speed, Gear, RPM)</option>
+            <option value="speed">Speed Only</option>
+            <option value="gear">Gear Only</option>
+            <option value="rpm">RPM Only</option>
+          </sdpi-select>
+        </sdpi-item>
 
-      <sdpi-item label="Port">
-        <sdpi-textfield setting="port" pattern="^([1-9]|[1-9]\d{1,3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$" required global></sdpi-textfield>
-      </sdpi-item>
+        <sdpi-item label="Speed Unit" id="unit-item">
+          <sdpi-select setting="unit" default="kmh">
+            <option value="kmh">KM/H</option>
+            <option value="mph">MPH</option>
+          </sdpi-select>
+        </sdpi-item>
+      </div>
 
-      <sdpi-item label="Font">
-        <sdpi-select
-          setting="font"
-          datasource="getFonts"
-          loading="Fetching fonts..."
-          hot-reload
-          show-refresh
-          global
-        >
-        </sdpi-select>
-      </sdpi-item>
+      <div class="tab-content" id="content-global">
+        <sdpi-item label="IP Address">
+          <sdpi-textfield
+            setting="address"
+            pattern="^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])){3}$"
+            required
+            global
+          ></sdpi-textfield>
+        </sdpi-item>
+
+        <sdpi-item label="Port">
+          <sdpi-textfield setting="port" pattern="^([1-9]|[1-9]\d{1,3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$" required global></sdpi-textfield>
+        </sdpi-item>
+
+        <sdpi-item label="Font">
+          <sdpi-select
+            setting="font"
+            datasource="getFonts"
+            loading="Fetching fonts..."
+            hot-reload
+            show-refresh
+            global
+          >
+          </sdpi-select>
+        </sdpi-item>
+      </div>
     </div>
   </body>
 </html>

@@ -1,24 +1,75 @@
-body {
+:root {
   /* sdpi-components.js で使用されているフォントと同じフォントを使用する。 */
-  --font-family: "Segoe UI", Arial, Roboto, "Helvetica Neue", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  --font-family:
+    "Segoe UI", Arial, Roboto, "Helvetica Neue", sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 
+  --tab-bg-color: #202020;
+  --tab-button-color: #999999;
+  --tab-button-hover-color: #dddddd;
+  --tab-active-bg-color: #3b3b3b;
+  --tab-active-color: #efefef;
+}
+
+body {
   font-family: var(--font-family);
 }
 
-.settings-group {
-  background-color: #2b2b2b;
-  border: 1px solid #444;
+/* タブコンテナ全体のレイアウト */
+.tab-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* タブ切り替え用の非表示ラジオボタン */
+.tab-input {
+  display: none;
+}
+
+/* タブ選択部分（横並び） */
+.tab-headers {
+  display: flex;
+  background-color: var(--tab-bg-color);
   border-radius: 4px;
-  margin-bottom: 12px;
+  padding: 2px;
+}
+
+/* 各タブボタン（ラベル）のスタイル */
+.tab-button {
+  flex: 1;
+  text-align: center;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 3px;
+  color: var(--tab-button-color);
+  font-size: 9pt;
+  font-family: var(--font-family);
+  font-weight: bold;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+
+.tab-button:hover {
+  color: var(--tab-button-hover-color);
+}
+
+/* アクティブなタブボタン（ラジオボタンがチェックされたとき）のスタイル */
+#tab-action-select:checked ~ .tab-headers label[for="tab-action-select"],
+#tab-global-select:checked ~ .tab-headers label[for="tab-global-select"] {
+  background-color: var(--tab-active-bg-color);
+  color: var(--tab-active-color);
+}
+
+/* タブコンテンツの初期状態（非表示） */
+.tab-content {
+  display: none;
   padding: 8px;
 }
 
-.settings-group-title {
-  border-bottom: 1px solid #444;
-  color: #ddd;
-  font-family: var(--font-family);
-  font-size: 10pt;
-  font-weight: bold;
-  margin-bottom: 8px;
-  padding-bottom: 4px;
+/* アクティブなタブコンテンツの表示制御 */
+#tab-action-select:checked ~ #content-action,
+#tab-global-select:checked ~ #content-global {
+  display: block;
 }
