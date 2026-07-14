@@ -10,10 +10,11 @@ import tseslint from 'typescript-eslint';
 export default defineConfig([
   globalIgnores(['**.sdPlugin/bin/**', '**/sdpi-components.js', 'docs/**']),
   {
-    files: ['**/*.{js,cjs,mjs,ts}'],
+    files: ['src/**/*.{js,ts}', 'tests/**/*.{js,ts}'],
     extends: [
       js.configs.recommended,
-      tseslint.configs.recommended,
+      tseslint.configs.strictTypeChecked,
+      tseslint.configs.stylisticTypeChecked,
       stylistic.configs.customize({
         arrowParens: true,
         quotes: 'single',
@@ -39,6 +40,12 @@ export default defineConfig([
       // anyの使用を許可する。
       '@typescript-eslint/no-explicit-any': 'off',
 
+      // interface ではなく type を使用する。
+      '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
+
+      // テンプレートリテラルの埋め込みできる型を制限する。
+      '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
+
       // 未使用のimportを禁止する。
       '@typescript-eslint/no-unused-vars': 'off',
       'unused-imports/no-unused-imports': 'warn',
@@ -57,7 +64,12 @@ export default defineConfig([
       'simple-import-sort/imports': 'warn',
       'simple-import-sort/exports': 'warn',
     },
-    languageOptions: { globals: globals.node },
+    languageOptions: {
+      globals: globals.node,
+      parserOptions: {
+        projectService: true,
+      },
+    },
   },
   {
     files: ['**/*.json'],

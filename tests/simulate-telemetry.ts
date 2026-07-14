@@ -1,23 +1,23 @@
 import { Buffer } from 'node:buffer';
 import * as dgram from 'node:dgram';
 
-const PORT: number = 24000;
-const HOST: string = '127.0.0.1';
-const INTERVAL_MS: number = 20;
+const PORT = 24000;
+const HOST = '127.0.0.1';
+const INTERVAL_MS = 20;
 
 // 車両のスペック定義
-const IDLE_RPM: number = 800;
-const MAX_RPM: number = 8000;
-const SHIFT_UP_RPM: number = 7500;
-const TIRE_RADIUS_M: number = 0.33; // タイヤ半径（メートル）
-const FINAL_DRIVE: number = 3.5;
+const IDLE_RPM = 800;
+const MAX_RPM = 8000;
+const SHIFT_UP_RPM = 7500;
+const TIRE_RADIUS_M = 0.33; // タイヤ半径（メートル）
+const FINAL_DRIVE = 3.5;
 
 // 各ギアのギア比（インデックス0はリバース［R］、1以上が前進ギア）
 const GEAR_RATIOS: number[] = [3.0, 3.0, 2.0, 1.5, 1.1, 0.85, 0.65];
 const MAX_GEAR: number = GEAR_RATIOS.length - 1;
 
 // 物理定数
-const G_ACCELERATION: number = 9.80665;
+const G_ACCELERATION = 9.80665;
 
 /**
  * FH6 Data Out パケットのバイトオフセット定義
@@ -43,6 +43,7 @@ const PACKET_OFFSET = {
   BEST_LAP: 296,
   LAST_LAP: 300,
   CURRENT_LAP: 304,
+  CURRENT_RACE_TIME: 308,
   LAP_NUMBER: 312,
   RACE_POSITION: 314,
   ACCEL: 315,
@@ -53,7 +54,7 @@ const PACKET_OFFSET = {
 /**
  * 車両のシミュレーション状態を保持するインターフェース
  */
-interface CarState {
+type CarState = {
   gear: number;
   rpm: number;
   speed: number;
@@ -62,6 +63,7 @@ interface CarState {
   currentLap: number;
   lastLap: number;
   bestLap: number;
+  currentRaceTime: number;
   racePosition: number;
   accelerationX: number;
   accelerationY: number;
@@ -74,7 +76,7 @@ interface CarState {
   suspensionFR: number;
   suspensionRL: number;
   suspensionRR: number;
-}
+};
 
 /**
  * 摂氏（℃）を華氏（℉）に変換します。
@@ -106,10 +108,10 @@ function simulateValue(
   amplitude: number,
   periodMs: number,
   noiseAmp: number,
-  load: number = 0,
+  load = 0,
   min?: number,
   max?: number,
-  useCosine: boolean = false,
+  useCosine = false,
 ): number {
   const angle = periodMs > 0 ? (timestampMs / periodMs) * 2 * Math.PI : 0;
   const wave = periodMs > 0 ? (useCosine ? Math.cos(angle) : Math.sin(angle)) : 0;
@@ -174,6 +176,7 @@ function buildTelemetryPacket(state: CarState): Buffer {
   buf.writeFloatLE(state.bestLap, PACKET_OFFSET.BEST_LAP);
   buf.writeFloatLE(state.lastLap, PACKET_OFFSET.LAST_LAP);
   buf.writeFloatLE(state.currentLap, PACKET_OFFSET.CURRENT_LAP);
+  buf.writeFloatLE(state.currentRaceTime, PACKET_OFFSET.CURRENT_RACE_TIME);
   buf.writeUInt16LE(state.lapNumber, PACKET_OFFSET.LAP_NUMBER);
   buf.writeUInt8(state.racePosition, PACKET_OFFSET.RACE_POSITION);
 
@@ -259,6 +262,7 @@ function updateCarState(state: CarState, dt: number): void {
   // 速度の再計算とタイムスタンプ更新
   state.speed = calculateSpeed(state.rpm, state.gear);
   state.timestampMs += INTERVAL_MS;
+  state.currentRaceTime = state.timestampMs / 1000;
 
   // ラップタイムの更新（60秒で1周と仮定）
   state.currentLap += dt;
@@ -280,6 +284,7 @@ function updateCarState(state: CarState, dt: number): void {
     state.rpm = IDLE_RPM;
     state.speed = 0;
     state.timestampMs = 0; // 経過時間をリセットし、波形シミュレーションを再同期する
+    state.currentRaceTime = 0;
   }
 }
 
@@ -293,6 +298,7 @@ const state: CarState = {
   currentLap: 0,
   lastLap: 0,
   bestLap: 0,
+  currentRaceTime: 0,
   racePosition: 4,
   accelerationX: 0,
   accelerationY: 0,
@@ -336,10 +342,11 @@ setInterval(() => {
   const currentRpm: string = state.rpm.toFixed(0);
   const gearChar: string = state.gear === 0 ? 'R' : state.gear.toString();
   const currentLapStr: string = state.currentLap.toFixed(1);
+  const raceTimeStr: string = state.currentRaceTime.toFixed(1);
   const gXStr: string = (state.accelerationX / G_ACCELERATION).toFixed(2);
   const gZStr: string = (state.accelerationZ / G_ACCELERATION).toFixed(2);
 
   process.stdout.write(
-    `\rGear: ${gearChar} | RPM: ${currentRpm.padStart(4, ' ')} | Speed: ${speedKmh.padStart(4, ' ')} km/h | G-Force: X:${gXStr.padStart(5, ' ')} Z:${gZStr.padStart(5, ' ')} | Lap: ${state.lapNumber} (${currentLapStr}s) | Pos: ${state.racePosition}`,
+    `\rGear: ${gearChar} | RPM: ${currentRpm.padStart(4, ' ')} | Speed: ${speedKmh.padStart(4, ' ')} km/h | G-Force: X:${gXStr.padStart(5, ' ')} Z:${gZStr.padStart(5, ' ')} | Lap: ${state.lapNumber} (${currentLapStr}s) | RaceTime: ${raceTimeStr.padStart(5, ' ')}s | Pos: ${state.racePosition}`,
   );
 }, INTERVAL_MS);
