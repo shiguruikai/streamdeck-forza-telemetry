@@ -5,7 +5,7 @@ import { RaceInfoAction } from './actions/race-info';
 import { SpeedMeterAction } from './actions/speed-meter';
 import { SuspensionTravelAction } from './actions/suspension-travel';
 import { TireTempAction } from './actions/tire-temp';
-import { parseSettings } from './settings/settings';
+import { DEFAULT_FPS, parseSettings } from './settings/settings';
 import { telemetryManager } from './telemetry/manager';
 import { setGlobalFont } from './utils/image';
 
@@ -32,11 +32,14 @@ function handleGlobalSettings(settingsObj: object) {
   // 1. グローバルフォントのセット（最初に実行しないと再描画時に古いフォントで描画されてしまう）
   setGlobalFont(settings.font);
 
-  // 2. 接続設定の適用
+  // 2. 接続設定・FPS設定の適用
+  const fps = settings.fps ?? DEFAULT_FPS;
+
   if (settings.port && settings.address) {
     telemetryManager.configure({
       port: settings.port,
       address: settings.address,
+      updateIntervalMs: Math.round(1000 / fps),
     });
   } else {
     telemetryManager.clearConfig();

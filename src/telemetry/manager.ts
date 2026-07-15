@@ -26,7 +26,10 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
 
   private readonly server: TelemetryServer;
   private lastUpdate = 0;
-  private readonly updateIntervalMs = 50;
+  // Elgato Marketplace の Plugin Guidelines（Programmatic Floodingの回避）に従い、
+  // 描画更新頻度は秒間最大10回（10Hz）以下が推奨されます。
+  // 本プラグインでは設定画面から 10〜30 FPS（100ms〜33.3ms）まで可変設定できるよう、動的変更に対応します。
+  private updateIntervalMs = 100;
 
   private startParams?: { port?: number; address?: string };
 
@@ -107,8 +110,11 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
    *
    * @param params - 接続先の設定（ポート、IPアドレス）
    */
-  public configure(params?: { port?: number; address?: string }) {
+  public configure(params?: { port?: number; address?: string; updateIntervalMs?: number }) {
     this.startParams = params;
+    if (params?.updateIntervalMs !== undefined) {
+      this.updateIntervalMs = params.updateIntervalMs;
+    }
 
     // リスナーが既に存在する場合は、新しいパラメータでサーバーを起動/更新する
     if (this.listenerCount('data') > 0) {

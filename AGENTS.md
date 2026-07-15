@@ -25,12 +25,12 @@
 
 ### ドキュメント
 
-- テレメトリ定義: `docs/forza-telemetry/` 配下を参照
-- Stream Deck API仕様: `docs/stream-deck-docs/index.md` を参照
-- アーキテクチャ概要＆ディレクトリ構造: `docs/architecture.md` を参照
-- UIデザインルール: `docs/design-rules.md` を参照
-- Marketplace掲載用説明文: `docs/marketplace-listing.md` を参照
-- リリースロードマップ・進捗管理: `docs/release-roadmap.md` を参照
+- テレメトリ定義: `docs/forza-telemetry/`
+- Stream Deck API仕様: `docs/stream-deck-docs/index.md`
+- アーキテクチャ概要＆ディレクトリ構造: `docs/architecture.md`
+- UIデザインルール: `docs/design-rules.md`
+- Marketplace掲載用説明文: `docs/marketplace-listing.md`
+- リリースロードマップ・進捗管理: `docs/release-roadmap.md`
 
 ### ドキュメント記述ルール
 

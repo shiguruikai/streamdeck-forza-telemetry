@@ -105,7 +105,7 @@ export function createAllWheelsImage(
   const cy = height / 2;
 
   const bodyW = 24;
-  const bodyH = bodyW * 3;
+  const bodyH = bodyW * (titleInfo ? 2 : 3);
   const bodyX = cx - bodyW / 2;
   const bodyY = cy - bodyH / 2 + adj.offsetY;
 
@@ -175,8 +175,8 @@ export function createAllWheelsImage(
   } else {
     // キーパッドの場合、バーの上または下に値のテキストを表示する。
     const fontSize = 20;
-    const textX_Left = barX_Left + 34;
-    const textX_Right = barX_Right + barW + 20;
+    const textX_Left = 66;
+    const textX_Right = width - PADDING;
     const textY_Front = barY_Front - 6;
     const textY_Rear = barY_Rear + barH + 22;
 
@@ -307,7 +307,8 @@ export function createGForceImage(
 
   const leftTextX = PADDING;
   const rightTextX = width - PADDING;
-  const bottomTextY = height - PADDING;
+  const bottomTextY = height - PADDING + (titleInfo?.titleAlignment === 'bottom' ? adj.offsetY * 2 : 0);
+  const peakTextY = 22 + (titleInfo?.titleAlignment === 'bottom' ? 0 : adj.offsetY * 2);
 
   return toSvgDataUri(`
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none">
@@ -322,10 +323,10 @@ export function createGForceImage(
 
   ${peakCircle}
 
-  <line x1="${cx}" y1="${cy}" x2="${currentPlotX}" y2="${currentPlotY}" stroke="${Color.RED}" stroke-width="6" opacity="0.5"/>
+  <line x1="${cx}" y1="${cy}" x2="${currentPlotX}" y2="${currentPlotY}" stroke="${Color.RED}" stroke-width="4" opacity="0.6"/>
   <circle cx="${currentPlotX}" cy="${currentPlotY}" r="${rBall}" fill="${Color.RED}"/>
 
-  <text x="${rightTextX}" y="${22 + adj.offsetY * 2}" text-anchor="end" font-size="${fontSize}" fill="${Color.YELLOW}">${peakText}</text>
+  <text x="${rightTextX}" y="${peakTextY}" text-anchor="end" font-size="${fontSize}" fill="${Color.YELLOW}">${peakText}</text>
   <text x="${leftTextX}" y="${bottomTextY}" font-size="${fontSize}" fill="${Color.GREY}">${scaleText}</text>
   <text x="${rightTextX}" y="${bottomTextY}" text-anchor="end" font-size="${fontSize}" fill="${Color.WHITE}">${currentGText}</text>
 
@@ -351,9 +352,9 @@ export function createSpeedMeterImage(
   const rpmBarPaddingX = PADDING * 2;
   const rpmBarW = width - rpmBarPaddingX;
   const rpmFillW = clamp(rpmBarW * rpmPct, 0, rpmBarW);
-  const rpmBarH = 20;
 
   if (isDial) {
+    const rpmBarH = 20;
     const rpmBarX = PADDING;
     const rpmBarY = height - rpmBarH - PADDING;
     const speedY = 64;
@@ -376,24 +377,32 @@ export function createSpeedMeterImage(
 </svg>
 `);
   } else {
-    const cx = width / 2;
-    const cy = height / 2;
+    const speedX = width - 55;
+    const speedY = 66 + adj.offsetY;
 
-    const speedY = 44 + adj.offsetY;
-    const gearCircleY = cy + 8 + adj.offsetY;
-    const gearTextY = cy + 24 + adj.offsetY;
-    const rpmBarX = PADDING;
-    const rpmBarY = height - rpmBarH - PADDING + adj.offsetY;
+    const speedUnitX = width - PADDING;
+
+    const gearFontSize = 28;
+    const gearR = gearFontSize * 0.7;
+    const gearCircleX = 34;
+    const gearCircleY = speedY + 35;
+    const gearTextY = gearCircleY + gearFontSize * 0.38;
+
+    const rpmBarH = 30;
+    const rpmBarX = 65;
+    const rpmBarY = speedY + 20;
+    const rpmBarW = width - rpmBarX - PADDING;
+    const rpmFillW = clamp(rpmBarW * rpmPct, 0, rpmBarW);
 
     return toSvgDataUri(`
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none">
   ${getCommonStyle()}
 
-  <text x="${cx + 12}" y="${speedY}" font-size="44" fill="${Color.WHITE}" text-anchor="end">${speed}</text>
-  <text x="${cx + 64}" y="${speedY}" font-size="18" fill="${Color.GREY}" text-anchor="end">${unit}</text>
+  <text x="${speedX}" y="${speedY}" font-size="48" fill="${Color.WHITE}" text-anchor="end">${speed}</text>
+  <text x="${speedUnitX}" y="${speedY}" font-size="18" fill="${Color.GREY}" text-anchor="end">${unit}</text>
 
-  <circle cx="${cx}" cy="${gearCircleY}" r="24" stroke="${Color.GREEN}" stroke-width="3"/>
-  <text x="${cx}" y="${gearTextY}" font-size="42" fill="${Color.GREEN}" text-anchor="middle">${gear}</text>
+  <circle cx="${gearCircleX}" cy="${gearCircleY}" r="${gearR}" stroke="${Color.GREEN}" stroke-width="4"/>
+  <text x="${gearCircleX}" y="${gearTextY}" font-size="${gearFontSize}" fill="${Color.GREEN}" text-anchor="middle">${gear}</text>
 
   <rect x="${rpmBarX}" y="${rpmBarY}" width="${rpmBarW}" height="${rpmBarH}" fill="${Color.DARK_GREY}"/>
   <rect x="${rpmBarX}" y="${rpmBarY}" width="${rpmFillW}" height="${rpmBarH}" fill="${rpmColor}"/>
@@ -513,35 +522,7 @@ export function createSingleValueImage(
   ${adj.titleElement}
 
   <text x="${cx}" y="${cy + 21}" font-size="56" text-anchor="middle" fill="${Color.WHITE}">${value ?? ''}</text>
-  ${unit ? `<text x="${unitX}" y="${unitY}" font-size="20" text-anchor="end" fill="${Color.GREY}">${unit}</text>` : ''}
-</svg>
-`);
-}
-
-export function createGearImage(
-  isDial: boolean,
-  gear: string,
-  titleInfo?: TitleInfo,
-): string {
-  const adj = getLayoutAdjustments(isDial, titleInfo);
-
-  const width = isDial ? DIAL_WIDTH : KEY_WIDTH;
-  const height = isDial ? DIAL_HEIGHT : KEY_HEIGHT;
-
-  const cx = width / 2;
-  const cy = height / 2 + adj.offsetY;
-
-  const fontSize = isDial ? 50 : 60;
-  const r = fontSize * 0.7;
-  const textY = cy + fontSize * 0.38;
-
-  return toSvgDataUri(`
-<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none">
-  ${getCommonStyle()}
-  ${adj.titleElement}
-
-  <circle cx="${cx}" cy="${cy}" r="${r}" stroke="${Color.GREEN}" stroke-width="4"/>
-  <text x="${cx}" y="${textY}" font-size="${fontSize}" text-anchor="middle" fill="${Color.GREEN}">${gear}</text>
+  ${unit ? `<text x="${unitX}" y="${unitY}" font-size="24" text-anchor="end" fill="${Color.GREY}">${unit}</text>` : ''}
 </svg>
 `);
 }
@@ -571,7 +552,35 @@ export function createRpmImage(
   ${adj.titleElement}
 
   <text x="${cx}" y="${cy + 19}" font-size="50" text-anchor="middle" fill="${rpmColor}">${rpm.toFixed(0)}</text>
-  <text x="${unitX}" y="${unitY}" font-size="20" text-anchor="end" fill="${Color.GREY}">RPM</text>
+  <text x="${unitX}" y="${unitY}" font-size="24" text-anchor="end" fill="${Color.GREY}">RPM</text>
+</svg>
+`);
+}
+
+export function createGearImage(
+  isDial: boolean,
+  gear: string,
+  titleInfo?: TitleInfo,
+): string {
+  const adj = getLayoutAdjustments(isDial, titleInfo);
+
+  const width = isDial ? DIAL_WIDTH : KEY_WIDTH;
+  const height = isDial ? DIAL_HEIGHT : KEY_HEIGHT;
+
+  const cx = width / 2;
+  const cy = height / 2 + adj.offsetY;
+
+  const fontSize = isDial ? 50 : 60;
+  const r = fontSize * 0.7;
+  const textY = cy + fontSize * 0.38;
+
+  return toSvgDataUri(`
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none">
+  ${getCommonStyle()}
+  ${adj.titleElement}
+
+  <circle cx="${cx}" cy="${cy}" r="${r}" stroke="${Color.GREEN}" stroke-width="4"/>
+  <text x="${cx}" y="${textY}" font-size="${fontSize}" text-anchor="middle" fill="${Color.GREEN}">${gear}</text>
 </svg>
 `);
 }

@@ -16,7 +16,7 @@ import {
   formatSpeed,
   formatUnit,
 } from '../utils/format';
-import { createGearImage, createRpmImage, createSingleValueImage, createSpeedMeterImage } from '../utils/image';
+import { Color, createGearImage, createRpmImage, createSingleValueImage, createSpeedMeterImage } from '../utils/image';
 import { clamp } from '../utils/utils';
 import { PressDurationAction } from './press-duration';
 
@@ -41,7 +41,7 @@ export class SpeedMeterAction extends PressDurationAction<SpeedMeterSettings> {
     let speedText = '0';
     let gearText = 'N';
     let rpmPct = 0;
-    let rpmColor = '#ffffff';
+    let rpmColor: string = Color.WHITE;
 
     if (data) {
       speedText = formatSpeed(data.speed, unit);

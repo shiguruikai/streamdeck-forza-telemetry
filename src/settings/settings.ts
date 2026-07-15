@@ -15,10 +15,13 @@ export type RaceInfoLayout = typeof RACE_INFO_LAYOUTS[number];
 export const SPEED_METER_LAYOUTS = ['full', 'speed', 'gear', 'rpm'] as const;
 export type SpeedMeterLayout = typeof SPEED_METER_LAYOUTS[number];
 
+export const DEFAULT_FPS = 10;
+
 export type GlobalSettings = {
   port?: number;
   address?: string;
   font?: string;
+  fps?: number;
 };
 
 export function parseSettings(jsonSettings: object): GlobalSettings {
@@ -43,6 +46,14 @@ export function parseSettings(jsonSettings: object): GlobalSettings {
     const font = jsonSettings.font;
     if (typeof font === 'string') {
       result.font = font;
+    }
+  }
+
+  if ('fps' in jsonSettings) {
+    const fpsValue = jsonSettings.fps;
+    const fps = typeof fpsValue === 'number' ? fpsValue : Number.parseInt(String(fpsValue), 10);
+    if (Number.isInteger(fps) && fps >= 10 && fps <= 30) {
+      result.fps = fps;
     }
   }
 

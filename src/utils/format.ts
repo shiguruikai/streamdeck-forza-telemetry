@@ -105,7 +105,7 @@ const TIRE_COLORS: string[] = (function () {
       hue = 120 - 120 * ratio;
     }
 
-    const { r, g, b } = hslToRgb(hue, 100, 50);
+    const { r, g, b } = hslToRgb(hue, 100, 60);
     result.push(`rgb(${r},${g},${b})`);
   }
 
@@ -144,7 +144,7 @@ const SUSPENSION_TRAVEL_COLORS: string[] = (function () {
       hue = 120 - 120 * ratio;
     }
 
-    const { r, g, b } = hslToRgb(hue, 100, 50);
+    const { r, g, b } = hslToRgb(hue, 100, 60);
     result.push(`rgb(${r},${g},${b})`);
   }
 
