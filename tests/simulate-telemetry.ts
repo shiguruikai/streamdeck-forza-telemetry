@@ -12,44 +12,31 @@ const SHIFT_UP_RPM = 7500;
 const TIRE_RADIUS_M = 0.33; // タイヤ半径（メートル）
 const FINAL_DRIVE = 3.5;
 
-// 各ギアのギア比（インデックス0はリバース［R］、1以上が前進ギア）
 const GEAR_RATIOS: number[] = [3.0, 3.0, 2.0, 1.5, 1.1, 0.85, 0.65];
 const MAX_GEAR: number = GEAR_RATIOS.length - 1;
 
 // 物理定数
 const G_ACCELERATION = 9.80665;
 
-/**
- * FH6 Data Out パケットのバイトオフセット定義
- */
-const PACKET_OFFSET = {
-  IS_RACE_ON: 0,
-  TIMESTAMP_MS: 4,
-  ENGINE_MAX_RPM: 8,
-  ENGINE_IDLE_RPM: 12,
-  CURRENT_ENGINE_RPM: 16,
-  ACCELERATION_X: 20,
-  ACCELERATION_Y: 24,
-  ACCELERATION_Z: 28,
-  SUSPENSION_TRAVEL_FL: 68,
-  SUSPENSION_TRAVEL_FR: 72,
-  SUSPENSION_TRAVEL_RL: 76,
-  SUSPENSION_TRAVEL_RR: 80,
-  SPEED: 256,
-  TIRE_TEMP_FL: 268,
-  TIRE_TEMP_FR: 272,
-  TIRE_TEMP_RL: 276,
-  TIRE_TEMP_RR: 280,
-  BEST_LAP: 296,
-  LAST_LAP: 300,
-  CURRENT_LAP: 304,
-  CURRENT_RACE_TIME: 308,
-  LAP_NUMBER: 312,
-  RACE_POSITION: 314,
-  ACCEL: 315,
-  BRAKE: 316,
-  GEAR: 319,
-} as const;
+let format: 'fh6' | 'fm8-dash' | 'fm7-dash' | 'fm-sled' = 'fh6';
+
+// 引数のパース
+const args = process.argv.slice(2);
+const formatIndex = args.indexOf('--format');
+if (formatIndex !== -1) {
+  const formatVal = args[formatIndex + 1];
+  if (!formatVal) {
+    console.error('Error: --format option requires a value. Allowed values: fh6, fm8-dash, fm7-dash, fm-sled');
+    process.exit(1);
+  }
+  const f = formatVal.toLowerCase();
+  if (f === 'fh6' || f === 'fm8-dash' || f === 'fm7-dash' || f === 'fm-sled') {
+    format = f;
+  } else {
+    console.error(`Invalid format: ${f}. Allowed values: fh6, fm8-dash, fm7-dash, fm-sled`);
+    process.exit(1);
+  }
+}
 
 /**
  * 車両のシミュレーション状態を保持するインターフェース
@@ -143,47 +130,103 @@ function calculateSpeed(rpm: number, gear: number): number {
 }
 
 /**
- * FH6のData Out仕様に準拠した324バイトのUDPペイロードを生成します。
- *
- * @param state 現在の車両シミュレーション状態
- * @returns 生成されたテレメトリパケットのバイナリデータ
+ * 共通のSledデータ書き込み処理（0〜231バイト）
+ */
+function writeSledData(buf: Buffer, state: CarState): void {
+  buf.writeInt32LE(1, 0); // IS_RACE_ON
+  buf.writeUInt32LE(state.timestampMs, 4); // TIMESTAMP_MS
+  buf.writeFloatLE(MAX_RPM, 8); // ENGINE_MAX_RPM
+  buf.writeFloatLE(IDLE_RPM, 12); // ENGINE_IDLE_RPM
+  buf.writeFloatLE(state.rpm, 16); // CURRENT_ENGINE_RPM
+  buf.writeFloatLE(state.accelerationX, 20); // ACCELERATION_X
+  buf.writeFloatLE(state.accelerationY, 24); // ACCELERATION_Y
+  buf.writeFloatLE(state.accelerationZ, 28); // ACCELERATION_Z
+
+  // 必要なSledデータを埋める
+  buf.writeFloatLE(state.suspensionFL, 68);
+  buf.writeFloatLE(state.suspensionFR, 72);
+  buf.writeFloatLE(state.suspensionRL, 76);
+  buf.writeFloatLE(state.suspensionRR, 80);
+}
+
+/**
+ * 共通のDashデータ書き込み処理
+ */
+function writeDashData(buf: Buffer, state: CarState, offsetDiff: number): void {
+  buf.writeFloatLE(0, 232 + offsetDiff); // positionX
+  buf.writeFloatLE(0, 236 + offsetDiff); // positionY
+  buf.writeFloatLE(0, 240 + offsetDiff); // positionZ
+  buf.writeFloatLE(state.speed, 244 + offsetDiff);
+  buf.writeFloatLE(0, 248 + offsetDiff); // power
+  buf.writeFloatLE(0, 252 + offsetDiff); // torque
+  buf.writeFloatLE(state.tireTempFL, 256 + offsetDiff);
+  buf.writeFloatLE(state.tireTempFR, 260 + offsetDiff);
+  buf.writeFloatLE(state.tireTempRL, 264 + offsetDiff);
+  buf.writeFloatLE(state.tireTempRR, 268 + offsetDiff);
+  buf.writeFloatLE(0, 272 + offsetDiff); // boost
+  buf.writeFloatLE(0, 276 + offsetDiff); // fuel
+  buf.writeFloatLE(0, 280 + offsetDiff); // distanceTraveled
+  buf.writeFloatLE(state.bestLap, 284 + offsetDiff);
+  buf.writeFloatLE(state.lastLap, 288 + offsetDiff);
+  buf.writeFloatLE(state.currentLap, 292 + offsetDiff);
+  buf.writeFloatLE(state.currentRaceTime, 296 + offsetDiff);
+  buf.writeUInt16LE(state.lapNumber, 300 + offsetDiff);
+  buf.writeUInt8(state.racePosition, 302 + offsetDiff);
+  buf.writeUInt8(255, 303 + offsetDiff); // accel
+  buf.writeUInt8(0, 304 + offsetDiff); // brake
+  buf.writeUInt8(0, 305 + offsetDiff); // clutch
+  buf.writeUInt8(0, 306 + offsetDiff); // handBrake
+  buf.writeUInt8(state.gear, 307 + offsetDiff);
+  buf.writeInt8(0, 308 + offsetDiff); // steer
+  buf.writeInt8(0, 309 + offsetDiff); // normalizedDrivingLine
+  buf.writeInt8(0, 310 + offsetDiff); // normalizedAIBrakeDifference
+}
+
+/**
+ * 送信フォーマットに応じたパケットバッファを生成します。
  */
 function buildTelemetryPacket(state: CarState): Buffer {
-  const buf: Buffer = Buffer.alloc(324, 0); // 未使用領域は0で初期化
+  if (format === 'fm-sled') {
+    // Sled 形式 (232バイト)
+    const buf = Buffer.alloc(232, 0);
+    writeSledData(buf, state);
+    return buf;
+  }
 
-  buf.writeInt32LE(1, PACKET_OFFSET.IS_RACE_ON);
-  buf.writeUInt32LE(state.timestampMs, PACKET_OFFSET.TIMESTAMP_MS);
-  buf.writeFloatLE(MAX_RPM, PACKET_OFFSET.ENGINE_MAX_RPM);
-  buf.writeFloatLE(IDLE_RPM, PACKET_OFFSET.ENGINE_IDLE_RPM);
-  buf.writeFloatLE(state.rpm, PACKET_OFFSET.CURRENT_ENGINE_RPM);
+  if (format === 'fm7-dash') {
+    // FM7 Dash 形式 (311バイト)
+    const buf = Buffer.alloc(311, 0);
+    writeSledData(buf, state);
+    writeDashData(buf, state, 0); // オフセットシフトなし
+    return buf;
+  }
 
-  buf.writeFloatLE(state.accelerationX, PACKET_OFFSET.ACCELERATION_X);
-  buf.writeFloatLE(state.accelerationY, PACKET_OFFSET.ACCELERATION_Y);
-  buf.writeFloatLE(state.accelerationZ, PACKET_OFFSET.ACCELERATION_Z);
+  if (format === 'fm8-dash') {
+    // FM8 Dash 形式 (331バイト)
+    const buf = Buffer.alloc(331, 0);
+    writeSledData(buf, state);
+    writeDashData(buf, state, 0); // オフセットシフトなし
 
-  buf.writeFloatLE(state.suspensionFL, PACKET_OFFSET.SUSPENSION_TRAVEL_FL);
-  buf.writeFloatLE(state.suspensionFR, PACKET_OFFSET.SUSPENSION_TRAVEL_FR);
-  buf.writeFloatLE(state.suspensionRL, PACKET_OFFSET.SUSPENSION_TRAVEL_RL);
-  buf.writeFloatLE(state.suspensionRR, PACKET_OFFSET.SUSPENSION_TRAVEL_RR);
+    // FM8固有の末尾データ (Offset 311〜330)
+    buf.writeFloatLE(0.01, 311); // tireWearFrontLeft
+    buf.writeFloatLE(0.02, 315); // tireWearFrontRight
+    buf.writeFloatLE(0.03, 319); // tireWearRearLeft
+    buf.writeFloatLE(0.04, 323); // tireWearRearRight
+    buf.writeInt32LE(42, 327); // trackOrdinal
+    return buf;
+  }
 
-  buf.writeFloatLE(state.speed, PACKET_OFFSET.SPEED);
+  // デフォルト: FH6/FH5 形式 (324バイト)
+  const buf = Buffer.alloc(324, 0);
+  writeSledData(buf, state);
 
-  buf.writeFloatLE(state.tireTempFL, PACKET_OFFSET.TIRE_TEMP_FL);
-  buf.writeFloatLE(state.tireTempFR, PACKET_OFFSET.TIRE_TEMP_FR);
-  buf.writeFloatLE(state.tireTempRL, PACKET_OFFSET.TIRE_TEMP_RL);
-  buf.writeFloatLE(state.tireTempRR, PACKET_OFFSET.TIRE_TEMP_RR);
+  // FH6/5 の追加データ (Offset 232〜243)
+  buf.writeUInt32LE(99, 232); // carGroup
+  buf.writeFloatLE(0.5, 236); // smashableVelDiff
+  buf.writeFloatLE(100.0, 240); // smashableMass
 
-  buf.writeFloatLE(state.bestLap, PACKET_OFFSET.BEST_LAP);
-  buf.writeFloatLE(state.lastLap, PACKET_OFFSET.LAST_LAP);
-  buf.writeFloatLE(state.currentLap, PACKET_OFFSET.CURRENT_LAP);
-  buf.writeFloatLE(state.currentRaceTime, PACKET_OFFSET.CURRENT_RACE_TIME);
-  buf.writeUInt16LE(state.lapNumber, PACKET_OFFSET.LAP_NUMBER);
-  buf.writeUInt8(state.racePosition, PACKET_OFFSET.RACE_POSITION);
-
-  buf.writeUInt8(255, PACKET_OFFSET.ACCEL);
-  buf.writeUInt8(0, PACKET_OFFSET.BRAKE);
-  buf.writeUInt8(state.gear, PACKET_OFFSET.GEAR);
-
+  // 12バイトずらしてDashデータを書き込む
+  writeDashData(buf, state, 12);
   return buf;
 }
 

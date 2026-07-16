@@ -1,9 +1,8 @@
 import { EventEmitter } from 'node:events';
-import { isNativeError } from 'node:util/types';
 
 import streamDeck from '@elgato/streamdeck';
 
-import { ForzaTelemetryData, parseToForzaTelemetryData } from './parser';
+import { ForzaTelemetryData, parseToForzaTelemetryData, SledFormatNotSupportedError, UnsupportedPacketSizeError } from './parser';
 import { TelemetryServer } from './server';
 
 type TelemetryManagerEvents = {
@@ -25,13 +24,18 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
   private readonly logger = streamDeck.logger.createScope(TelemetryManager.name);
 
   private readonly server: TelemetryServer;
-  private lastUpdate = 0;
+
   // Elgato Marketplace の Plugin Guidelines（Programmatic Floodingの回避）に従い、
   // 描画更新頻度は秒間最大10回（10Hz）以下が推奨されます。
   // 本プラグインでは設定画面から 10〜30 FPS（100ms〜33.3ms）まで可変設定できるよう、動的変更に対応します。
   private updateIntervalMs = 100;
 
+  private lastProcessed = 0;
+
   private startParams?: { port?: number; address?: string };
+
+  private lastWarningTime = 0;
+  private readonly warningIntervalMs = 5000;
 
   // タイムアウト監視用。
   // ゲーム未起動状態やポート設定の誤りを検知するため、UDPサーバー起動後は
@@ -45,26 +49,35 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
     this.server = new TelemetryServer();
 
     this.server.on('message', (msg) => {
+      // 通信自体は届いているため、タイムアウト状態であれば解除し、タイマーをリセット
       if (this.isTimeout) {
         this.logger.info('Telemetry data reception resumed.');
+        this.isTimeout = false;
       }
-
-      // 次のタイムアウト判定タイマーを開始
       this.resetTimeoutTimer();
 
       const now = Date.now();
 
       // スロットリング
-      if (now - this.lastUpdate < this.updateIntervalMs) {
+      if (now - this.lastProcessed < this.updateIntervalMs) {
         return;
       }
+      this.lastProcessed = now;
 
       try {
         const data = parseToForzaTelemetryData(msg);
-        this.lastUpdate = now;
         this.emit('data', data);
       } catch (error) {
-        this.emit('error', isNativeError(error) ? error : new Error(`Failed to parse telemetry data. ${String(error)}`));
+        if (error instanceof SledFormatNotSupportedError || error instanceof UnsupportedPacketSizeError) {
+          if (now - this.lastWarningTime > this.warningIntervalMs) {
+            this.logger.warn(error.message);
+            this.lastWarningTime = now;
+            // 5秒に1回のみ error イベントを emit し、即時警告とパフォーマンス維持を両立
+            this.emit('error', error);
+          }
+          return;
+        }
+        this.emit('error', error as Error);
       }
     });
 
@@ -99,6 +112,7 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
         this.server.stop();
 
         this.isTimeout = false;
+        this.lastProcessed = 0;
         this.clearTimeoutTimer();
       });
     });
@@ -130,6 +144,7 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
     this.startParams = undefined;
     this.clearTimeoutTimer();
     this.isTimeout = false;
+    this.lastProcessed = 0;
     this.server.stop();
   }
 
