@@ -2,7 +2,7 @@
 
 ## プロジェクト概要
 
-レースシミュレーションゲーム Forza Horizon からテレメトリデータを受信し、Stream Deck + の液晶キーおよびタッチディスプレイの両方に対応した5つのアクション（速度計、ラップタイム、Gフォース、タイヤ温度、サスペンション移動量）を提供する Stream Deck プラグイン。
+レースシミュレーションゲーム Forza Horizon および Forza Motorsport からテレメトリデータを受信し、Stream Deck + の液晶キーおよびタッチディスプレイの両方に対応した5つのアクション（速度計、ラップタイム、Gフォース、タイヤ温度、サスペンション移動量）を提供する Stream Deck プラグイン。
 
 ## 技術スタック
 
@@ -14,7 +14,11 @@
 - `pnpm build`: プラグインのビルド
 - `pnpm watch`: 変更監視ビルドおよび自動再起動
 - `pnpm lint:fix`: ESLintによるコード修正（JavaScript、TypeScript、JSONのみ対象）
-- `pnpm sim`: 擬似テレメトリ送信（`tests/simulate-telemetry.ts` の実行）
+- `pnpm sim`: 擬似テレメトリ送信（`tests/simulate-telemetry.ts`のデフォルト実行）
+  - `pnpm sim:fh6`: FH6形式
+  - `pnpm sim:fm7`: FM7 Dash形式
+  - `pnpm sim:fm8`: FM8 Dash形式
+  - `pnpm sim:sled`: FM Sled形式（非対応）
 - `pnpm streamdeck:validate`: プラグイン構成の検証
 - `pnpm streamdeck:restart`: プラグインの強制再起動
 - `pnpm streamdeck:pack`: 配布ファイルの作成

@@ -67,13 +67,13 @@
 
 ```mermaid
 flowchart LR
-    FH[Forza Horizon]
+    Forza["Forza シリーズ\n（Horizon / Motorsport）"]
     Server[TelemetryServer]
     Manager[TelemetryManager]
     Actions[TelemetryAction\nサブクラス]
     SD[Stream Deck]
 
-    FH -->|UDPパケット| Server
+    Forza -->|UDPパケット| Server
     subgraph 本プラグイン
         Server --> Manager
         Manager --> Actions
@@ -93,6 +93,10 @@ flowchart LR
 - **役割**: 受信データのパースおよびアクションへの配信管理を行うシングルトンインスタンス。
   - 使用する際はインスタンスを直接インポートする。例：`import { telemetryManager } from '../telemetry/manager';`
 - **データ解析とスロットリング**: `TelemetryServer` から生パケットを受信後、グローバル設定のFPS（10〜30 FPS、デフォルト10 FPS）に基づいた配信間隔に動的制限（スロットリング）しつつ、パース処理（[parser.ts](../src/telemetry/parser.ts)）でオブジェクト構造に変換してからイベントとして各アクションへブロードキャストする。
+  - **対応フォーマット**:
+    - Forza Horizon（324バイト）
+    - Forza Motorsport 7 Dash形式（311バイト）
+    - Forza Motorsport 8 Dash形式（331バイト） ※Sled形式（232バイト）は未サポート。
 - **リソースの自動管理**: `data` イベントの購読数でアクティブなアクションの増減を監視し、ソケットの開閉を自動制御する。
   - アクションが画面に表示されたとき、`TelemetryServer` を自動起動。
   - すべてのアクションが画面から消えたとき、`TelemetryServer` を自動停止。
