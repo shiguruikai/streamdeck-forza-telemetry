@@ -9,8 +9,7 @@ import {
 
 import { SuspensionMode, WHEEL_POSITIONS, WheelPosition } from '../settings/settings';
 import { ForzaTelemetryData } from '../telemetry/parser';
-import { formatTravel, formatTravelColor } from '../utils/format';
-import { createAllWheelsImage, createWheelImage } from '../utils/image';
+import { createSuspensionTravelAllWheelsImage, createSuspensionTravelSingleWheelImage } from '../utils/image';
 import { getNextWheelPosition } from '../utils/utils';
 import { PressDurationAction } from './press-duration';
 
@@ -21,8 +20,6 @@ type SuspensionTravelSettings = {
 
 type EventAction = DialAction<SuspensionTravelSettings> | KeyAction<SuspensionTravelSettings>;
 
-const DEFAULT_TRAVEL_VALUE = 0.5;
-
 @action({
   UUID: 'com.github.shiguruikai.streamdeck-forza-telemetry.suspension-travel',
 })
@@ -30,42 +27,12 @@ export class SuspensionTravelAction extends PressDurationAction<SuspensionTravel
   private async updateImage(action: EventAction, data?: ForzaTelemetryData): Promise<void> {
     const { position = WHEEL_POSITIONS[0], mode = 'percentage' } = this.getSettings(action.id) ?? {};
 
-    const travelFL = data ? data.normalizedSuspensionTravelFrontLeft : DEFAULT_TRAVEL_VALUE;
-    const travelFR = data ? data.normalizedSuspensionTravelFrontRight : DEFAULT_TRAVEL_VALUE;
-    const travelRL = data ? data.normalizedSuspensionTravelRearLeft : DEFAULT_TRAVEL_VALUE;
-    const travelRR = data ? data.normalizedSuspensionTravelRearRight : DEFAULT_TRAVEL_VALUE;
-
     const isDial = action.isDial();
     const titleInfo = this.getTitleInfo(action.id);
-    let image;
-    if (position === 'all') {
-      // 全輪表示モード
-      const values = [travelFL, travelFR, travelRL, travelRR];
-      const texts = values.map((v) => formatTravel(v, mode));
-      const colors = values.map((v) => formatTravelColor(v));
-      image = createAllWheelsImage(isDial, values, texts, colors, 0, titleInfo);
-    } else {
-      // 単一表示モード
-      let value;
-      if (position === 'fl') {
-        value = travelFL;
-      } else if (position === 'fr') {
-        value = travelFR;
-      } else if (position === 'rl') {
-        value = travelRL;
-      } else {
-        value = travelRR;
-      }
-      image = createWheelImage(
-        isDial,
-        position,
-        value,
-        formatTravel(value, mode),
-        formatTravelColor(value),
-        0,
-        titleInfo,
-      );
-    }
+
+    const image = position === 'all'
+      ? createSuspensionTravelAllWheelsImage(isDial, data, mode, titleInfo)
+      : createSuspensionTravelSingleWheelImage(isDial, position, data, mode, titleInfo);
 
     if (isDial) {
       await action.setFeedback({ canvas: image });

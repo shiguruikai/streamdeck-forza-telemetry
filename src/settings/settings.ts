@@ -8,6 +8,7 @@ export type SuspensionMode = 'percentage' | 'value';
 
 export const WHEEL_POSITIONS = ['all', 'fl', 'fr', 'rl', 'rr'] as const;
 export type WheelPosition = typeof WHEEL_POSITIONS[number];
+export type SingleWheelPosition = Exclude<WheelPosition, 'all'>;
 
 export const RACE_INFO_LAYOUTS = ['lap-time', 'race-time', 'race-time-only', 'current-time-only', 'best-time-only', 'lap-only', 'position-only'] as const;
 export type RaceInfoLayout = typeof RACE_INFO_LAYOUTS[number];

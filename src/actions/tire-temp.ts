@@ -9,8 +9,7 @@ import {
 
 import { TempUnit, WHEEL_POSITIONS, WheelPosition } from '../settings/settings';
 import { ForzaTelemetryData } from '../telemetry/parser';
-import { formatTemp, formatTireColor } from '../utils/format';
-import { createAllWheelsImage, createWheelImage } from '../utils/image';
+import { createTireTempAllWheelsImage, createTireTempSingleWheelImage } from '../utils/image';
 import { getNextWheelPosition } from '../utils/utils';
 import { PressDurationAction } from './press-duration';
 
@@ -28,50 +27,12 @@ export class TireTempAction extends PressDurationAction<TireTempSettings> {
   private async updateImage(action: EventAction, data?: ForzaTelemetryData): Promise<void> {
     const { position = WHEEL_POSITIONS[0], unit = 'celsius' } = this.getSettings(action.id) ?? {};
 
-    const tempFL = data ? data.tireTempFrontLeft : 0;
-    const tempFR = data ? data.tireTempFrontRight : 0;
-    const tempRL = data ? data.tireTempRearLeft : 0;
-    const tempRR = data ? data.tireTempRearRight : 0;
-
     const isDial = action.isDial();
     const titleInfo = this.getTitleInfo(action.id);
-    let image: string;
-    if (position === 'all') {
-      const colorFL = formatTireColor(tempFL);
-      const colorFR = formatTireColor(tempFR);
-      const colorRL = formatTireColor(tempRL);
-      const colorRR = formatTireColor(tempRR);
 
-      const values = [1, 1, 1, 1]; // タイヤは常にフルサイズ（比率1）で表示するため
-      const texts = [
-        formatTemp(tempFL, unit),
-        formatTemp(tempFR, unit),
-        formatTemp(tempRL, unit),
-        formatTemp(tempRR, unit),
-      ];
-      const colors = [colorFL, colorFR, colorRL, colorRR];
-      image = createAllWheelsImage(isDial, values, texts, colors, 0.4, titleInfo);
-    } else {
-      let value: number;
-      if (position === 'fl') {
-        value = tempFL;
-      } else if (position === 'fr') {
-        value = tempFR;
-      } else if (position === 'rl') {
-        value = tempRL;
-      } else {
-        value = tempRR;
-      }
-      image = createWheelImage(
-        isDial,
-        position,
-        1,
-        formatTemp(value, unit),
-        formatTireColor(value),
-        0.4,
-        titleInfo,
-      );
-    }
+    const image = position === 'all'
+      ? createTireTempAllWheelsImage(isDial, data, unit, titleInfo)
+      : createTireTempSingleWheelImage(isDial, position, data, unit, titleInfo);
 
     if (isDial) {
       await action.setFeedback({ canvas: image });

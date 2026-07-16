@@ -10,13 +10,7 @@ import {
 
 import { SPEED_METER_LAYOUTS, SpeedMeterLayout, SpeedUnit } from '../settings/settings';
 import { ForzaTelemetryData } from '../telemetry/parser';
-import {
-  formatGear,
-  formatRpmBar,
-  formatSpeed,
-  formatUnit,
-} from '../utils/format';
-import { Color, createGearImage, createRpmImage, createSingleValueImage, createSpeedMeterImage } from '../utils/image';
+import { createSpeedMeterImage } from '../utils/image';
 import { clamp } from '../utils/utils';
 import { PressDurationAction } from './press-duration';
 
@@ -36,36 +30,19 @@ export class SpeedMeterAction extends PressDurationAction<SpeedMeterSettings> {
   private async updateImage(action: EventAction, data?: ForzaTelemetryData): Promise<void> {
     const { layout = 'full', unit = 'kmh' } = this.getSettings(action.id) ?? {};
 
-    const unitText = formatUnit(unit);
-
-    let speedText = '0';
-    let gearText = 'N';
-    let rpmPct = 0;
-    let rpmColor: string = Color.WHITE;
-
-    if (data) {
-      speedText = formatSpeed(data.speed, unit);
-      const gear = formatGear(data.gear) ?? this.previousGears.get(action.id) ?? 'N';
-      this.previousGears.set(action.id, gear);
-      gearText = gear;
-
-      const rpmInfo = formatRpmBar(data.currentEngineRpm, data.engineMaxRpm);
-      rpmPct = rpmInfo.rpmPct;
-      rpmColor = rpmInfo.rpmColor;
-    }
-
     const isDial = action.isDial();
     const titleInfo = this.getTitleInfo(action.id);
-    let image: string;
-    if (layout === 'full') {
-      image = createSpeedMeterImage(isDial, speedText, gearText, rpmPct, rpmColor, unitText, titleInfo);
-    } else if (layout === 'speed') {
-      image = createSingleValueImage(isDial, speedText, unitText, titleInfo);
-    } else if (layout === 'gear') {
-      image = createGearImage(isDial, gearText, titleInfo);
-    } else {
-      image = createRpmImage(isDial, data?.currentEngineRpm, data?.engineMaxRpm, titleInfo);
-    }
+
+    const { image, currentGearText } = createSpeedMeterImage(
+      isDial,
+      layout,
+      data,
+      unit,
+      this.previousGears.get(action.id),
+      titleInfo,
+    );
+
+    this.previousGears.set(action.id, currentGearText);
 
     if (isDial) {
       await action.setFeedback({ canvas: image });

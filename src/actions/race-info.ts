@@ -7,7 +7,15 @@ import {
 
 import { RACE_INFO_LAYOUTS, RaceInfoLayout } from '../settings/settings';
 import { ForzaTelemetryData } from '../telemetry/parser';
-import { createLapTimeImage, createRaceTimeImage, createSingleValueImage, createTimeImage } from '../utils/image';
+import {
+  createBestLapTimeOnlyImage,
+  createLapNumberOnlyImage,
+  createLapTimeImage,
+  createLapTimeOnlyImage,
+  createPositionOnlyImage,
+  createRaceTimeImage,
+  createRaceTimeOnlyImage,
+} from '../utils/image';
 import { clamp } from '../utils/utils';
 import { TelemetryAction } from './telemetry-action';
 
@@ -26,21 +34,22 @@ export class RaceInfoAction extends TelemetryAction<RaceInfoSettings> {
 
     const isDial = action.isDial();
     const titleInfo = this.getTitleInfo(action.id);
+
     let image: string;
     if (layout === 'race-time') {
-      image = createRaceTimeImage(isDial, data?.racePosition, data?.currentRaceTime, titleInfo);
-    } else if (layout == 'lap-time') {
-      image = createLapTimeImage(isDial, data?.lapNumber, data?.racePosition, data?.currentLap, data?.bestLap, titleInfo);
-    } else if (layout == 'race-time-only') {
-      image = createTimeImage(isDial, data?.currentRaceTime, titleInfo);
-    } else if (layout == 'current-time-only') {
-      image = createTimeImage(isDial, data?.currentLap, titleInfo);
-    } else if (layout == 'best-time-only') {
-      image = createTimeImage(isDial, data?.bestLap, titleInfo);
-    } else if (layout == 'lap-only') {
-      image = createSingleValueImage(isDial, ((data?.lapNumber ?? 0) + 1).toString(), null, titleInfo);
+      image = createRaceTimeImage(isDial, data, titleInfo);
+    } else if (layout === 'lap-time') {
+      image = createLapTimeImage(isDial, data, titleInfo);
+    } else if (layout === 'race-time-only') {
+      image = createRaceTimeOnlyImage(isDial, data, titleInfo);
+    } else if (layout === 'current-time-only') {
+      image = createLapTimeOnlyImage(isDial, data, titleInfo);
+    } else if (layout === 'best-time-only') {
+      image = createBestLapTimeOnlyImage(isDial, data, titleInfo);
+    } else if (layout === 'lap-only') {
+      image = createLapNumberOnlyImage(isDial, data, titleInfo);
     } else {
-      image = createSingleValueImage(isDial, (data?.racePosition ?? '--').toString(), null, titleInfo);
+      image = createPositionOnlyImage(isDial, data, titleInfo);
     }
 
     if (isDial) {

@@ -32,13 +32,15 @@ export function formatUnit(unit?: SpeedUnit): string {
   return unit === 'mph' ? 'MPH' : 'KM/H';
 }
 
-export function formatSpeed(speed: number, unit?: SpeedUnit): string {
-  return Math.floor(speed * (unit === 'kmh' ? 3.6 : 2.23694)).toString();
+export function formatSpeed(speed: number | null | undefined, unit?: SpeedUnit): string {
+  const s = speed ?? 0;
+  return Math.floor(s * (unit === 'kmh' ? 3.6 : 2.23694)).toString();
 }
 
-export function formatGear(gear: number): string | null {
+export function formatGear(gear: number | null | undefined): string | null {
   // ギアが有効範囲外の場合、null を返す。
   // NOTE: 実機において、シフトチェンジの瞬間に11の値となることがあるので、11以上は無効値として扱う。
+  if (gear === undefined || gear === null) return null;
   if (gear < 0 || gear > 10) return null;
   return gear === 0 ? 'R' : gear.toString();
 }
@@ -71,8 +73,9 @@ export function fahrenheitToCelsius(fahrenheit: number): number {
   return (fahrenheit - 32) / 1.8;
 }
 
-export function formatTemp(tempF: number, unit?: TempUnit): string {
-  const value = unit === 'fahrenheit' ? tempF : fahrenheitToCelsius(tempF);
+export function formatTemp(tempF: number | null | undefined, unit?: TempUnit): string {
+  const t = tempF ?? 0;
+  const value = unit === 'fahrenheit' ? t : fahrenheitToCelsius(t);
   const u = unit === 'fahrenheit' ? '℉' : '℃';
   return `${Math.round(value)}${u}`;
 }
@@ -112,8 +115,9 @@ const TIRE_COLORS: string[] = (function () {
   return result;
 })();
 
-export function formatTireColor(tempF: number): string {
-  const tempC = Math.round(fahrenheitToCelsius(tempF)) - MIN_TIRE_COLORS_TEMP_C;
+export function formatTireColor(tempF: number | null | undefined): string {
+  const t = tempF ?? 0;
+  const tempC = Math.round(fahrenheitToCelsius(t)) - MIN_TIRE_COLORS_TEMP_C;
   const index = clamp(tempC, 0, MAX_TIRE_COLORS_TEMP_C - MIN_TIRE_COLORS_TEMP_C);
   return TIRE_COLORS[index];
 }
@@ -122,8 +126,9 @@ export function formatTireColor(tempF: number): string {
 // サスペンション移動量（Suspension Travel）用フォーマット
 // =============================================================================
 
-export function formatTravel(travel: number, mode?: SuspensionMode): string {
-  return mode === 'value' ? travel.toFixed(2) : `${Math.round(travel * 100)}%`;
+export function formatTravel(travel: number | null | undefined, mode?: SuspensionMode): string {
+  const t = travel ?? 0;
+  return mode === 'value' ? t.toFixed(2) : `${Math.round(t * 100)}%`;
 }
 
 // 0%から100%まで1%刻みのRGBカラー文字列を保持するキャッシュ配列
@@ -151,7 +156,8 @@ const SUSPENSION_TRAVEL_COLORS: string[] = (function () {
   return result;
 })();
 
-export function formatTravelColor(travel: number): string {
-  const index = clamp(Math.round(travel * 100), 0, 100);
+export function formatTravelColor(travel: number | null | undefined): string {
+  const t = travel ?? 0;
+  const index = clamp(Math.round(t * 100), 0, 100);
   return SUSPENSION_TRAVEL_COLORS[index];
 }
