@@ -23,7 +23,8 @@
 │   └── manifest.json                     # プラグインの構成定義
 ├── docs/                                 # 設計・開発ドキュメント
 │   ├── forza-telemetry/                  # Forzaテレメトリデータ仕様
-│   │   └── fh6.md
+│   │   ├── fh6.md
+│   │   └── fm8.md
 │   ├── stream-deck-docs/                 # Stream Deck SDKのドキュメント群（OKF形式）
 │   ├── architecture.md                   # アーキテクチャ仕様書
 │   ├── design-rules.md                   # UIデザインルール
