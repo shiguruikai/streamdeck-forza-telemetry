@@ -255,8 +255,9 @@ export function createGForceImage(
 
   let peakCircle = '';
   if (peak && peak.total > 0) {
-    const peakPlotX = cx + peak.x / Math.min(peak.total, scale) * maxRadius;
-    const peakPlotY = cy + peak.z / Math.min(peak.total, scale) * maxRadius;
+    const scaleDivisor = Math.max(peak.total, scale);
+    const peakPlotX = cx + (peak.x / scaleDivisor) * maxRadius;
+    const peakPlotY = cy + (peak.z / scaleDivisor) * maxRadius;
     peakCircle = `<circle cx="${peakPlotX}" cy="${peakPlotY}" r="${rBall}" fill="${Color.YELLOW}" opacity="0.5"/>`;
   }
 
