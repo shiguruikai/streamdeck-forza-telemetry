@@ -7,7 +7,7 @@
 ├── com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin/ # プラグインの配布パッケージ
 │   ├── bin/                              # ビルド成果物の出力先
 │   ├── imgs/                             # 画像リソース
-│   │   ├── actions/                      # 各アクション用のアイコン画像
+│   │   ├── actions/                      # 各アクション用のアイコン画像（icon.svg と key.svg は同一データで配置）
 │   │   └── plugin/                       # プラグインのアイコン画像
 │   ├── layouts/                          # アクションのレイアウト定義
 │   │   └── canvas-layout.json            # 全アクション共通のキャンバスレイアウト
@@ -53,6 +53,8 @@
 ├── tests/                                # テストコード
 │   ├── simulate-telemetry.ts             # 擬似テレメトリ送信シミュレータ
 │   └── tsconfig.json                     # テスト用TypeScript設定
+├── tools/                                # 開発支援ツール
+│   └── gen-marketplace-icon.ps1          # Marketplace用アイコンを生成するスクリプト
 ├── .editorconfig                         # EditorConfig設定ファイル
 ├── .gitignore                            # Gitの除外設定
 ├── AGENTS.md                             # AIエージェント向けのガイド

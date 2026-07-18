@@ -30,7 +30,7 @@
 ### ドキュメント
 
 - テレメトリ定義: `docs/forza-telemetry/`
-- Stream Deck API仕様: `docs/stream-deck-docs/index.md`
+- Stream Deck API仕様・ガイドライン: `docs/stream-deck-docs/index.md`
 - アーキテクチャ概要＆ディレクトリ構造: `docs/architecture.md`
 - UIデザインルール: `docs/design-rules.md`
 - Marketplace掲載用説明文: `docs/marketplace-listing.md`
