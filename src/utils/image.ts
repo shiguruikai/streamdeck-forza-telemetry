@@ -617,11 +617,14 @@ function drawSingleWheel(
   const barH_Value = clamp(barH * value, 0, barH);
   const barY_Value = barY + barH - barH_Value;
 
-  const fontSize = 30;
-  const textOffsetX = 6;
-  const textOffsetY = 3;
-  const textX = barX - textOffsetX;
-  const textY = barY + barH - textOffsetY;
+  const fontSize = 28;
+  const textOffsetX = -6;
+  const textOffsetY = titleInfo?.titleAlignment === 'bottom' ? -10 : -5;
+  const textX = barX + textOffsetX;
+  const textY = barY + barH + textOffsetY;
+
+  const posX = cx - 30;
+  const poxY = barY + 34;
 
   const rx = barW * radius;
 
@@ -633,7 +636,7 @@ function drawSingleWheel(
   <rect x="${barX}" y="${barY}" width="${barW}" height="${barH}" fill="${Color.DARK_GREY}" rx="${rx}"/>
   <rect x="${barX}" y="${barY_Value}" width="${barW}" height="${barH_Value}" fill="${color}" rx="${rx}"/>
 
-  <text x="${cx / 2}" y="${barY + 24}" font-size="${fontSize}" text-anchor="middle" fill="${Color.GREY}">${position.toUpperCase()}</text>
+  <text x="${posX}" y="${poxY}" font-size="${fontSize}" text-anchor="middle" fill="${Color.GREY}">${position.toUpperCase()}</text>
   <text x="${textX}" y="${textY}" font-size="${fontSize}" text-anchor="end" fill="${Color.WHITE}">${text}</text>
 </svg>
 `);
