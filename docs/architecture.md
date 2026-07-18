@@ -30,6 +30,7 @@
 │   ├── design-rules.md                   # UIデザインルール
 │   └── release-roadmap.md                # リリースロードマップおよび進捗管理
 ├── src/                                  # ソースコード
+│   ├── actions/                          # 各アクションの処理
 │   │   ├── g-force.ts                    # Gフォースメーター
 │   │   ├── press-duration.ts             # 長押し判定付きベースクラス
 │   │   ├── race-info.ts                  # レース情報（ラップ・順位・タイム）
