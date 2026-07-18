@@ -17,7 +17,7 @@ type TelemetryManagerEvents = {
  * テレメトリデータの受信、パース、およびイベント配信を管理するシングルトンクラス。
  *
  * - **サーバー制御**: 表示中のアクション数（dataリスナー数）に応じてUDPサーバーの起動と停止を自動制御。
- * - **スロットリング**: 描画負荷を抑えるため、データ配信頻度を最大20FPS（50ms間隔）に制限。
+ * - **スロットリング**: 描画負荷を抑えるため、外部から設定された配信間隔（updateIntervalMs）に基づいてデータ配信を制限。
  * - **タイムアウト監視**: データ受信が3秒間途絶えた場合にタイムアウトイベントを通知。
  */
 class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
@@ -27,7 +27,7 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
 
   // Elgato Marketplace の Plugin Guidelines（Programmatic Floodingの回避）に従い、
   // 描画更新頻度は秒間最大10回（10Hz）以下が推奨されます。
-  // 本プラグインでは設定画面から 10〜30 FPS（100ms〜33.3ms）まで可変設定できるよう、動的変更に対応します。
+  // 本プラグインでは、設定画面から 10〜30 FPS（100ms〜33.3ms）に変更できるようにしています。
   private updateIntervalMs = 100;
 
   private lastProcessed = 0;
