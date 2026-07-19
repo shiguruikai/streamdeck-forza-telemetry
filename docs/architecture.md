@@ -64,6 +64,7 @@
 ├── eslint.config.ts                      # ESLint設定設定ファイル
 ├── package.json                          # プロジェクトの設定と依存関係
 ├── pnpm-lock.yaml                        # pnpmロックファイル
+├── README.md                             # README.md
 ├── rollup.config.mjs                     # Rollupビルド設定
 └── tsconfig.json                         # TypeScript設定
 ```
