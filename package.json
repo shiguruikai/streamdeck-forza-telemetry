@@ -1,4 +1,6 @@
 {
+  "name": "streamdeck-forza-telemetry",
+  "version": "0.1.0",
   "scripts": {
     "build": "rollup -c",
     "watch": "rollup -c -w --watch.onEnd=\"streamdeck restart com.github.shiguruikai.streamdeck-forza-telemetry\"",
@@ -39,5 +41,15 @@
   "dependencies": {
     "@elgato/streamdeck": "^2.1.0",
     "execa": "^9.6.1"
+  },
+  "engines": {
+    "node": "^24"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11",
+      "onFail": "download"
+    }
   }
 }

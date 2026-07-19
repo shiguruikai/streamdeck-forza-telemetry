@@ -35,6 +35,8 @@
 - UIデザインルール: `docs/design-rules.md`
 - Marketplace掲載用説明文: `docs/marketplace-listing.md`
 - リリースロードマップ・進捗管理: `docs/release-roadmap.md`
+- リリース手順書: `docs/release-guide.md`
+
 
 ### ドキュメント記述ルール
 

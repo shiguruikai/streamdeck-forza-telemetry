@@ -92,3 +92,5 @@
 - [Marketplace掲載用説明文](marketplace-listing.md)
 - [UIデザインルール](design-rules.md)
 - [アーキテクチャ概要](architecture.md)
+- [リリース手順書](release-guide.md)
+

@@ -28,6 +28,8 @@
 │   ├── stream-deck-docs/                 # Stream Deck SDKのドキュメント群（OKF形式）
 │   ├── architecture.md                   # アーキテクチャ仕様書
 │   ├── design-rules.md                   # UIデザインルール
+│   ├── marketplace-listing.md            # Marketplace掲載用説明文
+│   ├── release-guide.md                  # リリース手順書
 │   └── release-roadmap.md                # リリースロードマップおよび進捗管理
 ├── src/                                  # ソースコード
 │   ├── actions/                          # 各アクションの処理
