@@ -11,9 +11,9 @@
     "sim:fm7": "node tests/simulate-telemetry.ts --format fm7-dash",
     "sim:fm8": "node tests/simulate-telemetry.ts --format fm8-dash",
     "sim:sled": "node tests/simulate-telemetry.ts --format fm-sled",
-    "streamdeck:validate": "streamdeck validate com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin",
-    "streamdeck:restart": "streamdeck restart com.github.shiguruikai.streamdeck-forza-telemetry",
-    "streamdeck:pack": "streamdeck pack -f com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin"
+    "sd:validate": "streamdeck validate com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin",
+    "sd:restart": "streamdeck restart com.github.shiguruikai.streamdeck-forza-telemetry",
+    "sd:pack": "streamdeck pack -f com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin"
   },
   "type": "module",
   "devDependencies": {

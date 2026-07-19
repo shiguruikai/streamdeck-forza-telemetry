@@ -64,7 +64,7 @@
 - [ ] **リンターの適用**
   - `pnpm lint:fix` を実行し、コードと設定ファイルの書式を最適化する。
 - [ ] **構成のバリデーション**
-  - `pnpm streamdeck:validate` を実行し、`manifest.json` の構成に問題がないか確認する。
+  - `pnpm sd:validate` を実行し、`manifest.json` の構成に問題がないか確認する。
 - [ ] **配布用パッケージの生成**
   - `@elgato/cli` または Elgato Distribution tool を用いて、配布パッケージ（`.streamDeckPlugin`）をエクスポートする。
 - [ ] **実機インストールテスト**

@@ -19,9 +19,9 @@
   - `pnpm sim:fm7`: FM7 Dash形式
   - `pnpm sim:fm8`: FM8 Dash形式
   - `pnpm sim:sled`: FM Sled形式（非対応）
-- `pnpm streamdeck:validate`: プラグイン構成の検証
-- `pnpm streamdeck:restart`: プラグインの強制再起動
-- `pnpm streamdeck:pack`: 配布ファイルの作成
+- `pnpm sd:validate`: プラグイン構成の検証
+- `pnpm sd:restart`: プラグインの強制再起動
+- `pnpm sd:pack`: 配布ファイルの作成
 
 ## 設計・開発ルール
 
@@ -46,7 +46,7 @@
 ### テストルール
 
 - 機能追加・修正時は、開発者自ら `pnpm sim` を実行し、実機または Stream Deck アプリ上で挙動を確認すること。
-- プラグインの設定変更時は、`pnpm streamdeck:validate` で検証すること。
+- プラグインの設定変更時は、`pnpm sd:validate` で検証すること。
 
 ### Gitルール
 
@@ -56,4 +56,4 @@
 
 ## 禁止事項
 
-- **不要なコマンド実行の禁止**: 変更ファイルが `*.md` のみの場合、`pnpm lint:fix`、`pnpm streamdeck:validate`、`pnpm build` を実行しないでください。
+- **不要なコマンド実行の禁止**: 変更ファイルが `*.md` のみの場合、`pnpm lint:fix`、`pnpm sd:validate`、`pnpm build` を実行しないでください。

@@ -11,8 +11,8 @@
 
 1. `pnpm lint`
 2. `pnpm build`
-3. `pnpm streamdeck:validate`
-4. `pnpm streamdeck:pack` を実行し、パッケージファイル（`.streamDeckPlugin`）が正常に生成されることを確認する。
+3. `pnpm sd:validate`
+4. `pnpm sd:pack` を実行し、パッケージファイル（`.streamDeckPlugin`）が正常に生成されることを確認する。
 5. 必ずユーザーの承認を得てからリリース手順に進む。
 
 ## 3. リリース手順
@@ -47,8 +47,8 @@
       ```
 4. **バージョン更新後の最終検証**
    1. `pnpm build`
-   2. `pnpm streamdeck:validate`
-   3. `pnpm streamdeck:pack`
+   2. `pnpm sd:validate`
+   3. `pnpm sd:pack`
 5. **コミット＆プッシュ**
    1. ステージング: `git add package.json CHANGELOG.md com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin/manifest.json`
    2. 差分確認: `git diff --cached`
