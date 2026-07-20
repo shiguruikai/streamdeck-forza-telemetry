@@ -29,12 +29,13 @@
 │   ├── forza-telemetry/                  # Forza テレメトリデータ仕様書
 │   │   ├── fh6.md
 │   │   └── fm8.md
+│   ├── marketplace/                      # Marketplace 掲載・申請用ドキュメント
+│   │   ├── listing.md                    # Marketplace 掲載用説明文
+│   │   └── roadmap.md                    # Marketplace リリースロードマップ
 │   ├── stream-deck/                      # Stream Deck プラグイン開発ナレッジベース
 │   ├── architecture.md                   # アーキテクチャ概要
 │   ├── design-rules.md                   # UIデザインルール
-│   ├── marketplace-listing.md            # Marketplace 掲載用説明文
-│   ├── release-guide.md                  # リリース手順書
-│   └── release-roadmap.md                # Marketplace リリースロードマップ
+│   └── release-guide.md                  # リリース手順書
 ├── src/                                  # ソースコード
 │   ├── actions/                          # 各アクションの処理
 │   │   ├── g-force.ts                    # Gフォースメーター

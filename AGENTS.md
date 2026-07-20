@@ -35,8 +35,8 @@
 - [Forza Horizon テレメトリデータ仕様](docs/forza-telemetry/fh6.md)
 - [Forza Motorsport テレメトリデータ仕様](docs/forza-telemetry/fm8.md)
 - [リリース手順書](docs/release-guide.md)
-- [Marketplace リリースロードマップ](docs/release-roadmap.md)
-- [Marketplace 掲載用説明文](docs/marketplace-listing.md)
+- [Marketplace リリースロードマップ](docs/marketplace/roadmap.md)
+- [Marketplace 掲載用説明文](docs/marketplace/listing.md)
 
 ### ドキュメント記述ルール
 
