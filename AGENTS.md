@@ -29,14 +29,14 @@
 
 ### ドキュメント
 
-- テレメトリ定義: `docs/forza-telemetry/`
-- Stream Deck API仕様・ガイドライン: `docs/stream-deck-docs/index.md`
-- アーキテクチャ概要＆ディレクトリ構造: `docs/architecture.md`
-- UIデザインルール: `docs/design-rules.md`
-- Marketplace掲載用説明文: `docs/marketplace-listing.md`
-- リリースロードマップ・進捗管理: `docs/release-roadmap.md`
-- リリース手順書: `docs/release-guide.md`
-
+- [アーキテクチャ概要＆ディレクトリ構造](docs/architecture.md)
+- [UIデザインルール](docs/design-rules.md)
+- [Stream Deck プラグイン開発ナレッジベース（API仕様、ガイドライン）](docs/stream-deck/index.md)
+- [Forza Horizon テレメトリデータ仕様](docs/forza-telemetry/fh6.md)
+- [Forza Motorsport テレメトリデータ仕様](docs/forza-telemetry/fm8.md)
+- [リリース手順書](docs/release-guide.md)
+- [Marketplace リリースロードマップ](docs/release-roadmap.md)
+- [Marketplace 掲載用説明文](docs/marketplace-listing.md)
 
 ### ドキュメント記述ルール
 

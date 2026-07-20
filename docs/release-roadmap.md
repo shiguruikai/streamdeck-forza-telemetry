@@ -88,7 +88,7 @@
 
 ## 関連ドキュメント
 
-- [公式ガイドライン](stream-deck-docs/distribution/index.md)
+- [公式ガイドライン](stream-deck/distribution/index.md)
 - [Marketplace掲載用説明文](marketplace-listing.md)
 - [UIデザインルール](design-rules.md)
 - [アーキテクチャ概要](architecture.md)

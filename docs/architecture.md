@@ -4,7 +4,11 @@
 
 ```
 .
-├── com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin/ # プラグインの配布パッケージ
+├── .github/
+│   └── workflows/
+│       ├── ci.yml                        # CI（ビルド＆検証）
+│       └── release.yml                   # GitHub Release の自動化
+├── com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin/
 │   ├── bin/                              # ビルド成果物の出力先
 │   ├── imgs/                             # 画像リソース
 │   │   ├── actions/                      # 各アクション用のアイコン画像（icon.svg と key.svg は同一データで配置）
@@ -22,15 +26,15 @@
 │   │   └── tire-temp.html
 │   └── manifest.json                     # プラグインの構成定義
 ├── docs/                                 # 設計・開発ドキュメント
-│   ├── forza-telemetry/                  # Forzaテレメトリデータ仕様
+│   ├── forza-telemetry/                  # Forza テレメトリデータ仕様書
 │   │   ├── fh6.md
 │   │   └── fm8.md
-│   ├── stream-deck-docs/                 # Stream Deck SDKのドキュメント群（OKF形式）
-│   ├── architecture.md                   # アーキテクチャ仕様書
+│   ├── stream-deck/                      # Stream Deck プラグイン開発ナレッジベース
+│   ├── architecture.md                   # アーキテクチャ概要
 │   ├── design-rules.md                   # UIデザインルール
-│   ├── marketplace-listing.md            # Marketplace掲載用説明文
+│   ├── marketplace-listing.md            # Marketplace 掲載用説明文
 │   ├── release-guide.md                  # リリース手順書
-│   └── release-roadmap.md                # リリースロードマップおよび進捗管理
+│   └── release-roadmap.md                # Marketplace リリースロードマップ
 ├── src/                                  # ソースコード
 │   ├── actions/                          # 各アクションの処理
 │   │   ├── g-force.ts                    # Gフォースメーター
@@ -57,11 +61,13 @@
 │   ├── simulate-telemetry.ts             # 擬似テレメトリ送信シミュレータ
 │   └── tsconfig.json                     # テスト用TypeScript設定
 ├── tools/                                # 開発支援ツール
-│   └── gen-marketplace-icon.ps1          # Marketplace用アイコンを生成するスクリプト
+│   └── gen-marketplace-icon.ps1          # プラグインのアイコン（marketplace.svg）をPNG形式に変換するスクリプト
 ├── .editorconfig                         # EditorConfig設定ファイル
 ├── .gitignore                            # Gitの除外設定
 ├── AGENTS.md                             # AIエージェント向けのガイド
-├── eslint.config.ts                      # ESLint設定設定ファイル
+├── CHANGELOG.md                          # 変更履歴
+├── eslint.config.ts                      # ESLint設定ファイル
+├── LICENSE                               # ライセンスファイル
 ├── package.json                          # プロジェクトの設定と依存関係
 ├── pnpm-lock.yaml                        # pnpmロックファイル
 ├── README.md                             # README.md
