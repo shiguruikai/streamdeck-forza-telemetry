@@ -55,6 +55,7 @@ type CarState = {
   accelerationX: number;
   accelerationY: number;
   accelerationZ: number;
+  yaw: number;
   tireTempFL: number;
   tireTempFR: number;
   tireTempRL: number;
@@ -141,6 +142,7 @@ function writeSledData(buf: Buffer, state: CarState): void {
   buf.writeFloatLE(state.accelerationX, 20); // ACCELERATION_X
   buf.writeFloatLE(state.accelerationY, 24); // ACCELERATION_Y
   buf.writeFloatLE(state.accelerationZ, 28); // ACCELERATION_Z
+  buf.writeFloatLE(state.yaw, 56); // YAW
 
   // 必要なSledデータを埋める
   buf.writeFloatLE(state.suspensionFL, 68);
@@ -307,6 +309,9 @@ function updateCarState(state: CarState, dt: number): void {
   state.timestampMs += INTERVAL_MS;
   state.currentRaceTime = state.timestampMs / 1000;
 
+  // 方角（yaw）のシミュレーション（ラジアン: -π ～ +π）
+  state.yaw = ((state.timestampMs / 15000) * 2 * Math.PI) % (2 * Math.PI) - Math.PI;
+
   // ラップタイムの更新（60秒で1周と仮定）
   state.currentLap += dt;
   if (state.currentLap >= 60) {
@@ -346,6 +351,7 @@ const state: CarState = {
   accelerationX: 0,
   accelerationY: 0,
   accelerationZ: 0,
+  yaw: 0,
   tireTempFL: 80,
   tireTempFR: 80,
   tireTempRL: 75,
@@ -388,8 +394,9 @@ setInterval(() => {
   const raceTimeStr: string = state.currentRaceTime.toFixed(1);
   const gXStr: string = (state.accelerationX / G_ACCELERATION).toFixed(2);
   const gZStr: string = (state.accelerationZ / G_ACCELERATION).toFixed(2);
+  const headingDeg: string = (((state.yaw * 180) / Math.PI + 360) % 360).toFixed(0);
 
   process.stdout.write(
-    `\rGear: ${gearChar} | RPM: ${currentRpm.padStart(4, ' ')} | Speed: ${speedKmh.padStart(4, ' ')} km/h | G-Force: X:${gXStr.padStart(5, ' ')} Z:${gZStr.padStart(5, ' ')} | Lap: ${state.lapNumber} (${currentLapStr}s) | RaceTime: ${raceTimeStr.padStart(5, ' ')}s | Pos: ${state.racePosition}`,
+    `\rGear: ${gearChar} | RPM: ${currentRpm.padStart(4, ' ')} | Speed: ${speedKmh.padStart(4, ' ')} km/h | Yaw: ${headingDeg.padStart(3, ' ')}° | G-Force: X:${gXStr.padStart(5, ' ')} Z:${gZStr.padStart(5, ' ')} | Lap: ${state.lapNumber} (${currentLapStr}s) | RaceTime: ${raceTimeStr.padStart(5, ' ')}s | Pos: ${state.racePosition}`,
   );
 }, INTERVAL_MS);

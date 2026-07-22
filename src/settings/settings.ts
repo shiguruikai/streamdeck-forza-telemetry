@@ -16,6 +16,9 @@ export type RaceInfoLayout = typeof RACE_INFO_LAYOUTS[number];
 export const SPEED_METER_LAYOUTS = ['full', 'speed', 'gear', 'rpm'] as const;
 export type SpeedMeterLayout = typeof SPEED_METER_LAYOUTS[number];
 
+export const COMPASS_DISPLAY_MODES = ['arch', 'circle'] as const;
+export type CompassDisplayMode = typeof COMPASS_DISPLAY_MODES[number];
+
 export const DEFAULT_FPS = 10;
 
 export type GlobalSettings = {
