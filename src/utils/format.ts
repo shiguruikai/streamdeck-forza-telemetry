@@ -1,10 +1,6 @@
 import { SpeedUnit, SuspensionMode, TempUnit } from '../settings/settings';
-import { Color } from './image';
+import { Color } from './graphics/common';
 import { clamp, hslToRgb } from './utils';
-
-// =============================================================================
-// 汎用・レース情報フォーマット
-// =============================================================================
 
 export function formatTime(seconds?: number): string {
   if (seconds === undefined || !Number.isFinite(seconds) || seconds <= 0) {
@@ -24,11 +20,7 @@ export function formatPosition(pos?: number): string {
   return pos === undefined ? 'POS --' : `POS ${pos.toString().padStart(2, ' ')}`;
 }
 
-// =============================================================================
-// 速度計（Speed Meter）用フォーマット
-// =============================================================================
-
-export function formatUnit(unit?: SpeedUnit): string {
+export function formatSpeedUnit(unit?: SpeedUnit): string {
   return unit === 'mph' ? 'MPH' : 'KM/H';
 }
 
@@ -37,11 +29,11 @@ export function formatSpeed(speed: number | null | undefined, unit?: SpeedUnit):
   return Math.floor(s * (unit === 'kmh' ? 3.6 : 2.23694)).toString();
 }
 
-export function formatGear(gear: number | null | undefined): string | null {
+export function formatGear(gear: number | null | undefined, previous: string | null | undefined): string {
   // ギアが有効範囲外の場合、null を返す。
   // NOTE: 実機において、シフトチェンジの瞬間に11の値となることがあるので、11以上は無効値として扱う。
-  if (gear === undefined || gear === null) return null;
-  if (gear < 0 || gear > 10) return null;
+  if (gear === undefined || gear === null) return previous ?? 'N';
+  if (gear < 0 || gear > 10) return previous ?? 'N';
   return gear === 0 ? 'R' : gear.toString();
 }
 
@@ -61,10 +53,6 @@ export function formatRpmBar(
   }
   return { rpm: currentEngineRpm, rpmPct, rpmColor };
 }
-
-// =============================================================================
-// タイヤ温度（Tire Temperature）用フォーマット
-// =============================================================================
 
 /**
  * 華氏を摂氏に変換します。
@@ -108,7 +96,7 @@ const TIRE_COLORS: string[] = (function () {
       hue = 120 - 120 * ratio;
     }
 
-    const { r, g, b } = hslToRgb(hue, 100, 60);
+    const { r, g, b } = hslToRgb(hue, 100, 55);
     result.push(`rgb(${r},${g},${b})`);
   }
 
@@ -149,7 +137,7 @@ const SUSPENSION_TRAVEL_COLORS: string[] = (function () {
       hue = 120 - 120 * ratio;
     }
 
-    const { r, g, b } = hslToRgb(hue, 100, 60);
+    const { r, g, b } = hslToRgb(hue, 100, 55);
     result.push(`rgb(${r},${g},${b})`);
   }
 
@@ -160,4 +148,11 @@ export function formatTravelColor(travel: number | null | undefined): string {
   const t = travel ?? 0;
   const index = clamp(Math.round(t * 100), 0, 100);
   return SUSPENSION_TRAVEL_COLORS[index];
+}
+
+export function formatHeading(yaw: number | null | undefined): { heading: number; headingStr: string } {
+  const y = yaw ?? 0;
+  const heading = Math.round((((y * (180 / Math.PI)) % 360) + 360) % 360);
+  const headingStr = `${heading}°`;
+  return { heading, headingStr };
 }

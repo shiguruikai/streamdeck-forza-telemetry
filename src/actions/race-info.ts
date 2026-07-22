@@ -8,14 +8,14 @@ import {
 import { RACE_INFO_LAYOUTS, RaceInfoLayout } from '../settings/settings';
 import { ForzaTelemetryData } from '../telemetry/parser';
 import {
-  createBestLapTimeOnlyImage,
-  createLapNumberOnlyImage,
-  createLapTimeImage,
-  createLapTimeOnlyImage,
-  createPositionOnlyImage,
-  createRaceTimeImage,
-  createRaceTimeOnlyImage,
-} from '../utils/image';
+  generateBestLapTimeImage,
+  generateLapNumberImage,
+  generateLapTimeImage,
+  generatePositionImage,
+  generateRaceInfoImage,
+  generateRacePosAndTimeImage,
+  generateRaceTimeImage,
+} from '../utils/graphics';
 import { clamp } from '../utils/utils';
 import { TelemetryAction } from './telemetry-action';
 
@@ -23,13 +23,14 @@ type RaceInfoSettings = {
   layout?: RaceInfoLayout;
 };
 
-type EventAction = DialAction<RaceInfoSettings> | KeyAction<RaceInfoSettings>;
-
 @action({
   UUID: 'com.github.shiguruikai.streamdeck-forza-telemetry.race-info',
 })
 export class RaceInfoAction extends TelemetryAction<RaceInfoSettings> {
-  private async updateImage(action: EventAction, data?: ForzaTelemetryData): Promise<void> {
+  private async updateImage(
+    action: DialAction<RaceInfoSettings> | KeyAction<RaceInfoSettings>,
+    data?: ForzaTelemetryData,
+  ): Promise<void> {
     const { layout = RACE_INFO_LAYOUTS[0] } = this.getSettings(action.id) ?? {};
 
     const isDial = action.isDial();
@@ -37,19 +38,19 @@ export class RaceInfoAction extends TelemetryAction<RaceInfoSettings> {
 
     let image: string;
     if (layout === 'race-time') {
-      image = createRaceTimeImage(isDial, data, titleInfo);
+      image = generateRacePosAndTimeImage(isDial, data, titleInfo);
     } else if (layout === 'lap-time') {
-      image = createLapTimeImage(isDial, data, titleInfo);
+      image = generateRaceInfoImage(isDial, data, titleInfo);
     } else if (layout === 'race-time-only') {
-      image = createRaceTimeOnlyImage(isDial, data, titleInfo);
+      image = generateRaceTimeImage(isDial, data, titleInfo);
     } else if (layout === 'current-time-only') {
-      image = createLapTimeOnlyImage(isDial, data, titleInfo);
+      image = generateLapTimeImage(isDial, data, titleInfo);
     } else if (layout === 'best-time-only') {
-      image = createBestLapTimeOnlyImage(isDial, data, titleInfo);
+      image = generateBestLapTimeImage(isDial, data, titleInfo);
     } else if (layout === 'lap-only') {
-      image = createLapNumberOnlyImage(isDial, data, titleInfo);
+      image = generateLapNumberImage(isDial, data, titleInfo);
     } else {
-      image = createPositionOnlyImage(isDial, data, titleInfo);
+      image = generatePositionImage(isDial, data, titleInfo);
     }
 
     if (isDial) {
@@ -59,7 +60,10 @@ export class RaceInfoAction extends TelemetryAction<RaceInfoSettings> {
     }
   }
 
-  protected override async onTelemetryData(action: EventAction, data?: ForzaTelemetryData): Promise<void> {
+  protected override async onTelemetryData(
+    action: DialAction<RaceInfoSettings> | KeyAction<RaceInfoSettings>,
+    data?: ForzaTelemetryData,
+  ): Promise<void> {
     await this.updateImage(action, data);
   }
 

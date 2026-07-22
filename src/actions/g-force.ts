@@ -11,7 +11,7 @@ import {
 } from '@elgato/streamdeck';
 
 import { ForzaTelemetryData } from '../telemetry/parser';
-import { createGForceImage } from '../utils/image';
+import { generateGForceImage } from '../utils/graphics';
 import { clamp } from '../utils/utils';
 import { PressDurationAction } from './press-duration';
 
@@ -22,8 +22,6 @@ type GForceSettings = {
   scale?: number;
   showPeakG?: boolean;
 };
-
-type EventAction = DialAction<GForceSettings> | KeyAction<GForceSettings>;
 
 @action({
   UUID: 'com.github.shiguruikai.streamdeck-forza-telemetry.g-force',
@@ -36,7 +34,10 @@ export class GForceAction extends PressDurationAction<GForceSettings> {
   // 画面切り替えを跨いでも値を保持しておく
   private readonly peakGs = new Map<string, { x: number; z: number; total: number }>();
 
-  private async updateImage(action: EventAction, data?: ForzaTelemetryData): Promise<void> {
+  private async updateImage(
+    action: DialAction<GForceSettings> | KeyAction<GForceSettings>,
+    data?: ForzaTelemetryData,
+  ): Promise<void> {
     const { showPeakG = true, scale = DEFAULT_SCALE } = this.getSettings(action.id) ?? {};
 
     const showResetText = this.showResetTexts.get(action.id) ?? false;
@@ -64,7 +65,7 @@ export class GForceAction extends PressDurationAction<GForceSettings> {
     }
 
     const isDial = action.isDial();
-    const dataUri = createGForceImage(
+    const dataUri = generateGForceImage(
       isDial,
       scale,
       current,

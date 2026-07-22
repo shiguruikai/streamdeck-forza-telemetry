@@ -51,28 +51,6 @@
     {
       "UserTitleEnabled": true,
       "DisableCaching": true,
-      "Name": "G-Force Meter",
-      "UUID": "com.github.shiguruikai.streamdeck-forza-telemetry.g-force",
-      "Icon": "imgs/actions/g-force/icon",
-      "Tooltip": "Show G-Force meter.",
-      "PropertyInspectorPath": "ui/g-force.html",
-      "Controllers": [
-        "Keypad",
-        "Encoder"
-      ],
-      "Encoder": {
-        "layout": "layouts/canvas-layout.json"
-      },
-      "States": [
-        {
-          "Image": "imgs/actions/g-force/key",
-          "TitleAlignment": "middle"
-        }
-      ]
-    },
-    {
-      "UserTitleEnabled": true,
-      "DisableCaching": true,
       "Name": "Tire Temperature",
       "UUID": "com.github.shiguruikai.streamdeck-forza-telemetry.tire-temp",
       "Icon": "imgs/actions/tire-temp/icon",
@@ -110,6 +88,50 @@
       "States": [
         {
           "Image": "imgs/actions/suspension-travel/key",
+          "TitleAlignment": "middle"
+        }
+      ]
+    },
+    {
+      "UserTitleEnabled": true,
+      "DisableCaching": true,
+      "Name": "G-Force Meter",
+      "UUID": "com.github.shiguruikai.streamdeck-forza-telemetry.g-force",
+      "Icon": "imgs/actions/g-force/icon",
+      "Tooltip": "Show G-Force meter.",
+      "PropertyInspectorPath": "ui/g-force.html",
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "Encoder": {
+        "layout": "layouts/canvas-layout.json"
+      },
+      "States": [
+        {
+          "Image": "imgs/actions/g-force/key",
+          "TitleAlignment": "middle"
+        }
+      ]
+    },
+    {
+      "UserTitleEnabled": true,
+      "DisableCaching": true,
+      "Name": "Compass",
+      "UUID": "com.github.shiguruikai.streamdeck-forza-telemetry.compass",
+      "Icon": "imgs/actions/compass/icon",
+      "Tooltip": "Show compass.",
+      "PropertyInspectorPath": "ui/compass.html",
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "Encoder": {
+        "layout": "layouts/canvas-layout.json"
+      },
+      "States": [
+        {
+          "Image": "imgs/actions/compass/key",
           "TitleAlignment": "middle"
         }
       ]

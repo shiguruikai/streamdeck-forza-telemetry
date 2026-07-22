@@ -18,6 +18,7 @@
 │   ├── logs/                             # ログ出力先
 │   ├── ui/                               # 各アクションのProperty Inspector（設定画面）のUI定義
 │   │   ├── common.css                    # 共通スタイルシート
+│   │   ├── compass.html                  # コンパス
 │   │   ├── g-force.html
 │   │   ├── race-info.html
 │   │   ├── sdpi-components.js            # 公式のUIライブラリ
@@ -38,6 +39,7 @@
 │   └── release-guide.md                  # リリース手順書
 ├── src/                                  # ソースコード
 │   ├── actions/                          # 各アクションの処理
+│   │   ├── compass.ts                    # コンパス
 │   │   ├── g-force.ts                    # Gフォースメーター
 │   │   ├── press-duration.ts             # 長押し判定付きベースクラス
 │   │   ├── race-info.ts                  # レース情報（ラップ・順位・タイム）
@@ -55,7 +57,16 @@
 │   │   └── sdpi.ts                       # SDPI（Stream Deck Property Inspector）関連の型定義
 │   ├── utils/                            # 共通ユーティリティ
 │   │   ├── format.ts                     # 変換系の処理
-│   │   ├── image.ts                      # 動的SVG画像生成処理
+│   │   ├── graphics/                     # 動的SVGグラフィック描画モジュール群
+│   │   │   ├── common.ts                 # 共通スタイル・レイアウト調整ヘルパー
+│   │   │   ├── compass.ts                # コンパス描画
+│   │   │   ├── g-force.ts                # Gフォース描画
+│   │   │   ├── race-info.ts              # レース情報描画
+│   │   │   ├── speed-meter.ts            # 速度計・ギア描画
+│   │   │   ├── suspension.ts             # サスペンション描画
+│   │   │   ├── tire-temp.ts              # タイヤ温度描画
+│   │   │   ├── wheels.ts                 # 全輪・単輪共通描画
+│   │   │   └── index.ts                  # グラフィックモジュールのバレルエクスポート
 │   │   └── utils.ts                      # 汎用関数
 │   └── plugin.ts                         # プラグインのエントリポイント
 ├── tests/                                # テストコード

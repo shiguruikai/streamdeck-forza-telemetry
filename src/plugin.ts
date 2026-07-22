@@ -1,5 +1,6 @@
 import streamDeck from '@elgato/streamdeck';
 
+import { CompassAction } from './actions/compass';
 import { GForceAction } from './actions/g-force';
 import { RaceInfoAction } from './actions/race-info';
 import { SpeedMeterAction } from './actions/speed-meter';
@@ -7,17 +8,17 @@ import { SuspensionTravelAction } from './actions/suspension-travel';
 import { TireTempAction } from './actions/tire-temp';
 import { DEFAULT_FPS, parseSettings } from './settings/settings';
 import { telemetryManager } from './telemetry/manager';
-import { setGlobalFont } from './utils/image';
+import { setGlobalFont } from './utils/graphics';
 
-// デバッグ効率向上のため、Stream Deckとプラグイン間のすべての通信メッセージを記録するよう「trace」ログレベルを設定
-streamDeck.logger.setLevel('trace');
+streamDeck.logger.setLevel('debug');
 
 const actions = [
   new SpeedMeterAction(),
   new RaceInfoAction(),
-  new GForceAction(),
   new TireTempAction(),
   new SuspensionTravelAction(),
+  new GForceAction(),
+  new CompassAction(),
 ];
 
 // 各種アクションのインスタンスをSDKに登録

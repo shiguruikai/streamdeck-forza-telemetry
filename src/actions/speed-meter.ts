@@ -10,7 +10,7 @@ import {
 
 import { SPEED_METER_LAYOUTS, SpeedMeterLayout, SpeedUnit } from '../settings/settings';
 import { ForzaTelemetryData } from '../telemetry/parser';
-import { createSpeedMeterImage } from '../utils/image';
+import { generateGearImage, generateRpmImage, generateSpeedImage, generateSpeedMeterImage } from '../utils/graphics';
 import { clamp } from '../utils/utils';
 import { PressDurationAction } from './press-duration';
 
@@ -19,30 +19,33 @@ type SpeedMeterSettings = {
   unit?: SpeedUnit;
 };
 
-type EventAction = DialAction<SpeedMeterSettings> | KeyAction<SpeedMeterSettings>;
-
 @action({
   UUID: 'com.github.shiguruikai.streamdeck-forza-telemetry.speed-meter',
 })
 export class SpeedMeterAction extends PressDurationAction<SpeedMeterSettings> {
   private readonly previousGears = new Map<string, string>();
 
-  private async updateImage(action: EventAction, data?: ForzaTelemetryData): Promise<void> {
+  private async updateImage(
+    action: DialAction<SpeedMeterSettings> | KeyAction<SpeedMeterSettings>,
+    data?: ForzaTelemetryData,
+  ): Promise<void> {
     const { layout = 'full', unit = 'kmh' } = this.getSettings(action.id) ?? {};
 
     const isDial = action.isDial();
     const titleInfo = this.getTitleInfo(action.id);
 
-    const { image, currentGearText } = createSpeedMeterImage(
-      isDial,
-      layout,
-      data,
-      unit,
-      this.previousGears.get(action.id),
-      titleInfo,
-    );
-
-    this.previousGears.set(action.id, currentGearText);
+    let image;
+    if (layout === 'full') {
+      image = generateSpeedMeterImage(isDial, data, unit, this.previousGears.get(action.id), titleInfo);
+    } else if (layout === 'speed') {
+      image = generateSpeedImage(isDial, data, unit, titleInfo);
+    } else if (layout === 'gear') {
+      const gearImage = generateGearImage(isDial, data, unit, titleInfo);
+      image = gearImage.image;
+      this.previousGears.set(action.id, gearImage.gearText);
+    } else {
+      image = generateRpmImage(isDial, data, titleInfo);
+    }
 
     if (isDial) {
       await action.setFeedback({ canvas: image });
@@ -51,7 +54,10 @@ export class SpeedMeterAction extends PressDurationAction<SpeedMeterSettings> {
     }
   }
 
-  protected override async onTelemetryData(action: EventAction, data?: ForzaTelemetryData): Promise<void> {
+  protected override async onTelemetryData(
+    action: DialAction<SpeedMeterSettings> | KeyAction<SpeedMeterSettings>,
+    data?: ForzaTelemetryData,
+  ): Promise<void> {
     await this.updateImage(action, data);
   }
 

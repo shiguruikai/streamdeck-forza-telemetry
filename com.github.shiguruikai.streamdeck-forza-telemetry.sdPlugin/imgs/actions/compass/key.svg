@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" width="144" height="144" fill="none" stroke="#FFFFFF" >
+  <!-- 外周リング -->
+  <circle cx="72" cy="72" r="56" stroke-width="4"/>
+
+  <!-- 目盛り線(主要4方位) -->
+  <g stroke-width="4">
+    <line x1="72" y1="16" x2="72" y2="26"/>
+    <line x1="72" y1="118" x2="72" y2="128"/>
+    <line x1="16" y1="72" x2="26" y2="72"/>
+    <line x1="118" y1="72" x2="128" y2="72"/>
+  </g>
+
+  <!-- 目盛り線(斜め4方位) -->
+  <g stroke-width="3">
+    <line x1="105" y1="39" x2="112" y2="32"/>
+    <line x1="105" y1="105" x2="112" y2="112"/>
+    <line x1="39" y1="105" x2="32" y2="112"/>
+    <line x1="39" y1="39" x2="32" y2="32"/>
+  </g>
+
+  <!-- コンパス針 -->
+  <g stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 72 36 L 84 72 L 60 72 Z" fill="#FFFFFF"/>
+    <path d="M 72 108 L 60 72 L 84 72 Z" fill="none" />
+  </g>
+</svg>

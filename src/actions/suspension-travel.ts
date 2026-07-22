@@ -9,7 +9,7 @@ import {
 
 import { SuspensionMode, WHEEL_POSITIONS, WheelPosition } from '../settings/settings';
 import { ForzaTelemetryData } from '../telemetry/parser';
-import { createSuspensionTravelAllWheelsImage, createSuspensionTravelSingleWheelImage } from '../utils/image';
+import { generateSuspensionTravelAllWheelsImage, generateSuspensionTravelSingleWheelImage } from '../utils/graphics';
 import { getNextWheelPosition } from '../utils/utils';
 import { PressDurationAction } from './press-duration';
 
@@ -18,21 +18,22 @@ type SuspensionTravelSettings = {
   mode?: SuspensionMode;
 };
 
-type EventAction = DialAction<SuspensionTravelSettings> | KeyAction<SuspensionTravelSettings>;
-
 @action({
   UUID: 'com.github.shiguruikai.streamdeck-forza-telemetry.suspension-travel',
 })
 export class SuspensionTravelAction extends PressDurationAction<SuspensionTravelSettings> {
-  private async updateImage(action: EventAction, data?: ForzaTelemetryData): Promise<void> {
+  private async updateImage(
+    action: DialAction<SuspensionTravelSettings> | KeyAction<SuspensionTravelSettings>,
+    data?: ForzaTelemetryData,
+  ): Promise<void> {
     const { position = WHEEL_POSITIONS[0], mode = 'percentage' } = this.getSettings(action.id) ?? {};
 
     const isDial = action.isDial();
     const titleInfo = this.getTitleInfo(action.id);
 
     const image = position === 'all'
-      ? createSuspensionTravelAllWheelsImage(isDial, data, mode, titleInfo)
-      : createSuspensionTravelSingleWheelImage(isDial, position, data, mode, titleInfo);
+      ? generateSuspensionTravelAllWheelsImage(isDial, data, mode, titleInfo)
+      : generateSuspensionTravelSingleWheelImage(isDial, position, data, mode, titleInfo);
 
     if (isDial) {
       await action.setFeedback({ canvas: image });
@@ -41,7 +42,10 @@ export class SuspensionTravelAction extends PressDurationAction<SuspensionTravel
     }
   }
 
-  protected override onTelemetryData(action: EventAction, data?: ForzaTelemetryData): Promise<void> {
+  protected override onTelemetryData(
+    action: DialAction<SuspensionTravelSettings> | KeyAction<SuspensionTravelSettings>,
+    data?: ForzaTelemetryData,
+  ): Promise<void> {
     return this.updateImage(action, data);
   }
 

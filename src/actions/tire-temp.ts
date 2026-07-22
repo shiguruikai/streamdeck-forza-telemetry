@@ -9,7 +9,7 @@ import {
 
 import { TempUnit, WHEEL_POSITIONS, WheelPosition } from '../settings/settings';
 import { ForzaTelemetryData } from '../telemetry/parser';
-import { createTireTempAllWheelsImage, createTireTempSingleWheelImage } from '../utils/image';
+import { generateTireTempAllWheelsImage, generateTireTempSingleWheelImage } from '../utils/graphics';
 import { getNextWheelPosition } from '../utils/utils';
 import { PressDurationAction } from './press-duration';
 
@@ -18,21 +18,22 @@ type TireTempSettings = {
   unit?: TempUnit;
 };
 
-type EventAction = DialAction<TireTempSettings> | KeyAction<TireTempSettings>;
-
 @action({
   UUID: 'com.github.shiguruikai.streamdeck-forza-telemetry.tire-temp',
 })
 export class TireTempAction extends PressDurationAction<TireTempSettings> {
-  private async updateImage(action: EventAction, data?: ForzaTelemetryData): Promise<void> {
+  private async updateImage(
+    action: DialAction<TireTempSettings> | KeyAction<TireTempSettings>,
+    data?: ForzaTelemetryData,
+  ): Promise<void> {
     const { position = WHEEL_POSITIONS[0], unit = 'celsius' } = this.getSettings(action.id) ?? {};
 
     const isDial = action.isDial();
     const titleInfo = this.getTitleInfo(action.id);
 
     const image = position === 'all'
-      ? createTireTempAllWheelsImage(isDial, data, unit, titleInfo)
-      : createTireTempSingleWheelImage(isDial, position, data, unit, titleInfo);
+      ? generateTireTempAllWheelsImage(isDial, data, unit, titleInfo)
+      : generateTireTempSingleWheelImage(isDial, position, data, unit, titleInfo);
 
     if (isDial) {
       await action.setFeedback({ canvas: image });
@@ -41,7 +42,10 @@ export class TireTempAction extends PressDurationAction<TireTempSettings> {
     }
   }
 
-  protected override onTelemetryData(action: EventAction, data?: ForzaTelemetryData): Promise<void> {
+  protected override onTelemetryData(
+    action: DialAction<TireTempSettings> | KeyAction<TireTempSettings>,
+    data?: ForzaTelemetryData,
+  ): Promise<void> {
     return this.updateImage(action, data);
   }
 
