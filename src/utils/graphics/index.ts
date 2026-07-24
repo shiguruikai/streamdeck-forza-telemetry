@@ -1,6 +1,7 @@
 export * from './common';
 export * from './compass';
 export * from './g-force';
+export * from './power';
 export * from './race-info';
 export * from './speed-meter';
 export * from './suspension';

@@ -97,20 +97,81 @@ export function generateSingleValueImage(
   const height = isDial ? DIAL_HEIGHT : KEY_HEIGHT;
 
   const cx = width / 2;
-  const cy = height / 2 + adj.offsetY;
+  const cy = height / 2;
 
   const unitX = width - PADDING;
-  const unitY = titleInfo?.titleAlignment === 'bottom' ? PADDING + 12 : height - PADDING;
+  const unitY = titleInfo?.titleAlignment === 'bottom' ? PADDING + 24 : height - PADDING;
+
+  const valueFontSize = isDial ? 46 : 54;
+  const unitFontSize = isDial ? 20 : 27;
+
+  const valueY = cy + valueFontSize * 0.38;
 
   return toSvgDataUri(`
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none">
   ${getCommonStyle()}
   ${adj.titleElement}
 
-  <text x="${cx}" y="${cy + 21}" font-size="56" text-anchor="middle" fill="${Color.WHITE}">${value ?? ''}</text>
-  ${unit ? `<text x="${unitX}" y="${unitY}" font-size="24" text-anchor="end" fill="${Color.GREY}">${unit}</text>` : ''}
+  <text x="${cx}" y="${valueY.toFixed(3)}" font-size="${valueFontSize}" text-anchor="middle" fill="${Color.WHITE}">${value ?? ''}</text>
+  ${unit ? `<text x="${unitX}" y="${unitY}" font-size="${unitFontSize}" text-anchor="end" fill="${Color.GREY}">${unit}</text>` : ''}
 </svg>
 `);
+}
+
+export function generateDoubleValueImage(
+  isDial: boolean,
+  topValue: string | null | undefined,
+  topUnit: string | null | undefined,
+  bottomValue: string | null | undefined,
+  bottomUnit: string | null | undefined,
+  titleInfo?: TitleInfo,
+): string {
+  const adj = getLayoutAdjustments(isDial, titleInfo);
+
+  if (isDial) {
+    const width = DIAL_WIDTH;
+    const height = DIAL_HEIGHT;
+    const valueX = width - PADDING - (titleInfo ? 50 : 60);
+    const unitX = width - PADDING;
+    const topY = titleInfo ? 56 : 42;
+    const bottomY = height - PADDING;
+    const valueFontSize = titleInfo ? 30 : 40;
+    const labelFontSize = titleInfo ? 15 : 20;
+    return toSvgDataUri(`
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none">
+  ${getCommonStyle()}
+  ${adj.titleElement}
+
+  <text x="${valueX}" y="${topY}" font-size="${valueFontSize}" text-anchor="end" fill="${Color.WHITE}">${topValue ?? ''}</text>
+  ${topUnit ? `<text x="${unitX}" y="${topY}" font-size="${labelFontSize}" text-anchor="end" fill="${Color.GREY}">${topUnit}</text>` : ''}
+  <text x="${valueX}" y="${bottomY}" font-size="${valueFontSize}" text-anchor="end" fill="${Color.WHITE}">${bottomValue ?? ''}</text>
+  ${bottomUnit ? `<text x="${unitX}" y="${bottomY}" font-size="${labelFontSize}" text-anchor="end" fill="${Color.GREY}">${bottomUnit}</text>` : ''}
+</svg>
+`);
+  } else {
+    const width = KEY_WIDTH;
+    const height = KEY_HEIGHT;
+    const cy = height / 2 + adj.offsetY;
+    const valueX = width - PADDING - 40;
+    const unitX = width - PADDING;
+    const topY = cy - 22;
+    const topUnitY = topY + 20;
+    const bottomY = cy + 32;
+    const bottomUnitY = bottomY + 20;
+    const valueFontSize = 35;
+    const labelFontSize = 17;
+    return toSvgDataUri(`
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none">
+  ${getCommonStyle()}
+  ${adj.titleElement}
+
+  <text x="${valueX}" y="${topY}" font-size="${valueFontSize}" text-anchor="end" fill="${Color.WHITE}">${topValue ?? ''}</text>
+  ${topUnit ? `<text x="${unitX}" y="${topUnitY}" font-size="${labelFontSize}" text-anchor="end" fill="${Color.GREY}">${topUnit}</text>` : ''}
+  <text x="${valueX}" y="${bottomY}" font-size="${valueFontSize}" text-anchor="end" fill="${Color.WHITE}">${bottomValue ?? ''}</text>
+  ${bottomUnit ? `<text x="${unitX}" y="${bottomUnitY}" font-size="${labelFontSize}" text-anchor="end" fill="${Color.GREY}">${bottomUnit}</text>` : ''}
+</svg>
+`);
+  }
 }
 
 export function generateSingleTimeImage(

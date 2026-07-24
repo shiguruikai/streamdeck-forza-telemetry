@@ -2,6 +2,7 @@ import streamDeck from '@elgato/streamdeck';
 
 import { CompassAction } from './actions/compass';
 import { GForceAction } from './actions/g-force';
+import { PowerAction } from './actions/power';
 import { RaceInfoAction } from './actions/race-info';
 import { SpeedMeterAction } from './actions/speed-meter';
 import { SuspensionTravelAction } from './actions/suspension-travel';
@@ -19,6 +20,7 @@ const actions = [
   new SuspensionTravelAction(),
   new GForceAction(),
   new CompassAction(),
+  new PowerAction(),
 ];
 
 // 各種アクションのインスタンスをSDKに登録

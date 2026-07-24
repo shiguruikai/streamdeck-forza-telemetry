@@ -135,6 +135,28 @@
           "TitleAlignment": "middle"
         }
       ]
+    },
+    {
+      "UserTitleEnabled": true,
+      "DisableCaching": true,
+      "Name": "Power & Torque",
+      "UUID": "com.github.shiguruikai.streamdeck-forza-telemetry.power",
+      "Icon": "imgs/actions/power/icon",
+      "Tooltip": "Show engine power and torque.",
+      "PropertyInspectorPath": "ui/power.html",
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "Encoder": {
+        "layout": "layouts/canvas-layout.json"
+      },
+      "States": [
+        {
+          "Image": "imgs/actions/power/key",
+          "TitleAlignment": "middle"
+        }
+      ]
     }
   ],
   "Category": "Forza Telemetry",

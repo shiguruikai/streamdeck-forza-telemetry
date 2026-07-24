@@ -20,6 +20,7 @@
 │   │   ├── common.css                    # 共通スタイルシート
 │   │   ├── compass.html                  # コンパス
 │   │   ├── g-force.html
+│   │   ├── power.html                    # エンジン出力（Power & Torque）
 │   │   ├── race-info.html
 │   │   ├── sdpi-components.js            # 公式のUIライブラリ
 │   │   ├── speed-meter.html
@@ -41,6 +42,7 @@
 │   ├── actions/                          # 各アクションの処理
 │   │   ├── compass.ts                    # コンパス
 │   │   ├── g-force.ts                    # Gフォースメーター
+│   │   ├── power.ts                      # エンジン出力（Power & Torque）
 │   │   ├── press-duration.ts             # 長押し判定付きベースクラス
 │   │   ├── race-info.ts                  # レース情報（ラップ・順位・タイム）
 │   │   ├── speed-meter.ts                # 速度計
@@ -61,6 +63,7 @@
 │   │   │   ├── common.ts                 # 共通スタイル・レイアウト調整ヘルパー
 │   │   │   ├── compass.ts                # コンパス描画
 │   │   │   ├── g-force.ts                # Gフォース描画
+│   │   │   ├── power.ts                  # エンジン出力・トルク描画
 │   │   │   ├── race-info.ts              # レース情報描画
 │   │   │   ├── speed-meter.ts            # 速度計・ギア描画
 │   │   │   ├── suspension.ts             # サスペンション描画

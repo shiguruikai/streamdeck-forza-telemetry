@@ -19,6 +19,33 @@ export type SpeedMeterLayout = typeof SPEED_METER_LAYOUTS[number];
 export const COMPASS_DISPLAY_MODES = ['arch', 'circle'] as const;
 export type CompassDisplayMode = typeof COMPASS_DISPLAY_MODES[number];
 
+export const POWER_DISPLAY_MODES = ['both', 'power', 'torque'] as const;
+export type PowerDisplayMode = typeof POWER_DISPLAY_MODES[number];
+
+export type PowerUnit = 'ps' | 'hp' | 'kw';
+export type TorqueUnit = 'nm' | 'kgfm' | 'ftlb';
+
+export const POWER_UNIT_PRESETS = ['ps-nm', 'ps-kgfm', 'hp-ftlb', 'kw-nm'] as const;
+export type PowerUnitPreset = typeof POWER_UNIT_PRESETS[number];
+
+export type UnitPresetDetail = {
+  powerUnit: PowerUnit;
+  torqueUnit: TorqueUnit;
+  label: string;
+};
+
+export const UNIT_PRESET_DETAILS: Record<PowerUnitPreset, UnitPresetDetail> = {
+  'ps-nm': { powerUnit: 'ps', torqueUnit: 'nm', label: 'PS & N·m (Metric / Modern)' },
+  'ps-kgfm': { powerUnit: 'ps', torqueUnit: 'kgfm', label: 'PS & kgf·m (Metric / Japanese Traditional)' },
+  'hp-ftlb': { powerUnit: 'hp', torqueUnit: 'ftlb', label: 'HP & ft·lb (Imperial / US)' },
+  'kw-nm': { powerUnit: 'kw', torqueUnit: 'nm', label: 'kW & N·m (SI / EV)' },
+};
+
+export type PowerSettings = {
+  mode?: PowerDisplayMode;
+  preset?: PowerUnitPreset;
+};
+
 export const DEFAULT_FPS = 10;
 
 export type GlobalSettings = {

@@ -64,6 +64,8 @@ type CarState = {
   suspensionFR: number;
   suspensionRL: number;
   suspensionRR: number;
+  power: number;
+  torque: number;
 };
 
 /**
@@ -159,8 +161,8 @@ function writeDashData(buf: Buffer, state: CarState, offsetDiff: number): void {
   buf.writeFloatLE(0, 236 + offsetDiff); // positionY
   buf.writeFloatLE(0, 240 + offsetDiff); // positionZ
   buf.writeFloatLE(state.speed, 244 + offsetDiff);
-  buf.writeFloatLE(0, 248 + offsetDiff); // power
-  buf.writeFloatLE(0, 252 + offsetDiff); // torque
+  buf.writeFloatLE(state.power, 248 + offsetDiff); // power in Watts
+  buf.writeFloatLE(state.torque, 252 + offsetDiff); // torque in N·m
   buf.writeFloatLE(state.tireTempFL, 256 + offsetDiff);
   buf.writeFloatLE(state.tireTempFR, 260 + offsetDiff);
   buf.writeFloatLE(state.tireTempRL, 264 + offsetDiff);
@@ -304,6 +306,12 @@ function updateCarState(state: CarState, dt: number): void {
   state.suspensionRL = simulateValue(0, 0.7, 0, 0, 0.1, -rollEffect - pitchEffect, 0.0, 1.0);
   state.suspensionRR = simulateValue(0, 0.7, 0, 0, 0.1, rollEffect - pitchEffect, 0.0, 1.0);
 
+  // トルク・出力のシミュレーション (RPMに応じた山型カーブ + 物理変換)
+  const torqueFactor = Math.sin(Math.PI * Math.min(1.0, state.rpm / (MAX_RPM * 0.9)));
+  state.torque = Math.max(180, 520 * torqueFactor + (Math.random() - 0.5) * 15);
+  // Power (W) = Torque (N·m) * RPM * (2 * PI / 60)
+  state.power = state.torque * state.rpm * (Math.PI / 30);
+
   // 速度の再計算とタイムスタンプ更新
   state.speed = calculateSpeed(state.rpm, state.gear);
   state.timestampMs += INTERVAL_MS;
@@ -360,6 +368,8 @@ const state: CarState = {
   suspensionFR: 0.5,
   suspensionRL: 0.5,
   suspensionRR: 0.5,
+  power: 0,
+  torque: 0,
 };
 
 const socket: dgram.Socket = dgram.createSocket('udp4');
@@ -391,12 +401,15 @@ setInterval(() => {
   const currentRpm: string = state.rpm.toFixed(0);
   const gearChar: string = state.gear === 0 ? 'R' : state.gear.toString();
   const currentLapStr: string = state.currentLap.toFixed(1);
-  const raceTimeStr: string = state.currentRaceTime.toFixed(1);
+  const _raceTimeStr: string = state.currentRaceTime.toFixed(1);
+
   const gXStr: string = (state.accelerationX / G_ACCELERATION).toFixed(2);
   const gZStr: string = (state.accelerationZ / G_ACCELERATION).toFixed(2);
   const headingDeg: string = (((state.yaw * 180) / Math.PI + 360) % 360).toFixed(0);
+  const powerPsStr: string = (state.power / 735.49875).toFixed(0);
+  const torqueNmStr: string = state.torque.toFixed(0);
 
   process.stdout.write(
-    `\rGear: ${gearChar} | RPM: ${currentRpm.padStart(4, ' ')} | Speed: ${speedKmh.padStart(4, ' ')} km/h | Yaw: ${headingDeg.padStart(3, ' ')}° | G-Force: X:${gXStr.padStart(5, ' ')} Z:${gZStr.padStart(5, ' ')} | Lap: ${state.lapNumber} (${currentLapStr}s) | RaceTime: ${raceTimeStr.padStart(5, ' ')}s | Pos: ${state.racePosition}`,
+    `\rGear: ${gearChar} | RPM: ${currentRpm.padStart(4, ' ')} | Speed: ${speedKmh.padStart(4, ' ')} km/h | Power: ${powerPsStr.padStart(4, ' ')} PS | Torque: ${torqueNmStr.padStart(4, ' ')} N·m | Yaw: ${headingDeg.padStart(3, ' ')}° | G: X:${gXStr.padStart(5, ' ')} Z:${gZStr.padStart(5, ' ')} | Lap: ${state.lapNumber} (${currentLapStr}s)`,
   );
 }, INTERVAL_MS);

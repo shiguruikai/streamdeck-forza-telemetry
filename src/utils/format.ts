@@ -1,4 +1,4 @@
-import { SpeedUnit, SuspensionMode, TempUnit } from '../settings/settings';
+import { PowerUnit, SpeedUnit, SuspensionMode, TempUnit, TorqueUnit } from '../settings/settings';
 import { Color } from './graphics/common';
 import { clamp, hslToRgb } from './utils';
 
@@ -155,4 +155,62 @@ export function formatHeading(yaw: number | null | undefined): { heading: number
   const heading = Math.round((((y * (180 / Math.PI)) % 360) + 360) % 360);
   const headingStr = `${heading}°`;
   return { heading, headingStr };
+}
+
+export function formatPowerUnit(unit: PowerUnit = 'ps'): string {
+  switch (unit) {
+    case 'kw':
+      return 'kW';
+    case 'hp':
+      return 'HP';
+    case 'ps':
+    default:
+      return 'PS';
+  }
+}
+
+export function formatTorqueUnit(unit: TorqueUnit = 'nm'): string {
+  switch (unit) {
+    case 'kgfm':
+      return 'kgf·m';
+    case 'ftlb':
+      return 'ft·lb';
+    case 'nm':
+    default:
+      return 'N·m';
+  }
+}
+
+export function formatPower(powerW?: number, unit: PowerUnit = 'ps'): string {
+  const v = powerW ?? 0;
+  let result = 0;
+  switch (unit) {
+    case 'ps':
+      result = v / 735.49875;
+      break;
+    case 'hp':
+      result = v / 745.699872;
+      break;
+    case 'kw':
+      result = v / 1000.0;
+      break;
+  }
+  return Math.round(result).toString();
+}
+
+export function formatTorque(torqueNm?: number, unit: TorqueUnit = 'nm'): string {
+  const v = torqueNm ?? 0;
+  let result = 0;
+  switch (unit) {
+    case 'nm':
+      result = v;
+      break;
+    case 'kgfm':
+      result = v / 9.80665;
+      break;
+    case 'ftlb':
+      result = v * 0.737562149;
+      break;
+  }
+  return Math.round(result).toString();
 }
