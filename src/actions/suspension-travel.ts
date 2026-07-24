@@ -11,7 +11,7 @@ import { SuspensionMode, WHEEL_POSITIONS, WheelPosition } from '../settings/sett
 import { ForzaTelemetryData } from '../telemetry/parser';
 import { generateSuspensionTravelAllWheelsImage, generateSuspensionTravelSingleWheelImage } from '../utils/graphics';
 import { getNextWheelPosition } from '../utils/utils';
-import { PressDurationAction } from './press-duration';
+import { TelemetryAction } from './telemetry-action';
 
 type SuspensionTravelSettings = {
   position?: WheelPosition;
@@ -21,7 +21,7 @@ type SuspensionTravelSettings = {
 @action({
   UUID: 'com.github.shiguruikai.streamdeck-forza-telemetry.suspension-travel',
 })
-export class SuspensionTravelAction extends PressDurationAction<SuspensionTravelSettings> {
+export class SuspensionTravelAction extends TelemetryAction<SuspensionTravelSettings> {
   private async updateImage(
     action: DialAction<SuspensionTravelSettings> | KeyAction<SuspensionTravelSettings>,
     data?: ForzaTelemetryData,

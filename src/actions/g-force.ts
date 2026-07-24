@@ -13,7 +13,7 @@ import {
 import { ForzaTelemetryData } from '../telemetry/parser';
 import { generateGForceImage } from '../utils/graphics';
 import { clamp } from '../utils/utils';
-import { PressDurationAction } from './press-duration';
+import { TelemetryAction } from './telemetry-action';
 
 const STANDARD_GRAVITY = 9.80665;
 const DEFAULT_SCALE = 2;
@@ -26,7 +26,7 @@ type GForceSettings = {
 @action({
   UUID: 'com.github.shiguruikai.streamdeck-forza-telemetry.g-force',
 })
-export class GForceAction extends PressDurationAction<GForceSettings> {
+export class GForceAction extends TelemetryAction<GForceSettings> {
   // リセット時のテキスト一時表示制御
   private readonly resetFeedbackTimers = new Map<string, NodeJS.Timeout>();
   private readonly showResetTexts = new Map<string, boolean>();

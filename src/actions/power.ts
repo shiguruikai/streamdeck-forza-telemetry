@@ -4,7 +4,7 @@ import {
   DialRotateEvent,
   DialUpEvent,
   KeyAction,
-  KeyDownEvent,
+  KeyUpEvent,
 } from '@elgato/streamdeck';
 
 import {
@@ -45,11 +45,10 @@ export class PowerAction extends TelemetryAction<PowerSettings> {
     await this.updateImage(action, data);
   }
 
-  override async onKeyDown(ev: KeyDownEvent<PowerSettings>): Promise<void> {
-    await this.cyclePreset(ev.action);
-  }
-
-  override async onDialUp(ev: DialUpEvent<PowerSettings>): Promise<void> {
+  /**
+   * キーまたはダイヤル短押しで単位プリセットを切り替える。
+   */
+  protected override async onShortPress(ev: KeyUpEvent<PowerSettings> | DialUpEvent<PowerSettings>): Promise<void> {
     await this.cyclePreset(ev.action);
   }
 

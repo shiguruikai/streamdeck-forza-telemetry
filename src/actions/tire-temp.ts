@@ -11,7 +11,7 @@ import { TempUnit, WHEEL_POSITIONS, WheelPosition } from '../settings/settings';
 import { ForzaTelemetryData } from '../telemetry/parser';
 import { generateTireTempAllWheelsImage, generateTireTempSingleWheelImage } from '../utils/graphics';
 import { getNextWheelPosition } from '../utils/utils';
-import { PressDurationAction } from './press-duration';
+import { TelemetryAction } from './telemetry-action';
 
 type TireTempSettings = {
   position?: WheelPosition;
@@ -21,7 +21,7 @@ type TireTempSettings = {
 @action({
   UUID: 'com.github.shiguruikai.streamdeck-forza-telemetry.tire-temp',
 })
-export class TireTempAction extends PressDurationAction<TireTempSettings> {
+export class TireTempAction extends TelemetryAction<TireTempSettings> {
   private async updateImage(
     action: DialAction<TireTempSettings> | KeyAction<TireTempSettings>,
     data?: ForzaTelemetryData,

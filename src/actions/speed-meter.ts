@@ -12,7 +12,7 @@ import { SPEED_METER_LAYOUTS, SpeedMeterLayout, SpeedUnit } from '../settings/se
 import { ForzaTelemetryData } from '../telemetry/parser';
 import { generateGearImage, generateRpmImage, generateSpeedImage, generateSpeedMeterImage } from '../utils/graphics';
 import { clamp } from '../utils/utils';
-import { PressDurationAction } from './press-duration';
+import { TelemetryAction } from './telemetry-action';
 
 type SpeedMeterSettings = {
   layout?: SpeedMeterLayout;
@@ -22,7 +22,7 @@ type SpeedMeterSettings = {
 @action({
   UUID: 'com.github.shiguruikai.streamdeck-forza-telemetry.speed-meter',
 })
-export class SpeedMeterAction extends PressDurationAction<SpeedMeterSettings> {
+export class SpeedMeterAction extends TelemetryAction<SpeedMeterSettings> {
   private readonly previousGears = new Map<string, string>();
 
   private async updateImage(

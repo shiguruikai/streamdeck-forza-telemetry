@@ -1,7 +1,11 @@
 import streamDeck, {
   DialAction,
+  DialDownEvent,
+  DialUpEvent,
   DidReceiveSettingsEvent,
   KeyAction,
+  KeyDownEvent,
+  KeyUpEvent,
   SendToPluginEvent,
   SingletonAction,
   TitleParametersDidChangeEvent,
@@ -23,6 +27,7 @@ import { getSystemFonts } from '../utils/utils';
  * - **キャッシュ**: ローカル設定、最終受信データ、アクティブアクションの参照を保持。
  * - **Property Inspector連携**: システムフォント一覧の取得要求など、設定画面との双方向通信の仲介。
  * - **エラー・タイムアウト監視**: サーバーエラーや受信タイムアウト（3秒）発生時に、アクティブアクションへ一斉に警告（showAlert）を表示。
+ * - **短押し・長押しのハンドリング**: キーおよびダイヤル操作の短押し（離した瞬間）と長押し（500ms経過時）のライフサイクルイベントを提供。
  *
  * @template TSettings - アクションが使用するローカル設定の型
  */
@@ -36,6 +41,15 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
   private readonly handlers = new Map<string, (data: ForzaTelemetryData) => void>();
   private readonly activeActions = new Map<string, DialAction<TSettings> | KeyAction<TSettings>>();
   private readonly titleInfoMap = new Map<string, TitleInfo>();
+
+  private readonly pressTimers = new Map<string, NodeJS.Timeout>();
+  private readonly longPressedFlags = new Set<string>();
+
+  /**
+   * 長押しと判定するしきい値（ミリ秒）。
+   * 必要に応じて子クラスでオーバーライド可能です。
+   */
+  protected longPressDurationMs = 500;
 
   private isListeningErrors = false;
 
@@ -142,6 +156,66 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
   protected onDisappear(ev: WillDisappearEvent<TSettings>): Promise<void> | void { /* pass */ }
 
   /**
+   * 短押し（キーまたはダイヤルが離された際に、長押しが発生していなかった場合）のコールバック。
+   */
+  protected onShortPress(
+    _ev: KeyUpEvent<TSettings> | DialUpEvent<TSettings>,
+  ): Promise<void> | void { /* pass */ }
+
+  /**
+   * 長押し（キーまたはダイヤルが押されてから規定時間が経過した瞬間）のコールバック。
+   */
+  protected onLongPress(
+    _ev: KeyDownEvent<TSettings> | DialDownEvent<TSettings>,
+  ): Promise<void> | void { /* pass */ }
+
+  override onKeyDown(ev: KeyDownEvent<TSettings>): Promise<void> | void {
+    this.handlePressDown(ev);
+  }
+
+  override onDialDown(ev: DialDownEvent<TSettings>): Promise<void> | void {
+    this.handlePressDown(ev);
+  }
+
+  override async onKeyUp(ev: KeyUpEvent<TSettings>): Promise<void> {
+    await this.handlePressUp(ev);
+  }
+
+  override async onDialUp(ev: DialUpEvent<TSettings>): Promise<void> {
+    await this.handlePressUp(ev);
+  }
+
+  private handlePressDown(ev: KeyDownEvent<TSettings> | DialDownEvent<TSettings>): void {
+    if (this.pressTimers.has(ev.action.id)) return;
+
+    const timer = setTimeout(() => {
+      this.longPressedFlags.add(ev.action.id);
+      void this.onLongPress(ev);
+    }, this.longPressDurationMs);
+
+    this.pressTimers.set(ev.action.id, timer);
+  }
+
+  private async handlePressUp(ev: KeyUpEvent<TSettings> | DialUpEvent<TSettings>): Promise<void> {
+    this.cancelPressTimer(ev.action.id);
+
+    const wasLongPressed = this.longPressedFlags.has(ev.action.id);
+    this.longPressedFlags.delete(ev.action.id);
+
+    if (!wasLongPressed && this.activeActions.has(ev.action.id)) {
+      await this.onShortPress(ev);
+    }
+  }
+
+  private cancelPressTimer(actionId: string): void {
+    const existingTimer = this.pressTimers.get(actionId);
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+      this.pressTimers.delete(actionId);
+    }
+  }
+
+  /**
    * Property Inspector（設定画面）から送信されたイベントを処理します。
    *
    * @note UI側の `sdpi-select`（データソース指定：datasource="getFonts"）からのフォント一覧要求をフックし、
@@ -215,6 +289,9 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
    */
   override async onWillDisappear(ev: WillDisappearEvent<TSettings>): Promise<void> {
     const { action } = ev;
+
+    this.cancelPressTimer(action.id);
+    this.longPressedFlags.delete(action.id);
 
     this.unsubscribeTelemetry(action.id);
 

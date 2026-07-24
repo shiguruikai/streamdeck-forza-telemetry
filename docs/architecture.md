@@ -43,7 +43,6 @@
 │   │   ├── compass.ts                    # コンパス
 │   │   ├── g-force.ts                    # Gフォースメーター
 │   │   ├── power.ts                      # エンジン出力（Power & Torque）
-│   │   ├── press-duration.ts             # 長押し判定付きベースクラス
 │   │   ├── race-info.ts                  # レース情報（ラップ・順位・タイム）
 │   │   ├── speed-meter.ts                # 速度計
 │   │   ├── suspension-travel.ts          # サスペンション
@@ -133,6 +132,7 @@ flowchart LR
 ### [TelemetryAction](../src/actions/telemetry-action.ts)（アクションの共通ベースクラス）
 
 - **ライフサイクル自動制御**: アクションの表示／非表示と連動して、テレメトリ受信の購読・購読解除を自動制御。
+- **短押し・長押しのハンドリング**: キーおよびダイヤル操作の短押し（離した瞬間）と長押し（500ms経過時）のメソッド（`onShortPress`、`onLongPress`）を提供。サブクラスは、`onKeyDown` や `onKeyUp` を直接オーバーライドしてはいけない。
 - **データキャッシュ**: 直近のテレメトリデータを保持し、画面の切り替わりや設定変更時、直近のデータで画面を再表示可能。
 - **一斉再描画**: グローバル設定（フォント等）の変更時、登録済みのアクティブアクションに対して `refreshActiveActions()` を呼び出し、即時再描画を実行。
 - **動的データソース**: `onSendToPlugin` で、Property Inspectorからのデータソース要求（`getFonts` イベント）をフックし、OSのローカルフォント一覧を動的に取得してUIへ配信する。
