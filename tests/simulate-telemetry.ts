@@ -1,9 +1,11 @@
 import { Buffer } from 'node:buffer';
 import * as dgram from 'node:dgram';
+import * as readline from 'node:readline';
 
 const PORT = 24000;
 const HOST = '127.0.0.1';
-const INTERVAL_MS = 20;
+const TELEMETRY_INTERVAL_MS = 16; // データ送信間隔（約60FPS）
+const CONSOLE_RENDER_INTERVAL_MS = 50; // コンソール描画間隔（20FPSで負荷を軽減）
 
 // 車両のスペック定義
 const IDLE_RPM = 800;
@@ -133,6 +135,35 @@ function calculateSpeed(rpm: number, gear: number): number {
 }
 
 /**
+ * RPMに応じたエンジントルク（N·m）を計算します。
+ * スポーツカー（最高回転数8000rpm、最大トルク520 N·m/5200rpm、最高出力約470 PS/7500rpm）の実車特性をシミュレートします。
+ *
+ * @param rpm 現在のエンジン回転数
+ * @returns トルク（N·m）
+ */
+function calculateTorque(rpm: number): number {
+  const idleRpm = IDLE_RPM;
+  const peakTorqueRpm = 5200;
+  const maxRpm = MAX_RPM;
+
+  let baseTorque: number;
+  if (rpm <= peakTorqueRpm) {
+    // 低～中回転域: 800rpm（約200 N·m）から 5200rpm（520 N·m）へスムーズに上昇
+    const progress = Math.max(0, (rpm - idleRpm) / (peakTorqueRpm - idleRpm));
+    baseTorque = 200 + 320 * Math.sin(progress * (Math.PI / 2));
+  } else {
+    // 高回転域: 5200rpm（520 N·m）から 8000rpm（約410 N·m）へ緩やかに低下
+    // 馬力（Power）はトルク×RPMに比例するため、7500rpm付近で最高出力（約470 PS）を発揮
+    const progress = Math.min(1, (rpm - peakTorqueRpm) / (maxRpm - peakTorqueRpm));
+    baseTorque = 520 - 110 * (1 - Math.cos(progress * (Math.PI / 2)));
+  }
+
+  // わずかな燃焼・負荷のノイズを加重
+  const noise = (Math.random() - 0.5) * 15;
+  return Math.max(100, baseTorque + noise);
+}
+
+/**
  * 共通のSledデータ書き込み処理（0〜231バイト）
  */
 function writeSledData(buf: Buffer, state: CarState): void {
@@ -234,6 +265,8 @@ function buildTelemetryPacket(state: CarState): Buffer {
   return buf;
 }
 
+let positionTimer = 0;
+
 /**
  * 車両シミュレーション状態を更新します。
  *
@@ -242,7 +275,7 @@ function buildTelemetryPacket(state: CarState): Buffer {
  */
 function updateCarState(state: CarState, dt: number): void {
   // 低いギアほどRPMの上がり方を早くする簡易ロジック（1秒あたりのRPM上昇量）
-  const rpmRiseRatePerSec = 6000 / state.gear;
+  const rpmRiseRatePerSec = 3500 / state.gear;
   const rpmGain = rpmRiseRatePerSec * dt;
   state.rpm += rpmGain;
 
@@ -306,19 +339,26 @@ function updateCarState(state: CarState, dt: number): void {
   state.suspensionRL = simulateValue(0, 0.7, 0, 0, 0.1, -rollEffect - pitchEffect, 0.0, 1.0);
   state.suspensionRR = simulateValue(0, 0.7, 0, 0, 0.1, rollEffect - pitchEffect, 0.0, 1.0);
 
-  // トルク・出力のシミュレーション (RPMに応じた山型カーブ + 物理変換)
-  const torqueFactor = Math.sin(Math.PI * Math.min(1.0, state.rpm / (MAX_RPM * 0.9)));
-  state.torque = Math.max(180, 520 * torqueFactor + (Math.random() - 0.5) * 15);
-  // Power (W) = Torque (N·m) * RPM * (2 * PI / 60)
+  // トルク・出力のシミュレーション（実車特性に応じたトルク曲線＋物理変換）
+  state.torque = calculateTorque(state.rpm);
+  // Power（W）= Torque（N·m）* RPM * (2 * PI / 60)
   state.power = state.torque * state.rpm * (Math.PI / 30);
 
   // 速度の再計算とタイムスタンプ更新
   state.speed = calculateSpeed(state.rpm, state.gear);
-  state.timestampMs += INTERVAL_MS;
+  state.timestampMs += dt * 1000;
   state.currentRaceTime = state.timestampMs / 1000;
 
   // 方角（yaw）のシミュレーション（ラジアン: -π ～ +π）
   state.yaw = ((state.timestampMs / 15000) * 2 * Math.PI) % (2 * Math.PI) - Math.PI;
+
+  // 順位の変動シミュレーション（約4秒ごとにオーバーテイクが発生）
+  positionTimer += dt;
+  if (positionTimer >= 4) {
+    positionTimer = 0;
+    const delta = Math.random() > 0.5 ? 1 : -1;
+    state.racePosition = Math.max(1, Math.min(12, state.racePosition + delta));
+  }
 
   // ラップタイムの更新（60秒で1周と仮定）
   state.currentLap += dt;
@@ -330,8 +370,6 @@ function updateCarState(state: CarState, dt: number): void {
     }
     state.lapNumber++;
     state.currentLap = 0;
-    // 順位もたまに変化させる（1〜12位の間）
-    state.racePosition = Math.max(1, Math.min(12, state.racePosition + (Math.random() > 0.5 ? 1 : -1)));
   }
 
   // 最高ギアで最高回転数に到達した場合、初期状態（ギア1＝1速）にリセットしてループを継続する
@@ -372,21 +410,85 @@ const state: CarState = {
   torque: 0,
 };
 
+let isPaused = false;
+let lastUpdateTime = performance.now();
+let lastConsoleRenderTime = 0;
+
 const socket: dgram.Socket = dgram.createSocket('udp4');
 
-console.log(`[Simulation Started] Target: ${HOST}:${PORT}`);
-console.log(
-  `Interval: ${INTERVAL_MS}ms, Max RPM: ${MAX_RPM}, Max Gear: ${MAX_GEAR}\n`,
-);
+const header = `
+=== Simulation Started ===
+Target: ${HOST}:${PORT}
+Format: ${format.toUpperCase()}
+Send Rate: ~${Math.round(1000 / TELEMETRY_INTERVAL_MS)} FPS (${TELEMETRY_INTERVAL_MS}ms)
+Render Rate: ~${Math.round(1000 / CONSOLE_RENDER_INTERVAL_MS)} FPS (${CONSOLE_RENDER_INTERVAL_MS}ms)
+Max RPM: ${MAX_RPM}, Max Gear: ${MAX_GEAR}
+Press 'P' to pause/resume simulation, Ctrl+C to exit.
+
+`.trimStart();
+
+// 終了時のクリーンアップ処理
+function cleanup(): void {
+  if (process.stdout.isTTY) {
+    process.stdout.write('\x1b[?25h'); // カーソルを表示に戻す
+    readline.cursorTo(process.stdout, 0);
+    readline.clearLine(process.stdout, 0);
+  }
+  try {
+    socket.close();
+  } catch {
+    // すでに閉じている場合は無視
+  }
+  process.exit(0);
+}
+
+// シグナル受信時の終了クリーンアップ
+process.on('SIGINT', cleanup);
+process.on('SIGTERM', cleanup);
+
+// キーボード入力（Pキーでパケット送信の一時停止/再開）の設定
+if (process.stdin.isTTY) {
+  readline.emitKeypressEvents(process.stdin);
+  process.stdin.setRawMode(true);
+  process.stdin.on('keypress', (_str, key: readline.Key) => {
+    if (key.ctrl && key.name === 'c') {
+      cleanup();
+    }
+    if (key.name === 'p' || key.sequence === 'p' || key.sequence === 'P') {
+      isPaused = !isPaused;
+      if (process.stdout.isTTY) {
+        readline.cursorTo(process.stdout, 0);
+        readline.clearLine(process.stdout, 0);
+        if (isPaused) {
+          process.stdout.write(
+            "[PAUSED] Simulation is paused. Press 'P' to resume...",
+          );
+        }
+      }
+    }
+  });
+}
+
+process.stdout.write(header);
+
+if (process.stdout.isTTY) {
+  process.stdout.write('\x1b[?25l'); // カーソルを非表示化（高速更新時のチラツキ防止）
+}
 
 // メインループ
 setInterval(() => {
-  const dt = INTERVAL_MS / 1000; // 経過時間（秒）
+  const now = performance.now();
+  if (isPaused) {
+    lastUpdateTime = now; // 一時停止解除後のdt飛びを防止
+    return;
+  }
 
-  // 1. 車両状態の更新
+  // 1. 実経過時間（秒）を計算してシミュレーション状態を更新
+  const dt = (now - lastUpdateTime) / 1000;
+  lastUpdateTime = now;
   updateCarState(state, dt);
 
-  // 2. パケット生成と送信
+  // 2. パケット生成と送信（30FPS超の高レートで送信）
   const packet: Buffer = buildTelemetryPacket(state);
 
   socket.send(packet, 0, packet.length, PORT, HOST, (err: Error | null) => {
@@ -396,20 +498,23 @@ setInterval(() => {
     }
   });
 
-  // 3. コンソール出力（m/s を km/h に変換して表示）
-  const speedKmh: string = (state.speed * 3.6).toFixed(0);
-  const currentRpm: string = state.rpm.toFixed(0);
-  const gearChar: string = state.gear === 0 ? 'R' : state.gear.toString();
-  const currentLapStr: string = state.currentLap.toFixed(1);
-  const _raceTimeStr: string = state.currentRaceTime.toFixed(1);
+  // 3. コンソール出力（間引いて描画負荷を低減）
+  if (process.stdout.isTTY && now - lastConsoleRenderTime >= CONSOLE_RENDER_INTERVAL_MS) {
+    lastConsoleRenderTime = now;
 
-  const gXStr: string = (state.accelerationX / G_ACCELERATION).toFixed(2);
-  const gZStr: string = (state.accelerationZ / G_ACCELERATION).toFixed(2);
-  const headingDeg: string = (((state.yaw * 180) / Math.PI + 360) % 360).toFixed(0);
-  const powerPsStr: string = (state.power / 735.49875).toFixed(0);
-  const torqueNmStr: string = state.torque.toFixed(0);
+    const speedKmh: string = (state.speed * 3.6).toFixed(0);
+    const currentRpm: string = state.rpm.toFixed(0);
+    const gearChar: string = state.gear === 0 ? 'R' : state.gear.toString();
+    const currentLapStr: string = state.currentLap.toFixed(1);
 
-  process.stdout.write(
-    `\rGear: ${gearChar} | RPM: ${currentRpm.padStart(4, ' ')} | Speed: ${speedKmh.padStart(4, ' ')} km/h | Power: ${powerPsStr.padStart(4, ' ')} PS | Torque: ${torqueNmStr.padStart(4, ' ')} N·m | Yaw: ${headingDeg.padStart(3, ' ')}° | G: X:${gXStr.padStart(5, ' ')} Z:${gZStr.padStart(5, ' ')} | Lap: ${state.lapNumber} (${currentLapStr}s)`,
-  );
-}, INTERVAL_MS);
+    const gXStr: string = (state.accelerationX / G_ACCELERATION).toFixed(2);
+    const gZStr: string = (state.accelerationZ / G_ACCELERATION).toFixed(2);
+    const headingDeg: string = (((state.yaw * 180) / Math.PI + 360) % 360).toFixed(0);
+    const powerPsStr: string = (state.power / 735.49875).toFixed(0);
+    const torqueNmStr: string = state.torque.toFixed(0);
+
+    process.stdout.write(
+      `\rGear: ${gearChar} | RPM: ${currentRpm.padStart(4, ' ')} | Speed: ${speedKmh.padStart(4, ' ')} km/h | Power: ${powerPsStr.padStart(4, ' ')} PS | Torque: ${torqueNmStr.padStart(4, ' ')} N·m | Yaw: ${headingDeg.padStart(3, ' ')}° | G: X:${gXStr.padStart(5, ' ')} Z:${gZStr.padStart(5, ' ')} | Lap: ${state.lapNumber} (${currentLapStr}s)`,
+    );
+  }
+}, TELEMETRY_INTERVAL_MS);
