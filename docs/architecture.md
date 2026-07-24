@@ -19,6 +19,8 @@
 │   ├── ui/                               # 各アクションのProperty Inspector（設定画面）のUI定義
 │   │   ├── common.css                    # 共通スタイルシート
 │   │   ├── compass.html                  # コンパス
+│   │   ├── components/                   # Web Component 群
+│   │   │   └── global-settings.js        # グローバル設定用 Web Component（<global-settings>）
 │   │   ├── g-force.html
 │   │   ├── power.html                    # エンジン出力（Power & Torque）
 │   │   ├── race-info.html
