@@ -1,0 +1,9 @@
+* text=auto eol=lf
+
+# バイナリファイル
+*.gif binary
+*.ico binary
+*.jpeg binary
+*.jpg binary
+*.png binary
+*.webp binary

@@ -75,6 +75,7 @@
 ├── tools/                                # 開発支援ツール
 │   └── gen-marketplace-icon.ps1          # プラグインのアイコン（marketplace.svg）をPNG形式に変換するスクリプト
 ├── .editorconfig                         # EditorConfig設定ファイル
+├── .gitattributes                        # Gitのファイル属性設定
 ├── .gitignore                            # Gitの除外設定
 ├── AGENTS.md                             # AIエージェント向けのガイド
 ├── CHANGELOG.md                          # 変更履歴
