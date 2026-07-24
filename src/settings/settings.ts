@@ -19,8 +19,8 @@ export type SpeedMeterLayout = typeof SPEED_METER_LAYOUTS[number];
 export const COMPASS_DISPLAY_MODES = ['arch', 'circle'] as const;
 export type CompassDisplayMode = typeof COMPASS_DISPLAY_MODES[number];
 
-export const POWER_DISPLAY_MODES = ['both', 'power', 'torque'] as const;
-export type PowerDisplayMode = typeof POWER_DISPLAY_MODES[number];
+export const POWER_LAYOUTS = ['both', 'power', 'torque'] as const;
+export type PowerLayout = typeof POWER_LAYOUTS[number];
 
 export type PowerUnit = 'ps' | 'hp' | 'kw';
 export type TorqueUnit = 'nm' | 'kgfm' | 'ftlb';
@@ -42,11 +42,11 @@ export const UNIT_PRESET_DETAILS: Record<PowerUnitPreset, UnitPresetDetail> = {
 };
 
 export type PowerSettings = {
-  mode?: PowerDisplayMode;
+  layout?: PowerLayout;
   preset?: PowerUnitPreset;
 };
 
-export const DEFAULT_FPS = 10;
+export const DEFAULT_FPS = 15;
 
 export type GlobalSettings = {
   port?: number;

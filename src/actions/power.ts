@@ -8,7 +8,7 @@ import {
 } from '@elgato/streamdeck';
 
 import {
-  POWER_DISPLAY_MODES,
+  POWER_LAYOUTS,
   POWER_UNIT_PRESETS,
   PowerSettings,
 } from '../settings/settings';
@@ -25,11 +25,11 @@ export class PowerAction extends TelemetryAction<PowerSettings> {
     action: DialAction<PowerSettings> | KeyAction<PowerSettings>,
     data?: ForzaTelemetryData,
   ): Promise<void> {
-    const { mode = 'both', preset = POWER_UNIT_PRESETS[0] } = this.getSettings(action.id) ?? {};
+    const { layout = 'both', preset = POWER_UNIT_PRESETS[0] } = this.getSettings(action.id) ?? {};
     const isDial = action.isDial();
     const titleInfo = this.getTitleInfo(action.id);
 
-    const image = generatePowerImage(isDial, data, mode, preset, titleInfo);
+    const image = generatePowerImage(isDial, data, layout, preset, titleInfo);
 
     if (isDial) {
       await action.setFeedback({ canvas: image });
@@ -66,13 +66,13 @@ export class PowerAction extends TelemetryAction<PowerSettings> {
 
   override async onDialRotate(ev: DialRotateEvent<PowerSettings>): Promise<void> {
     const currentSettings = ev.payload.settings;
-    const currentMode = currentSettings.mode ?? POWER_DISPLAY_MODES[0];
-    const currentIndex = POWER_DISPLAY_MODES.indexOf(currentMode);
-    const nextIndex = clamp(currentIndex + ev.payload.ticks, 0, POWER_DISPLAY_MODES.length - 1);
-    const nextMode = POWER_DISPLAY_MODES[nextIndex];
+    const currentLayout = currentSettings.layout ?? POWER_LAYOUTS[0];
+    const currentIndex = POWER_LAYOUTS.indexOf(currentLayout);
+    const nextIndex = clamp(currentIndex + ev.payload.ticks, 0, POWER_LAYOUTS.length - 1);
+    const nextLayout = POWER_LAYOUTS[nextIndex];
 
-    if (currentMode !== nextMode) {
-      const newSettings = { ...currentSettings, mode: nextMode };
+    if (currentLayout !== nextLayout) {
+      const newSettings = { ...currentSettings, layout: nextLayout };
       await this.setSettings(ev.action.id, newSettings);
       await this.updateImage(ev.action, this.getLastTelemetryData(ev.action.id));
     }

@@ -1,6 +1,6 @@
 import {
   POWER_UNIT_PRESETS,
-  PowerDisplayMode,
+  PowerLayout,
   PowerUnitPreset,
   UNIT_PRESET_DETAILS,
 } from '../../settings/settings';
@@ -15,13 +15,13 @@ import {
 export function generatePowerImage(
   isDial: boolean,
   data?: ForzaTelemetryData,
-  mode: PowerDisplayMode = 'both',
+  layout: PowerLayout = 'both',
   preset: PowerUnitPreset = POWER_UNIT_PRESETS[0],
   titleInfo?: TitleInfo,
 ): string {
   const detail = UNIT_PRESET_DETAILS[preset];
 
-  if (mode === 'both') {
+  if (layout === 'both') {
     return generateDoubleValueImage(
       isDial,
       formatPower(data?.power, detail.powerUnit),
@@ -29,7 +29,7 @@ export function generatePowerImage(
       formatTorque(data?.torque, detail.torqueUnit),
       formatTorqueUnit(detail.torqueUnit),
       titleInfo);
-  } else if (mode === 'power') {
+  } else if (layout === 'power') {
     return generateSingleValueImage(
       isDial,
       formatPower(data?.power, detail.powerUnit),
