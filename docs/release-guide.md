@@ -46,13 +46,15 @@
       [0.1.0]: https://github.com/shiguruikai/streamdeck-forza-telemetry/releases/tag/v0.1.0
       ```
 4. **バージョン更新後の最終検証**
-   1. `pnpm build`
-   2. `pnpm sd:validate`
-   3. `pnpm sd:pack`
+   1. `pnpm lint`
+   2. `pnpm build`
+   3. `pnpm sd:validate`
+   4. `pnpm sd:pack`
 5. **コミット＆プッシュ**
    1. ステージング: `git add package.json CHANGELOG.md com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin/manifest.json`
    2. 差分確認: `git diff --cached`
    3. コミット: `git commit -m "release: v1.0.0"`
    4. タグ追加: `git tag v1.0.0`
-   5. プッシュ: `git push origin main`
-   6. GitHub Actions `.github/workflows/release.yml` により、自動で GitHub Releases に公開される。
+   5. プッシュ: `git push origin main v1.0.0`
+      - **重要**: タグを同時にプッシュしないと GitHub Actions （`.github/workflows/release.yml`）が発火しないため、必ずタグを含めてプッシュすること。
+
