@@ -6,7 +6,7 @@
 
 ## 技術スタック
 
-- TypeScript, Node.js v24, pnpm, Rollup, ESLint
+- TypeScript, Node.js v24, pnpm, Rollup, ESLint, Vitest
 - Stream Deck SDK: `@elgato/streamdeck`, `@elgato/cli`
 
 ## コマンド
@@ -14,6 +14,7 @@
 - `pnpm build`: プラグインのビルド
 - `pnpm watch`: 変更監視ビルドおよび自動再起動
 - `pnpm lint:fix`: ESLintによるコード修正（JavaScript、TypeScript、JSONのみ対象）
+- `pnpm test`: Vitestによる単体テストの実行
 - `pnpm sim`: 擬似テレメトリ送信（`tests/simulate-telemetry.ts`のデフォルト実行）
   - `pnpm sim:fh6`: FH6形式
   - `pnpm sim:fm7`: FM7 Dash形式

@@ -80,6 +80,7 @@
 │   │   └── utils.ts                      # 汎用関数
 │   └── plugin.ts                         # プラグインのエントリポイント
 ├── tests/                                # テストコード
+│   ├── format.test.ts                    # フォーマット処理の単体テスト
 │   ├── simulate-telemetry.ts             # 擬似テレメトリ送信シミュレータ
 │   └── tsconfig.json                     # テスト用TypeScript設定
 ├── tools/                                # 開発支援ツール

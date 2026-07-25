@@ -11,6 +11,7 @@
     "sim:fm7": "node tests/simulate-telemetry.ts --format fm7-dash",
     "sim:fm8": "node tests/simulate-telemetry.ts --format fm8-dash",
     "sim:sled": "node tests/simulate-telemetry.ts --format fm-sled",
+    "test": "vitest run",
     "sd:validate": "streamdeck validate com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin",
     "sd:restart": "streamdeck restart com.github.shiguruikai.streamdeck-forza-telemetry",
     "sd:pack": "streamdeck pack -f com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin"
@@ -36,7 +37,8 @@
     "rollup": "^4.62.2",
     "tslib": "^2.8.1",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.64.0"
+    "typescript-eslint": "^8.64.0",
+    "vitest": "^4.1.10"
   },
   "dependencies": {
     "@elgato/streamdeck": "^2.1.0",
