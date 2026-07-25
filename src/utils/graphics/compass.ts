@@ -1,4 +1,4 @@
-import { CompassDisplayMode } from '../../settings/settings';
+import { CompassDisplayMode } from '../../shared';
 import { ForzaTelemetryData } from '../../telemetry/parser';
 import { formatHeading } from '../format';
 import { Color, DIAL_HEIGHT, DIAL_WIDTH, getCommonStyle, KEY_HEIGHT, KEY_WIDTH, PADDING, toSvgDataUri } from './common';

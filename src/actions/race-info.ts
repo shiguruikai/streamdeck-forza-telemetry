@@ -5,7 +5,7 @@ import {
   KeyAction,
 } from '@elgato/streamdeck';
 
-import { RACE_INFO_LAYOUTS, RaceInfoLayout } from '../settings/settings';
+import { RACE_INFO_LAYOUTS, RaceInfoLayout } from '../shared';
 import { ForzaTelemetryData } from '../telemetry/parser';
 import {
   generateBestLapTimeImage,

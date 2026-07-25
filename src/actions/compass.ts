@@ -5,7 +5,7 @@ import {
   KeyAction,
 } from '@elgato/streamdeck';
 
-import { COMPASS_DISPLAY_MODES, CompassDisplayMode } from '../settings/settings';
+import { COMPASS_DISPLAY_MODES, CompassDisplayMode } from '../shared';
 import { ForzaTelemetryData } from '../telemetry/parser';
 import { generateCompassSvg } from '../utils/graphics';
 import { clamp } from '../utils/utils';

@@ -1,5 +1,5 @@
-import { PowerUnit, SpeedUnit, SuspensionMode, TempUnit, TorqueUnit } from '../settings/settings';
-import { Color } from './graphics/common';
+import { getGlobalSettings } from '../settings/settings';
+import { PowerUnit, SpeedUnit, SuspensionMode, TempUnit, TorqueUnit } from '../shared';
 import { clamp, hslToRgb } from './utils';
 
 export function formatTime(seconds?: number): string {
@@ -43,13 +43,18 @@ export function formatRpmBar(
   currentEngineRpm ??= 0;
   engineMaxRpm ??= 0;
   const rpmPct = engineMaxRpm > 0 ? clamp(currentEngineRpm / engineMaxRpm, 0, 1) : 0;
-  let rpmColor;
-  if (rpmPct >= 0.85) {
-    rpmColor = Color.RED;
-  } else if (rpmPct >= 0.7) {
-    rpmColor = Color.YELLOW;
+
+  const { rpmRevPct, rpmWarnPct, rpmRevColor, rpmWarnColor, rpmNormalColor } = getGlobalSettings();
+  const revPct = clamp(rpmRevPct / 100, 0, 1);
+  const warnPct = clamp(Math.min(rpmWarnPct / 100, revPct), 0, 1);
+
+  let rpmColor: string;
+  if (rpmPct >= revPct) {
+    rpmColor = rpmRevColor;
+  } else if (rpmPct >= warnPct) {
+    rpmColor = rpmWarnColor;
   } else {
-    rpmColor = Color.WHITE;
+    rpmColor = rpmNormalColor;
   }
   return { rpm: currentEngineRpm, rpmPct, rpmColor };
 }

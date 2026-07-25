@@ -1,18 +1,5 @@
-import {
-  formatTime,
-} from '../format';
-
-const DEFAULT_GLOBAL_FONT = '';
-
-let globalFont = DEFAULT_GLOBAL_FONT;
-
-export function getGlobalFont(): string {
-  return globalFont;
-}
-
-export function setGlobalFont(font: string | null | undefined): void {
-  globalFont = font ?? DEFAULT_GLOBAL_FONT;
-}
+import { getGlobalSettings } from '../../settings/settings';
+import { formatTime } from '../format';
 
 /**
  * すべてのSVGに共通して適用するCSSスタイルシートを取得します。
@@ -20,7 +7,8 @@ export function setGlobalFont(font: string | null | undefined): void {
  * @note Stream Deck の制約により、`font-family` でのカンマ区切りの複数指定（フォールバック指定）は、正しく解釈されず、描画されない現象が発生します。
  */
 export function getCommonStyle(): string {
-  const fontFamily = globalFont ? `font-family:"${globalFont}";` : '';
+  const font = getGlobalSettings().font;
+  const fontFamily = font ? `font-family:"${font}";` : '';
   return `<style>text{${fontFamily}font-weight:bold;}</style>`;
 }
 

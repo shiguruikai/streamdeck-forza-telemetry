@@ -4,4 +4,5 @@ node_modules/
 # Stream Deck files
 *.sdPlugin/bin
 *.sdPlugin/logs
+*.sdPlugin/ui/components/global-settings.js*
 com.github.shiguruikai.streamdeck-forza-telemetry.streamDeckPlugin

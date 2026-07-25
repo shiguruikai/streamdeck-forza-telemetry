@@ -1,4 +1,4 @@
-import { SingleWheelPosition, SuspensionMode } from '../../settings/settings';
+import { SingleWheelPosition, SuspensionMode } from '../../shared';
 import { ForzaTelemetryData } from '../../telemetry/parser';
 import { formatTravel, formatTravelColor } from '../format';
 import { TitleInfo } from './common';

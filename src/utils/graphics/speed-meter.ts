@@ -1,4 +1,4 @@
-import { SpeedUnit } from '../../settings/settings';
+import { SpeedUnit } from '../../shared';
 import { ForzaTelemetryData } from '../../telemetry/parser';
 import { formatGear, formatRpmBar, formatSpeed, formatSpeedUnit } from '../format';
 import { clamp } from '../utils';

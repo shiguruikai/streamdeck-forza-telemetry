@@ -11,7 +11,7 @@ import {
   POWER_LAYOUTS,
   POWER_UNIT_PRESETS,
   PowerSettings,
-} from '../settings/settings';
+} from '../shared';
 import { ForzaTelemetryData } from '../telemetry/parser';
 import { generatePowerImage } from '../utils/graphics';
 import { clamp } from '../utils/utils';

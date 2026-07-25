@@ -7,7 +7,7 @@ import {
   KeyUpEvent,
 } from '@elgato/streamdeck';
 
-import { TempUnit, WHEEL_POSITIONS, WheelPosition } from '../settings/settings';
+import { TempUnit, WHEEL_POSITIONS, WheelPosition } from '../shared';
 import { ForzaTelemetryData } from '../telemetry/parser';
 import { generateTireTempAllWheelsImage, generateTireTempSingleWheelImage } from '../utils/graphics';
 import { getNextWheelPosition } from '../utils/utils';

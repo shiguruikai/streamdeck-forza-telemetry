@@ -1,7 +1,7 @@
 import streamDeck from '@elgato/streamdeck';
 import { execa } from 'execa';
 
-import { WHEEL_POSITIONS, WheelPosition } from '../settings/settings';
+import { WHEEL_POSITIONS, WheelPosition } from '../shared';
 
 const logger = streamDeck.logger.createScope('utils');
 

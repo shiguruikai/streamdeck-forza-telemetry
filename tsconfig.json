@@ -4,12 +4,6 @@
     "customConditions": [ "node" ],
     "module": "ES2022",
     "moduleResolution": "Bundler",
-    "noImplicitOverride": true,
-    "types": [ "node" ]
-  },
-  "include": [
-    "src/**/*.ts",
-    "tests/**/*.ts"
-  ],
-  "exclude": [ "node_modules" ]
+    "noImplicitOverride": true
+  }
 }

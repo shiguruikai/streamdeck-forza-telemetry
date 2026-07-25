@@ -3,7 +3,7 @@ import {
   PowerLayout,
   PowerUnitPreset,
   UNIT_PRESET_DETAILS,
-} from '../../settings/settings';
+} from '../../shared';
 import { ForzaTelemetryData } from '../../telemetry/parser';
 import { formatPower, formatPowerUnit, formatTorque, formatTorqueUnit } from '../format';
 import {

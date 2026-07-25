@@ -7,7 +7,7 @@ import {
   KeyUpEvent,
 } from '@elgato/streamdeck';
 
-import { SuspensionMode, WHEEL_POSITIONS, WheelPosition } from '../settings/settings';
+import { SuspensionMode, WHEEL_POSITIONS, WheelPosition } from '../shared';
 import { ForzaTelemetryData } from '../telemetry/parser';
 import { generateSuspensionTravelAllWheelsImage, generateSuspensionTravelSingleWheelImage } from '../utils/graphics';
 import { getNextWheelPosition } from '../utils/utils';

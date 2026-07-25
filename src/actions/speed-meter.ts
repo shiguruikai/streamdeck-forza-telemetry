@@ -8,7 +8,7 @@ import {
   WillDisappearEvent,
 } from '@elgato/streamdeck';
 
-import { SPEED_METER_LAYOUTS, SpeedMeterLayout, SpeedUnit } from '../settings/settings';
+import { SPEED_METER_LAYOUTS, SpeedMeterLayout, SpeedUnit } from '../shared';
 import { ForzaTelemetryData } from '../telemetry/parser';
 import { generateGearImage, generateRpmImage, generateSpeedImage, generateSpeedMeterImage } from '../utils/graphics';
 import { clamp } from '../utils/utils';

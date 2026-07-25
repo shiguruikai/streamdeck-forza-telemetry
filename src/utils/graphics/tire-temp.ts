@@ -1,4 +1,4 @@
-import { SingleWheelPosition, TempUnit } from '../../settings/settings';
+import { SingleWheelPosition, TempUnit } from '../../shared';
 import { ForzaTelemetryData } from '../../telemetry/parser';
 import { formatTemp, formatTireColor } from '../format';
 import { TitleInfo } from './common';

@@ -1,4 +1,4 @@
-import { SingleWheelPosition } from '../../settings/settings';
+import { SingleWheelPosition } from '../../shared';
 import { clamp } from '../utils';
 import { Color, DIAL_HEIGHT, DIAL_WIDTH, getCommonStyle, getLayoutAdjustments, KEY_HEIGHT, KEY_WIDTH, PADDING, TitleInfo, toSvgDataUri } from './common';
 

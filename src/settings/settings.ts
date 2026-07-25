@@ -1,92 +1,92 @@
 import net from 'node:net';
 
-export type SpeedUnit = 'kmh' | 'mph';
+import { JsonObject } from '@elgato/utils';
 
-export type TempUnit = 'celsius' | 'fahrenheit';
+import { TelemetryAction } from '../actions/telemetry-action';
+import { DEFAULT_GLOBAL_SETTINGS, GlobalSettings, RpmColorSettings } from '../shared/settings';
+import { telemetryManager } from '../telemetry/manager';
 
-export type SuspensionMode = 'percentage' | 'value';
+let currentSettings: GlobalSettings = DEFAULT_GLOBAL_SETTINGS;
 
-export const WHEEL_POSITIONS = ['all', 'fl', 'fr', 'rl', 'rr'] as const;
-export type WheelPosition = typeof WHEEL_POSITIONS[number];
-export type SingleWheelPosition = Exclude<WheelPosition, 'all'>;
+/**
+ * 現在、保持されているグローバル設定を取得します。
+ */
+export function getGlobalSettings(): GlobalSettings {
+  return currentSettings;
+}
 
-export const RACE_INFO_LAYOUTS = ['lap-time', 'race-time', 'race-time-only', 'current-time-only', 'best-time-only', 'lap-only', 'position-only'] as const;
-export type RaceInfoLayout = typeof RACE_INFO_LAYOUTS[number];
+const HEX_COLOR_REGEX = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
 
-export const SPEED_METER_LAYOUTS = ['full', 'speed', 'gear', 'rpm'] as const;
-export type SpeedMeterLayout = typeof SPEED_METER_LAYOUTS[number];
+function parseHexColor(value: unknown): string | undefined {
+  if (typeof value === 'string' && HEX_COLOR_REGEX.test(value)) {
+    return value;
+  }
+  return undefined;
+}
 
-export const COMPASS_DISPLAY_MODES = ['arch', 'circle'] as const;
-export type CompassDisplayMode = typeof COMPASS_DISPLAY_MODES[number];
+function parseInteger(value: unknown): number | undefined {
+  if (typeof value === 'number') {
+    return Number.isInteger(value) ? value : undefined;
+  }
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value);
+    return Number.isInteger(parsed) ? parsed : undefined;
+  }
+  return undefined;
+}
 
-export const POWER_LAYOUTS = ['both', 'power', 'torque'] as const;
-export type PowerLayout = typeof POWER_LAYOUTS[number];
+function parsePct(value: unknown): number | undefined {
+  const num = parseInteger(value);
+  if (num !== undefined && num >= 0 && num <= 100) {
+    return num;
+  }
+  return undefined;
+}
 
-export type PowerUnit = 'ps' | 'hp' | 'kw';
-export type TorqueUnit = 'nm' | 'kgfm' | 'ftlb';
+function parseRpmColorSettings(jsonSettings: JsonObject): RpmColorSettings {
+  return {
+    rpmNormalColor: parseHexColor(jsonSettings.rpmNormalColor) ?? DEFAULT_GLOBAL_SETTINGS.rpmNormalColor,
+    rpmWarnPct: parsePct(jsonSettings.rpmWarnPct) ?? DEFAULT_GLOBAL_SETTINGS.rpmWarnPct,
+    rpmWarnColor: parseHexColor(jsonSettings.rpmWarnColor) ?? DEFAULT_GLOBAL_SETTINGS.rpmWarnColor,
+    rpmRevPct: parsePct(jsonSettings.rpmRevPct) ?? DEFAULT_GLOBAL_SETTINGS.rpmRevPct,
+    rpmRevColor: parseHexColor(jsonSettings.rpmRevColor) ?? DEFAULT_GLOBAL_SETTINGS.rpmRevColor,
+  };
+}
 
-export const POWER_UNIT_PRESETS = ['ps-nm', 'ps-kgfm', 'hp-ftlb', 'kw-nm'] as const;
-export type PowerUnitPreset = typeof POWER_UNIT_PRESETS[number];
+function parseSettings(jsonSettings: JsonObject): GlobalSettings {
+  const rpmSettings = parseRpmColorSettings(jsonSettings);
 
-export type UnitPresetDetail = {
-  powerUnit: PowerUnit;
-  torqueUnit: TorqueUnit;
-  label: string;
-};
+  const rawPort = parseInteger(jsonSettings.port);
+  const port = (rawPort !== undefined && rawPort > 0 && rawPort < 65536) ? rawPort : undefined;
 
-export const UNIT_PRESET_DETAILS: Record<PowerUnitPreset, UnitPresetDetail> = {
-  'ps-nm': { powerUnit: 'ps', torqueUnit: 'nm', label: 'PS & N·m (Metric / Modern)' },
-  'ps-kgfm': { powerUnit: 'ps', torqueUnit: 'kgfm', label: 'PS & kgf·m (Metric / Japanese Traditional)' },
-  'hp-ftlb': { powerUnit: 'hp', torqueUnit: 'ftlb', label: 'HP & ft·lb (Imperial / US)' },
-  'kw-nm': { powerUnit: 'kw', torqueUnit: 'nm', label: 'kW & N·m (SI / EV)' },
-};
+  const address = (typeof jsonSettings.address === 'string' && net.isIPv4(jsonSettings.address))
+    ? jsonSettings.address
+    : undefined;
 
-export type PowerSettings = {
-  layout?: PowerLayout;
-  preset?: PowerUnitPreset;
-};
+  const font = (typeof jsonSettings.font === 'string') ? jsonSettings.font : DEFAULT_GLOBAL_SETTINGS.font;
 
-export const DEFAULT_FPS = 15;
+  const rawFps = parseInteger(jsonSettings.fps);
+  const fps = (rawFps !== undefined && rawFps >= 10 && rawFps <= 30) ? rawFps : DEFAULT_GLOBAL_SETTINGS.fps;
 
-export type GlobalSettings = {
-  port?: number;
-  address?: string;
-  font?: string;
-  fps?: number;
-};
+  return { address, port, font, fps, ...rpmSettings };
+}
 
-export function parseSettings(jsonSettings: object): GlobalSettings {
-  const result: GlobalSettings = {};
+export function applyGlobalSettings(rawSettings: JsonObject | GlobalSettings, actions: TelemetryAction[]): void {
+  currentSettings = parseSettings(rawSettings);
 
-  if ('port' in jsonSettings) {
-    const portValue = jsonSettings.port;
-    const port = typeof portValue === 'number' ? portValue : Number.parseInt(String(portValue), 10);
-    if (Number.isInteger(port) && port > 0 && port < 65536) {
-      result.port = port;
-    }
+  // 1. 接続設定・FPS設定の適用
+  if (currentSettings.port && currentSettings.address) {
+    telemetryManager.configure({
+      port: currentSettings.port,
+      address: currentSettings.address,
+      updateIntervalMs: Math.round(1000 / currentSettings.fps),
+    });
+  } else {
+    telemetryManager.clearConfig();
   }
 
-  if ('address' in jsonSettings) {
-    const address = jsonSettings.address;
-    if (typeof address === 'string' && net.isIPv4(address)) {
-      result.address = address;
-    }
-  }
-
-  if ('font' in jsonSettings) {
-    const font = jsonSettings.font;
-    if (typeof font === 'string') {
-      result.font = font;
-    }
-  }
-
-  if ('fps' in jsonSettings) {
-    const fpsValue = jsonSettings.fps;
-    const fps = typeof fpsValue === 'number' ? fpsValue : Number.parseInt(String(fpsValue), 10);
-    if (Number.isInteger(fps) && fps >= 10 && fps <= 30) {
-      result.fps = fps;
-    }
-  }
-
-  return result;
+  // 2. すべてのアクティブなアクションを再描画
+  actions.forEach((action) => {
+    action.refreshActiveActions();
+  });
 }

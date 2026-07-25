@@ -8,7 +8,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig([
-  globalIgnores(['**.sdPlugin/bin/**', '**/sdpi-components.js', 'docs/**']),
+  globalIgnores(['**.sdPlugin/**', 'docs/**']),
   {
     files: ['src/**/*.{js,ts}', 'tests/**/*.{js,ts}'],
     extends: [
@@ -69,6 +69,12 @@ export default defineConfig([
       parserOptions: {
         projectService: true,
       },
+    },
+  },
+  {
+    files: ['src/ui/**/*.ts'],
+    languageOptions: {
+      globals: globals.browser,
     },
   },
   {

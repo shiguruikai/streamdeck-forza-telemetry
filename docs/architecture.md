@@ -20,7 +20,6 @@
 │   │   ├── common.css                    # 共通スタイルシート
 │   │   ├── compass.html                  # コンパス
 │   │   ├── components/                   # Web Component 群
-│   │   │   └── global-settings.js        # グローバル設定用 Web Component（<global-settings>）
 │   │   ├── g-force.html
 │   │   ├── power.html                    # エンジン出力（Power & Torque）
 │   │   ├── race-info.html
@@ -50,14 +49,21 @@
 │   │   ├── suspension-travel.ts          # サスペンション
 │   │   ├── telemetry-action.ts           # 共通ベースクラス
 │   │   └── tire-temp.ts                  # タイヤ温度
-│   ├── settings/                         # 設定関連
-│   │   └── settings.ts                   # グローバル・ローカル設定の型定義やパース処理
+│   ├── settings/                         # プラグイン設定関連
+│   │   ├── index.ts
+│   │   └── settings.ts                   # 設定のパース処理と適用処理
+│   ├── shared/                           # UI・プラグイン共有モジュール（ブラウザや Node.js に依存しない純粋なTS）
+│   │   ├── index.ts
+│   │   └── settings.ts                   # 設定の型定義、デフォルト設定値
 │   ├── telemetry/                        # Forzaテレメトリ関連
 │   │   ├── manager.ts                    # テレメトリデータの管理
 │   │   ├── parser.ts                     # UDPパケットのパーサー＆データ型定義
 │   │   └── server.ts                     # UDP受信サーバー
 │   ├── types/                            # 型定義
 │   │   └── sdpi.ts                       # SDPI（Stream Deck Property Inspector）関連の型定義
+│   ├── ui/                               # Property Inspector UI
+│   │   └── components/                   # Web Component群
+│   │       └── global-settings.ts        # グローバル設定（<global-settings>）
 │   ├── utils/                            # 共通ユーティリティ
 │   │   ├── format.ts                     # 変換系の処理
 │   │   ├── graphics/                     # 動的SVGグラフィック描画モジュール群
@@ -110,7 +116,7 @@ flowchart LR
     Actions -->|SVG画像| SD
 ```
 
-## 主要クラス
+## 主要クラス・モジュール
 
 ### [TelemetryServer](../src/telemetry/server.ts)
 
@@ -144,10 +150,6 @@ flowchart LR
 
 Stream Deck公式のUIライブラリ [sdpi-components.js](../com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin/ui/sdpi-components.js) を使用し、設定の自動同期や動的なデータソースの取得に対応する。
 
-- **グローバル設定（[settings.ts](../src/settings/settings.ts)）**: プラグイン全体で同期される共通設定（接続ポート、IPアドレス、フォント）
-  - **監視と適用**: [plugin.ts](../src/plugin.ts) にて、設定変更を一元監視し、プラグイン起動時にも設定の適用を行う。
-  - **適用時のフロー**:
-    1. グローバルフォント名の保存
-    1. 接続ポート・IPアドレスの適用
-    1. アクティブアクションの一斉再描画
-- **ローカル設定**: SDKを介してアクション別に保存される設定。表示単位（KM/H <-> MPH、°C <-> °F）、表示モード（車輪位置、タイトル表示の有無）など。
+- **グローバル設定（[shared/settings.ts](../src/shared/settings.ts), [settings/settings.ts](../src/settings/settings.ts)）**: プラグイン全体で共有される設定（接続ポート、IPアドレス、フォント、FPS、RPMカラー）。
+  - デフォルト値と型定義は、UI・バックエンド共有モジュール（[shared/index.ts](../src/shared/index.ts)）で一元管理し、[plugin.ts](../src/plugin.ts) から `applyGlobalSettings()` を通じて一括適用される。
+- **ローカル設定**: SDKを介してアクション別に保存される設定（表示単位、レイアウト、車輪位置など）。

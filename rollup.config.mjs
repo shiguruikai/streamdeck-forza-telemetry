@@ -10,9 +10,10 @@ const isWatching = !!process.env.ROLLUP_WATCH;
 const sdPlugin = 'com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin';
 
 /**
+ * プラグインバックエンドのビルド設定
  * @type {import('rollup').RollupOptions}
  */
-const config = {
+const pluginConfig = {
   input: 'src/plugin.ts',
   output: {
     file: `${sdPlugin}/bin/plugin.js`,
@@ -24,11 +25,12 @@ const config = {
   plugins: [
     {
       name: 'watch-externals',
-      buildStart: function () {
+      buildStart() {
         this.addWatchFile(`${sdPlugin}/manifest.json`);
       },
     },
     typescript({
+      tsconfig: 'src/tsconfig.json',
       mapRoot: isWatching ? './' : undefined,
     }),
     nodeResolve({
@@ -47,4 +49,28 @@ const config = {
   ],
 };
 
-export default config;
+/**
+ * Property Inspector UI Web Component のビルド設定
+ * @type {import('rollup').RollupOptions}
+ */
+const uiConfig = {
+  input: 'src/ui/components/global-settings.ts',
+  output: {
+    file: `${sdPlugin}/ui/components/global-settings.js`,
+    format: 'iife',
+    sourcemap: isWatching,
+  },
+  plugins: [
+    typescript({
+      tsconfig: 'src/ui/tsconfig.json',
+      mapRoot: isWatching ? './' : undefined,
+    }),
+    nodeResolve({
+      browser: true,
+    }),
+    commonjs(),
+    !isWatching && terser(),
+  ],
+};
+
+export default [pluginConfig, uiConfig];
