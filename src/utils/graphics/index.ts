@@ -1,3 +1,4 @@
+export * from './car-spec';
 export * from './common';
 export * from './compass';
 export * from './g-force';

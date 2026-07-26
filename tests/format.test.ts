@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import {
   fahrenheitToCelsius,
+  formatCarClass,
+  formatCarPI,
+  formatCylinders,
+  formatDrivetrain,
   formatGear,
   formatHeading,
   formatLap,
@@ -270,5 +274,97 @@ describe('formatHeading', () => {
   it('NaN や Infinity 時に 0° を返すこと', () => {
     expect(formatHeading(NaN)).toEqual({ heading: 0, headingStr: '0°' });
     expect(formatHeading(Infinity)).toEqual({ heading: 0, headingStr: '0°' });
+  });
+});
+
+// =============================================================================
+// 車両スペック（Car Spec）
+// =============================================================================
+
+describe('formatCarClass', () => {
+  it('Horizon パケットで PI 値と carClass に応じて FH6 クラスとカラーを自動判定すること', () => {
+    expect(formatCarClass({ carClass: 0, carPerformanceIndex: 350, game: 'horizon' })).toEqual({ label: 'D', color: '#00a1e6' });
+    expect(formatCarClass({ carClass: 1, carPerformanceIndex: 450, game: 'horizon' })).toEqual({ label: 'C', color: '#e6a400' });
+    expect(formatCarClass({ carClass: 2, carPerformanceIndex: 550, game: 'horizon' })).toEqual({ label: 'B', color: '#e63d00' });
+    expect(formatCarClass({ carClass: 3, carPerformanceIndex: 650, game: 'horizon' })).toEqual({ label: 'A', color: '#e6002a' });
+    expect(formatCarClass({ carClass: 4, carPerformanceIndex: 750, game: 'horizon' })).toEqual({ label: 'S1', color: '#9500e6' });
+    expect(formatCarClass({ carClass: 5, carPerformanceIndex: 850, game: 'horizon' })).toEqual({ label: 'S2', color: '#004de6' });
+    expect(formatCarClass({ carClass: 6, carPerformanceIndex: 950, game: 'horizon' })).toEqual({ label: 'R', color: '#e600a4' });
+    expect(formatCarClass({ carClass: 7, carPerformanceIndex: 999, game: 'horizon' })).toEqual({ label: 'X', color: '#00e64d' });
+  });
+
+  it('FH5 特有の PI と carClass の組み合わせ（D=450, C=550, B=650, A=750, S1=850, S2=950, X=999）で FH5 クラスを自動判定すること', () => {
+    expect(formatCarClass({ carClass: 0, carPerformanceIndex: 450, game: 'horizon' })).toEqual({ label: 'D', color: '#00a1e6' });
+    expect(formatCarClass({ carClass: 1, carPerformanceIndex: 550, game: 'horizon' })).toEqual({ label: 'C', color: '#e6a400' });
+    expect(formatCarClass({ carClass: 2, carPerformanceIndex: 650, game: 'horizon' })).toEqual({ label: 'B', color: '#e63d00' });
+    expect(formatCarClass({ carClass: 3, carPerformanceIndex: 750, game: 'horizon' })).toEqual({ label: 'A', color: '#e6002a' });
+    expect(formatCarClass({ carClass: 4, carPerformanceIndex: 850, game: 'horizon' })).toEqual({ label: 'S1', color: '#9500e6' });
+    expect(formatCarClass({ carClass: 5, carPerformanceIndex: 950, game: 'horizon' })).toEqual({ label: 'S2', color: '#004de6' });
+    expect(formatCarClass({ carClass: 6, carPerformanceIndex: 999, game: 'horizon' })).toEqual({ label: 'X', color: '#00e64d' });
+  });
+
+  it('Motorsport パケットで正確なクラス（S, R, P, X）を判定すること', () => {
+    expect(formatCarClass({ carClass: 0, carPerformanceIndex: 350, game: 'motorsport' })).toEqual({ label: 'D', color: '#00a1e6' });
+    expect(formatCarClass({ carClass: 1, carPerformanceIndex: 450, game: 'motorsport' })).toEqual({ label: 'C', color: '#e6a400' });
+    expect(formatCarClass({ carClass: 2, carPerformanceIndex: 550, game: 'motorsport' })).toEqual({ label: 'B', color: '#e63d00' });
+    expect(formatCarClass({ carClass: 3, carPerformanceIndex: 650, game: 'motorsport' })).toEqual({ label: 'A', color: '#e6002a' });
+    expect(formatCarClass({ carClass: 4, carPerformanceIndex: 750, game: 'motorsport' })).toEqual({ label: 'S', color: '#9500e6' });
+    expect(formatCarClass({ carClass: 5, carPerformanceIndex: 850, game: 'motorsport' })).toEqual({ label: 'R', color: '#004de6' });
+    expect(formatCarClass({ carClass: 6, carPerformanceIndex: 950, game: 'motorsport' })).toEqual({ label: 'P', color: '#00e64d' });
+    expect(formatCarClass({ carClass: 7, carPerformanceIndex: 999, game: 'motorsport' })).toEqual({ label: 'X', color: '#39ac60' });
+  });
+
+  it('無効値や範囲外数値の場合はデフォルト値（-）を返すこと', () => {
+    expect(formatCarClass(null)).toEqual({ label: '-', color: '#737373' });
+    expect(formatCarClass(undefined)).toEqual({ label: '-', color: '#737373' });
+    expect(formatCarClass({ carClass: -1, carPerformanceIndex: 0, game: 'horizon' })).toEqual({ label: '-', color: '#737373' });
+    expect(formatCarClass({ carClass: 99, carPerformanceIndex: 999, game: 'horizon' })).toEqual({ label: '-', color: '#737373' });
+  });
+});
+
+describe('formatCarPI', () => {
+  it('PI値を文字列で返すこと', () => {
+    expect(formatCarPI(998)).toBe('998');
+    expect(formatCarPI(500)).toBe('500');
+  });
+
+  it('無効値や 0 以下の数値の場合は "---" を返すこと', () => {
+    expect(formatCarPI(null)).toBe('---');
+    expect(formatCarPI(undefined)).toBe('---');
+    expect(formatCarPI(0)).toBe('---');
+    expect(formatCarPI(-10)).toBe('---');
+  });
+});
+
+describe('formatDrivetrain', () => {
+  it('数値（0, 1, 2）に対応する駆動方式文字列を返すこと', () => {
+    expect(formatDrivetrain(0)).toBe('FWD');
+    expect(formatDrivetrain(1)).toBe('RWD');
+    expect(formatDrivetrain(2)).toBe('AWD');
+  });
+
+  it('無効値や範囲外数値の場合は "---" を返すこと', () => {
+    expect(formatDrivetrain(null)).toBe('---');
+    expect(formatDrivetrain(undefined)).toBe('---');
+    expect(formatDrivetrain(3)).toBe('---');
+  });
+});
+
+describe('formatCylinders', () => {
+  it('気筒数に応じた正確な表記を返すこと', () => {
+    expect(formatCylinders(0)).toBe('EV');
+    expect(formatCylinders(2)).toBe('2Cyl');
+    expect(formatCylinders(4)).toBe('4Cyl');
+    expect(formatCylinders(6)).toBe('6Cyl');
+    expect(formatCylinders(8)).toBe('8Cyl');
+    expect(formatCylinders(10)).toBe('10Cyl');
+    expect(formatCylinders(12)).toBe('12Cyl');
+    expect(formatCylinders(16)).toBe('16Cyl');
+  });
+
+  it('無効値や負の数値の場合は "---" を返すこと', () => {
+    expect(formatCylinders(null)).toBe('---');
+    expect(formatCylinders(undefined)).toBe('---');
+    expect(formatCylinders(-1)).toBe('---');
   });
 });

@@ -1,5 +1,6 @@
 import streamDeck from '@elgato/streamdeck';
 
+import { CarSpecAction } from './actions/car-spec';
 import { CompassAction } from './actions/compass';
 import { GForceAction } from './actions/g-force';
 import { PowerAction } from './actions/power';
@@ -20,6 +21,7 @@ const actions = [
   new GForceAction(),
   new CompassAction(),
   new PowerAction(),
+  new CarSpecAction(),
 ];
 
 actions.forEach((action) => {

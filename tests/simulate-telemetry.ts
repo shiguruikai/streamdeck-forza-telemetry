@@ -20,7 +20,7 @@ const MAX_GEAR: number = GEAR_RATIOS.length - 1;
 // 物理定数
 const G_ACCELERATION = 9.80665;
 
-let format: 'fh6' | 'fm8-dash' | 'fm7-dash' | 'fm-sled' = 'fh6';
+let format: 'fh6' | 'fh5' | 'fm8-dash' | 'fm7-dash' | 'fm-sled' = 'fh6';
 
 // 引数のパース
 const args = process.argv.slice(2);
@@ -28,14 +28,14 @@ const formatIndex = args.indexOf('--format');
 if (formatIndex !== -1) {
   const formatVal = args[formatIndex + 1];
   if (!formatVal) {
-    console.error('Error: --format option requires a value. Allowed values: fh6, fm8-dash, fm7-dash, fm-sled');
+    console.error('Error: --format option requires a value. Allowed values: fh6, fh5, fm8-dash, fm7-dash, fm-sled');
     process.exit(1);
   }
   const f = formatVal.toLowerCase();
-  if (f === 'fh6' || f === 'fm8-dash' || f === 'fm7-dash' || f === 'fm-sled') {
+  if (f === 'fh6' || f === 'fh5' || f === 'fm8-dash' || f === 'fm7-dash' || f === 'fm-sled') {
     format = f;
   } else {
-    console.error(`Invalid format: ${f}. Allowed values: fh6, fm8-dash, fm7-dash, fm-sled`);
+    console.error(`Invalid format: ${f}. Allowed values: fh6, fh5, fm8-dash, fm7-dash, fm-sled`);
     process.exit(1);
   }
 }
@@ -68,6 +68,11 @@ type CarState = {
   suspensionRR: number;
   power: number;
   torque: number;
+  carOrdinal: number;
+  carClass: number;
+  carPerformanceIndex: number;
+  drivetrainType: number;
+  numCylinders: number;
 };
 
 /**
@@ -182,6 +187,12 @@ function writeSledData(buf: Buffer, state: CarState): void {
   buf.writeFloatLE(state.suspensionFR, 72);
   buf.writeFloatLE(state.suspensionRL, 76);
   buf.writeFloatLE(state.suspensionRR, 80);
+
+  buf.writeInt32LE(state.carOrdinal, 212);
+  buf.writeInt32LE(state.carClass, 216);
+  buf.writeInt32LE(state.carPerformanceIndex, 220);
+  buf.writeInt32LE(state.drivetrainType, 224);
+  buf.writeInt32LE(state.numCylinders, 228);
 }
 
 /**
@@ -266,6 +277,7 @@ function buildTelemetryPacket(state: CarState): Buffer {
 }
 
 let positionTimer = 0;
+let totalElapsedTime = 0;
 
 /**
  * 車両シミュレーション状態を更新します。
@@ -372,6 +384,49 @@ function updateCarState(state: CarState, dt: number): void {
     state.currentLap = 0;
   }
 
+  // フォーマットに応じた Car Spec プリセットの動的切り替え（3秒間隔でクラスを順番に一周）
+  let specPresets = [
+    { ordinal: 1, class: 0, pi: 400, drivetrain: 0, cylinders: 4 },
+    { ordinal: 2, class: 1, pi: 500, drivetrain: 1, cylinders: 6 },
+    { ordinal: 3, class: 2, pi: 600, drivetrain: 1, cylinders: 8 },
+    { ordinal: 4, class: 3, pi: 700, drivetrain: 2, cylinders: 6 },
+    { ordinal: 5, class: 4, pi: 800, drivetrain: 2, cylinders: 8 },
+    { ordinal: 6, class: 5, pi: 900, drivetrain: 2, cylinders: 10 },
+    { ordinal: 7, class: 6, pi: 998, drivetrain: 2, cylinders: 10 },
+    { ordinal: 8, class: 7, pi: 999, drivetrain: 2, cylinders: 12 },
+  ];
+
+  if (format === 'fh5') {
+    specPresets = [
+      { ordinal: 1, class: 0, pi: 500, drivetrain: 0, cylinders: 4 },
+      { ordinal: 2, class: 1, pi: 600, drivetrain: 1, cylinders: 6 },
+      { ordinal: 3, class: 2, pi: 700, drivetrain: 1, cylinders: 8 },
+      { ordinal: 4, class: 3, pi: 800, drivetrain: 2, cylinders: 6 },
+      { ordinal: 5, class: 4, pi: 900, drivetrain: 2, cylinders: 8 },
+      { ordinal: 6, class: 5, pi: 998, drivetrain: 2, cylinders: 10 },
+      { ordinal: 7, class: 6, pi: 999, drivetrain: 2, cylinders: 12 },
+    ];
+  } else if (format === 'fm7-dash' || format === 'fm8-dash' || format === 'fm-sled') {
+    specPresets = [
+      { ordinal: 1, class: 0, pi: 400, drivetrain: 0, cylinders: 4 },
+      { ordinal: 2, class: 1, pi: 500, drivetrain: 1, cylinders: 6 },
+      { ordinal: 3, class: 2, pi: 600, drivetrain: 1, cylinders: 8 },
+      { ordinal: 4, class: 3, pi: 700, drivetrain: 2, cylinders: 6 },
+      { ordinal: 5, class: 4, pi: 800, drivetrain: 2, cylinders: 8 },
+      { ordinal: 6, class: 5, pi: 900, drivetrain: 2, cylinders: 10 },
+      { ordinal: 7, class: 6, pi: 998, drivetrain: 2, cylinders: 10 },
+      { ordinal: 8, class: 7, pi: 999, drivetrain: 2, cylinders: 12 },
+    ];
+  }
+  totalElapsedTime += dt;
+  const specIndex = Math.floor(totalElapsedTime / 3) % specPresets.length;
+  const currentSpec = specPresets[specIndex];
+  state.carOrdinal = currentSpec.ordinal;
+  state.carClass = currentSpec.class;
+  state.carPerformanceIndex = currentSpec.pi;
+  state.drivetrainType = currentSpec.drivetrain;
+  state.numCylinders = currentSpec.cylinders;
+
   // 最高ギアで最高回転数に到達した場合、初期状態（ギア1＝1速）にリセットしてループを継続する
   if (state.gear === MAX_GEAR && state.rpm >= MAX_RPM) {
     state.gear = 1;
@@ -408,6 +463,11 @@ const state: CarState = {
   suspensionRR: 0.5,
   power: 0,
   torque: 0,
+  carOrdinal: 1,
+  carClass: 0,
+  carPerformanceIndex: 500,
+  drivetrainType: 0,
+  numCylinders: 4,
 };
 
 let isPaused = false;
@@ -512,9 +572,11 @@ setInterval(() => {
     const headingDeg: string = (((state.yaw * 180) / Math.PI + 360) % 360).toFixed(0);
     const powerPsStr: string = (state.power / 735.49875).toFixed(0);
     const torqueNmStr: string = state.torque.toFixed(0);
+    const classes = ['D', 'C', 'B', 'A', 'S1', 'S2', 'X'];
+    const classLabel = classes[state.carClass] ?? '--';
 
     process.stdout.write(
-      `\rGear: ${gearChar} | RPM: ${currentRpm.padStart(4, ' ')} | Speed: ${speedKmh.padStart(4, ' ')} km/h | Power: ${powerPsStr.padStart(4, ' ')} PS | Torque: ${torqueNmStr.padStart(4, ' ')} N·m | Yaw: ${headingDeg.padStart(3, ' ')}° | G: X:${gXStr.padStart(5, ' ')} Z:${gZStr.padStart(5, ' ')} | Lap: ${state.lapNumber} (${currentLapStr}s)`,
+      `\rSpec: ${classLabel.padStart(2, ' ')} ${state.carPerformanceIndex.toString().padStart(3, ' ')} | Gear: ${gearChar} | RPM: ${currentRpm.padStart(4, ' ')} | Speed: ${speedKmh.padStart(4, ' ')} km/h | Power: ${powerPsStr.padStart(4, ' ')} PS | Torque: ${torqueNmStr.padStart(4, ' ')} N·m | Yaw: ${headingDeg.padStart(3, ' ')}° | G: X:${gXStr.padStart(5, ' ')} Z:${gZStr.padStart(5, ' ')} | Lap: ${state.lapNumber} (${currentLapStr}s)`,
     );
   }
 }, TELEMETRY_INTERVAL_MS);

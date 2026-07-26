@@ -7,6 +7,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "sim": "node tests/simulate-telemetry.ts",
+    "sim:fh5": "node tests/simulate-telemetry.ts --format fh5",
     "sim:fh6": "node tests/simulate-telemetry.ts --format fh6",
     "sim:fm7": "node tests/simulate-telemetry.ts --format fm7-dash",
     "sim:fm8": "node tests/simulate-telemetry.ts --format fm8-dash",

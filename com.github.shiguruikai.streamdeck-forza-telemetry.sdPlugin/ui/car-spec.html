@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+  <head lang="en">
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="common.css" />
+    <script src="sdpi-components.js"></script>
+    <script src="components/global-settings.js"></script>
+  </head>
+  <body>
+    <div class="tab-container">
+      <input type="radio" id="tab-action-select" class="tab-input" name="pi-tabs" checked />
+      <input type="radio" id="tab-global-select" class="tab-input" name="pi-tabs" />
+
+      <div class="tab-headers">
+        <label for="tab-action-select" class="tab-button">Action</label>
+        <label for="tab-global-select" class="tab-button">Global</label>
+      </div>
+
+      <div class="tab-content" id="content-action">
+        <sdpi-item label="Show Cylinders">
+          <sdpi-checkbox setting="showCylinders" default="true"></sdpi-checkbox>
+        </sdpi-item>
+      </div>
+
+      <div class="tab-content" id="content-global">
+        <global-settings></global-settings>
+      </div>
+    </div>
+  </body>
+</html>

@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **G-Force Meter action**: Visualizes lateral and longitudinal acceleration with peak G-force tracking.
 - **Compass action**: Displays vehicle heading direction with support for Stream Deck + touch display and dial interaction.
 - **Power & Torque action**: Displays real-time engine output horsepower and torque gauges.
+- **Car Spec action**: Displays vehicle performance index, class (D-X), drivetrain, and cylinder configuration.
 - **Forza Series Support**: Full support for Forza Horizon and Forza Motorsport (FM7 / FM8) Data Out telemetry streams.
 - **Stream Deck + Optimized**: Full compatibility with both standard LCD keys and Stream Deck + touch displays / dials.
 - **Telemetry Connection Alert**: Visual warning indicator when game telemetry stream is interrupted.

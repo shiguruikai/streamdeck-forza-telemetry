@@ -157,6 +157,28 @@
           "TitleAlignment": "middle"
         }
       ]
+    },
+    {
+      "UserTitleEnabled": true,
+      "DisableCaching": true,
+      "Name": "Car Spec",
+      "UUID": "com.github.shiguruikai.streamdeck-forza-telemetry.car-spec",
+      "Icon": "imgs/actions/car-spec/icon",
+      "Tooltip": "Show vehicle performance index, class, drivetrain, and cylinders.",
+      "PropertyInspectorPath": "ui/car-spec.html",
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "Encoder": {
+        "layout": "layouts/canvas-layout.json"
+      },
+      "States": [
+        {
+          "Image": "imgs/actions/car-spec/key",
+          "TitleAlignment": "middle"
+        }
+      ]
     }
   ],
   "Category": "Forza Telemetry",

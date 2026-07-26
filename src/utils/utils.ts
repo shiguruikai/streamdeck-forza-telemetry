@@ -31,6 +31,12 @@ export function hslToRgb(h: number, s: number, l: number): { r: number; g: numbe
   return { r, g, b };
 }
 
+export function hslToRgbHex(h: number, s: number, l: number): string {
+  const { r, g, b } = hslToRgb(h, s, l);
+  const toHex = (v: number) => v.toString(16).padStart(2, '0');
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
 export function getNextWheelPosition(currentPos: WheelPosition | undefined, ticks: number): WheelPosition {
   const currentIndex = WHEEL_POSITIONS.indexOf(currentPos ?? WHEEL_POSITIONS[0]);
   const nextIndex = clamp(currentIndex + ticks, 0, WHEEL_POSITIONS.length - 1);

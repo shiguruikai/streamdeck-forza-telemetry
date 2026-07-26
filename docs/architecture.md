@@ -21,12 +21,13 @@
 │   │   ├── compass.html                  # コンパス
 │   │   ├── components/                   # Web Component 群
 │   │   ├── g-force.html
-│   │   ├── power.html                    # エンジン出力（Power & Torque）
+│   │   ├── power.html
 │   │   ├── race-info.html
 │   │   ├── sdpi-components.js            # 公式のUIライブラリ
 │   │   ├── speed-meter.html
 │   │   ├── suspension-travel.html
-│   │   └── tire-temp.html
+│   │   ├── tire-temp.html
+│   │   └── car-spec.html
 │   └── manifest.json                     # プラグインの構成定義
 ├── docs/                                 # 設計・開発ドキュメント
 │   ├── forza-telemetry/                  # Forza テレメトリデータ仕様書
@@ -41,10 +42,11 @@
 │   └── release-guide.md                  # リリース手順書
 ├── src/                                  # ソースコード
 │   ├── actions/                          # 各アクションの処理
+│   │   ├── car-spec.ts                   # カースペック
 │   │   ├── compass.ts                    # コンパス
 │   │   ├── g-force.ts                    # Gフォースメーター
-│   │   ├── power.ts                      # エンジン出力（Power & Torque）
-│   │   ├── race-info.ts                  # レース情報（ラップ・順位・タイム）
+│   │   ├── power.ts                      # エンジン出力
+│   │   ├── race-info.ts                  # レース情報
 │   │   ├── speed-meter.ts                # 速度計
 │   │   ├── suspension-travel.ts          # サスペンション
 │   │   ├── telemetry-action.ts           # 共通ベースクラス
@@ -66,17 +68,18 @@
 │   │       └── global-settings.ts        # グローバル設定（<global-settings>）
 │   ├── utils/                            # 共通ユーティリティ
 │   │   ├── format.ts                     # 変換系の処理
-│   │   ├── graphics/                     # 動的SVGグラフィック描画モジュール群
-│   │   │   ├── common.ts                 # 共通スタイル・レイアウト調整ヘルパー
-│   │   │   ├── compass.ts                # コンパス描画
-│   │   │   ├── g-force.ts                # Gフォース描画
-│   │   │   ├── power.ts                  # エンジン出力・トルク描画
-│   │   │   ├── race-info.ts              # レース情報描画
-│   │   │   ├── speed-meter.ts            # 速度計・ギア描画
-│   │   │   ├── suspension.ts             # サスペンション描画
-│   │   │   ├── tire-temp.ts              # タイヤ温度描画
-│   │   │   ├── wheels.ts                 # 全輪・単輪共通描画
-│   │   │   └── index.ts                  # グラフィックモジュールのバレルエクスポート
+│   │   ├── graphics/                     # SVG描画モジュール群
+│   │   │   ├── car-spec.ts
+│   │   │   ├── common.ts                 # 共通描画処理
+│   │   │   ├── compass.ts
+│   │   │   ├── g-force.ts
+│   │   │   ├── power.ts
+│   │   │   ├── race-info.ts
+│   │   │   ├── speed-meter.ts
+│   │   │   ├── suspension.ts
+│   │   │   ├── tire-temp.ts
+│   │   │   ├── wheels.ts                 # タイヤ・サスペンション用共通描画処理
+│   │   │   └── index.ts
 │   │   └── utils.ts                      # 汎用関数
 │   └── plugin.ts                         # プラグインのエントリポイント
 ├── tests/                                # テストコード

@@ -1,6 +1,7 @@
 import { getGlobalSettings } from '../settings/settings';
 import { PowerUnit, SpeedUnit, SuspensionMode, TempUnit, TorqueUnit } from '../shared';
-import { clamp, hslToRgb } from './utils';
+import { ForzaTelemetryData } from '../telemetry/parser';
+import { clamp, hslToRgb, hslToRgbHex } from './utils';
 
 /**
  * 数値が有限の数値（number）であるか判定し、非有限値（NaN, Infinity, null, undefined）の場合はデフォルト値を返します。
@@ -252,4 +253,130 @@ export function formatHeading(yaw: number | null | undefined): { heading: number
   const heading = (Math.round(deg) % 360 + 360) % 360;
   const headingStr = `${heading}°`;
   return { heading, headingStr };
+}
+
+// =============================================================================
+// 車両スペック（Car Spec）
+// =============================================================================
+
+export type CarClassResult = { label: string; color: string };
+
+const FH_CLASS_COLORS = {
+  D: hslToRgbHex(198, 100, 45),
+  C: hslToRgbHex(43, 100, 45),
+  B: hslToRgbHex(16, 100, 45),
+  A: hslToRgbHex(349, 100, 45),
+  S1: hslToRgbHex(279, 100, 45),
+  S2: hslToRgbHex(220, 100, 45),
+  R: hslToRgbHex(317, 100, 45),
+  X: hslToRgbHex(140, 100, 45),
+  NONE: hslToRgbHex(0, 0, 45),
+} as const;
+
+const FM_CLASS_COLORS = {
+  D: FH_CLASS_COLORS.D,
+  C: FH_CLASS_COLORS.C,
+  B: FH_CLASS_COLORS.B,
+  A: FH_CLASS_COLORS.A,
+  S: FH_CLASS_COLORS.S1,
+  R: FH_CLASS_COLORS.S2,
+  P: FH_CLASS_COLORS.X,
+  X: hslToRgbHex(140, 50, 45),
+  NONE: FH_CLASS_COLORS.NONE,
+} as const;
+
+/**
+ * クラス番号と PI 値の組み合わせから Forza Horizon 6（FH6）データであるか判定します。
+ */
+function isFH6(carClass: number, pi: number): boolean {
+  // FH6 特有の条件: carClass = 7 (Xクラス) または carClass = 6 で PI < 999 (Rクラス)
+  if (carClass === 7 || (carClass === 6 && pi < 999)) {
+    return true;
+  }
+
+  // 各クラスの PI 範囲から FH6 を判定
+  // FH6: D(<=400), C(<=500), B(<=600), A(<=700), S1(<=800), S2(<=900)
+  if (carClass >= 0 && carClass <= 5) {
+    return pi <= (carClass + 4) * 100;
+  }
+
+  return false;
+}
+
+export function formatCarClass(
+  data: Readonly<Pick<ForzaTelemetryData, 'game' | 'carClass' | 'carPerformanceIndex'>> | null | undefined,
+): CarClassResult {
+  if (!data) {
+    return { label: '-', color: FH_CLASS_COLORS.NONE };
+  }
+
+  if (data.game === 'motorsport') {
+    switch (data.carClass) {
+      case 0: return { label: 'D', color: FM_CLASS_COLORS.D };
+      case 1: return { label: 'C', color: FM_CLASS_COLORS.C };
+      case 2: return { label: 'B', color: FM_CLASS_COLORS.B };
+      case 3: return { label: 'A', color: FM_CLASS_COLORS.A };
+      case 4: return { label: 'S', color: FM_CLASS_COLORS.S };
+      case 5: return { label: 'R', color: FM_CLASS_COLORS.R };
+      case 6: return { label: 'P', color: FM_CLASS_COLORS.P };
+      case 7: return { label: 'X', color: FM_CLASS_COLORS.X };
+      default: return { label: '-', color: FM_CLASS_COLORS.NONE };
+    }
+  } else if (isFH6(data.carClass, data.carPerformanceIndex)) {
+    switch (data.carClass) {
+      case 0: return { label: 'D', color: FH_CLASS_COLORS.D };
+      case 1: return { label: 'C', color: FH_CLASS_COLORS.C };
+      case 2: return { label: 'B', color: FH_CLASS_COLORS.B };
+      case 3: return { label: 'A', color: FH_CLASS_COLORS.A };
+      case 4: return { label: 'S1', color: FH_CLASS_COLORS.S1 };
+      case 5: return { label: 'S2', color: FH_CLASS_COLORS.S2 };
+      case 6: return { label: 'R', color: FH_CLASS_COLORS.R };
+      case 7: return { label: 'X', color: FH_CLASS_COLORS.X };
+      default: return { label: '-', color: FH_CLASS_COLORS.NONE };
+    }
+  } else {
+  // FH5
+    switch (data.carClass) {
+      case 0: return { label: 'D', color: FH_CLASS_COLORS.D };
+      case 1: return { label: 'C', color: FH_CLASS_COLORS.C };
+      case 2: return { label: 'B', color: FH_CLASS_COLORS.B };
+      case 3: return { label: 'A', color: FH_CLASS_COLORS.A };
+      case 4: return { label: 'S1', color: FH_CLASS_COLORS.S1 };
+      case 5: return { label: 'S2', color: FH_CLASS_COLORS.S2 };
+      case 6: return { label: 'X', color: FH_CLASS_COLORS.X };
+      default: return { label: '-', color: FH_CLASS_COLORS.NONE };
+    }
+  }
+}
+
+export function formatCarPI(pi: number | null | undefined): string {
+  if (pi === undefined || pi === null || !Number.isFinite(pi) || pi <= 0) {
+    return '---';
+  }
+  return pi.toString();
+}
+
+export function formatDrivetrain(drivetrain: number | null | undefined): string {
+  const d = toFiniteNumber(drivetrain, -1);
+  switch (d) {
+    case 0:
+      return 'FWD';
+    case 1:
+      return 'RWD';
+    case 2:
+      return 'AWD';
+    default:
+      return '---';
+  }
+}
+
+export function formatCylinders(cylinders: number | null | undefined): string {
+  const c = toFiniteNumber(cylinders, -1);
+  if (c < 0) {
+    return '---';
+  }
+  if (c === 0) {
+    return 'EV';
+  }
+  return `${c}Cyl`;
 }

@@ -52,6 +52,10 @@ export type RpmColorSettings = {
   rpmRevColor: string;
 };
 
+export type CarSpecSettings = {
+  showCylinders: boolean;
+};
+
 export type GlobalSettings = {
   port?: number;
   address?: string;
