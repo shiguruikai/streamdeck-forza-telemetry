@@ -10,10 +10,11 @@
 リリース前にリポジトリのルートディレクトリで以下を実行し、エラーが発生しないことを確認する。
 
 1. `pnpm lint`
-2. `pnpm build`
-3. `pnpm sd:validate`
-4. `pnpm sd:pack` を実行し、パッケージファイル（`.streamDeckPlugin`）が正常に生成されることを確認する。
-5. 必ずユーザーの承認を得てからリリース手順に進む。
+2. `pnpm test`
+3. `pnpm build`
+4. `pnpm sd:validate`
+5. `pnpm sd:pack` を実行し、パッケージファイル（`.streamDeckPlugin`）が正常に生成されることを確認する。
+6. 必ずユーザーの承認を得てからリリース手順に進む。
 
 ## 3. リリース手順
 
@@ -47,14 +48,15 @@
       ```
 4. **バージョン更新後の最終検証**
    1. `pnpm lint`
-   2. `pnpm build`
-   3. `pnpm sd:validate`
-   4. `pnpm sd:pack`
+   2. `pnpm test`
+   3. `pnpm build`
+   4. `pnpm sd:validate`
+   5. `pnpm sd:pack`
 5. **コミット＆プッシュ**
    1. ステージング: `git add package.json CHANGELOG.md com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin/manifest.json`
    2. 差分確認: `git diff --cached`
    3. コミット: `git commit -m "release: v1.0.0"`
-   4. タグ追加: `git tag v1.0.0`
+   4. タグ追加: `git tag -a v1.0.0 -m "release: v1.0.0"`
    5. プッシュ: `git push origin main v1.0.0`
       - **重要**: タグを同時にプッシュしないと GitHub Actions （`.github/workflows/release.yml`）が発火しないため、必ずタグを含めてプッシュすること。
 
