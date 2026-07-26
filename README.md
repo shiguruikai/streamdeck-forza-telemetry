@@ -1,6 +1,6 @@
-# Forza Telemetry for Stream Deck +
+# Forza Telemetry for Stream Deck
 
-Forza Horizon および Forza Motorsport シリーズから送信されるリアルタイムのテレメトリデータを、Stream Deck + の液晶キーおよびダイヤル（タッチディスプレイ）に表示するプラグインです。
+Forza Horizon および Forza Motorsport シリーズから送信されるリアルタイムのテレメトリデータを、Stream Deck の液晶キーおよび Stream Deck + のタッチディスプレイに表示するプラグインです。
 
 ## 機能
 
