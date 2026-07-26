@@ -9,6 +9,39 @@ export type SpeedMeterDrawData = Pick<
   'speed' | 'gear' | 'currentEngineRpm' | 'engineMaxRpm'
 >;
 
+function generateSegmentedRpmBar(
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  rpmPct: number,
+  rpmColor: string,
+): string {
+  const segmentCount = Math.max(1, Math.round(width * 0.1));
+  const gap = 2;
+  const skewAngle = -10;
+
+  const skewOffset = Math.tan((Math.abs(skewAngle) * Math.PI) / 180) * height;
+  const drawWidth = width - skewOffset;
+  const totalGap = (segmentCount - 1) * gap;
+  const segmentWidth = Math.max(1, (drawWidth - totalGap) / segmentCount);
+
+  const activeCount = Math.round(clamp(rpmPct, 0, 1) * segmentCount);
+
+  const segments: string[] = [];
+  for (let i = 0; i < segmentCount; i++) {
+    const segX = (segmentWidth + gap) * i;
+    const isActive = i < activeCount;
+    const fill = isActive ? rpmColor : Color.DARK_GREY;
+
+    segments.push(
+      `<rect x="${segX.toFixed(3)}" y="0" width="${segmentWidth.toFixed(3)}" height="${height}" fill="${fill}"/>`,
+    );
+  }
+
+  return `<g transform="translate(${(x + skewOffset).toFixed(3)}, ${y}) skewX(${skewAngle})">${segments.join('')}</g>`;
+}
+
 export function generateSpeedMeterImage(
   isDial: boolean,
   data: SpeedMeterDrawData | undefined,
@@ -26,14 +59,11 @@ export function generateSpeedMeterImage(
   const width = isDial ? DIAL_WIDTH : KEY_WIDTH;
   const height = isDial ? DIAL_HEIGHT : KEY_HEIGHT;
 
-  const rpmBarPaddingX = PADDING * 2;
-  const rpmBarW = width - rpmBarPaddingX;
-  const rpmFillW = clamp(rpmBarW * rpmPct, 0, rpmBarW);
-
   if (isDial) {
     const rpmBarH = titleInfo ? 14 : 28;
     const rpmBarX = PADDING;
     const rpmBarY = height - rpmBarH - PADDING;
+    const rpmBarW = width - PADDING * 2;
     const speedY = rpmBarY - 10;
     const gearCircleY = speedY - 19;
 
@@ -47,8 +77,7 @@ export function generateSpeedMeterImage(
 
   ${generateGearSvgComponent(34, gearCircleY, 32, gearText)}
 
-  <rect x="${rpmBarX}" y="${rpmBarY}" width="${rpmBarW}" height="${rpmBarH}" fill="${Color.DARK_GREY}"/>
-  <rect x="${rpmBarX}" y="${rpmBarY}" width="${rpmFillW}" height="${rpmBarH}" fill="${rpmColor}"/>
+  ${generateSegmentedRpmBar(rpmBarX, rpmBarY, rpmBarW, rpmBarH, rpmPct, rpmColor)}
 </svg>
 `);
   } else {
@@ -61,11 +90,10 @@ export function generateSpeedMeterImage(
     const gearCircleX = 34;
     const gearCircleY = speedY + 35;
 
-    const rpmBarH = 30;
-    const rpmBarX = 65;
-    const rpmBarY = speedY + 20;
+    const rpmBarH = 34;
+    const rpmBarX = 62;
+    const rpmBarY = speedY + 19;
     const rpmBarW = width - rpmBarX - PADDING;
-    const rpmFillW = clamp(rpmBarW * rpmPct, 0, rpmBarW);
 
     return toSvgDataUri(`
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none">
@@ -76,8 +104,7 @@ export function generateSpeedMeterImage(
 
   ${generateGearSvgComponent(gearCircleX, gearCircleY, gearFontSize, gearText)}
 
-  <rect x="${rpmBarX}" y="${rpmBarY}" width="${rpmBarW}" height="${rpmBarH}" fill="${Color.DARK_GREY}"/>
-  <rect x="${rpmBarX}" y="${rpmBarY}" width="${rpmFillW}" height="${rpmBarH}" fill="${rpmColor}"/>
+  ${generateSegmentedRpmBar(rpmBarX, rpmBarY, rpmBarW, rpmBarH, rpmPct, rpmColor)}
 </svg>
 `);
   }
