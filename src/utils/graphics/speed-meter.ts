@@ -31,11 +31,11 @@ export function generateSpeedMeterImage(
   const rpmFillW = clamp(rpmBarW * rpmPct, 0, rpmBarW);
 
   if (isDial) {
-    const rpmBarH = 20;
+    const rpmBarH = titleInfo ? 14 : 28;
     const rpmBarX = PADDING;
     const rpmBarY = height - rpmBarH - PADDING;
-    const speedY = 64;
-    const gearCircleY = 47;
+    const speedY = rpmBarY - 10;
+    const gearCircleY = speedY - 19;
 
     return toSvgDataUri(`
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none">
