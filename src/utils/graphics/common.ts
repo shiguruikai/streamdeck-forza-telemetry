@@ -202,7 +202,7 @@ export function generateSingleTimeImage(
  * @param gear - 描画するギアの文字
  * @returns ギア円のSVG要素文字列
  */
-export function generateGearSvgComponent(
+export function createGearSvgComponent(
   cx: number,
   cy: number,
   fontSize: number,

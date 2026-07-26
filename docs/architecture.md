@@ -150,6 +150,13 @@ flowchart LR
 - **動的データソース**: `onSendToPlugin` で、Property Inspectorからのデータソース要求（`getFonts` イベント）をフックし、OSのローカルフォント一覧を動的に取得してUIへ配信する。
 - **エラー・タイムアウトハンドリング**: TelemetryManagerからのエラーイベント（ポート競合など）やタイムアウトイベント（3秒間データ未受信）を受信した際、現在アクティブなすべてのアクションに対してSDKの `showAlert()` を呼び出して警告を表示する。
 
+### [Graphics モジュール](../src/utils/graphics/index.ts)
+
+- **役割**: SVG描画処理およびコンポーネントを管理するユーティリティ群。
+- **関数の命名規則**: 戻り値のデータ型と目的に応じて以下の規則に従って定義する。
+  - **`generate<Feature>Image`**: Stream Deck の表示キャンバス（`setImage` / `setFeedback`）へ直接渡す SVG Data URI（`data:image/svg+xml,...`）を生成・返却する関数。
+  - **`create<Feature>Svg`**: 別の描画関数内でパーツとして組み込んで利用する raw SVG 要素文字列（`<g>`, `<rect>`, `<circle>` 等）を構築・返却する関数。
+
 ## Property Inspector（設定画面）
 
 Stream Deck公式のUIライブラリ [sdpi-components.js](../com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin/ui/sdpi-components.js) を使用し、設定の自動同期や動的なデータソースの取得に対応する。

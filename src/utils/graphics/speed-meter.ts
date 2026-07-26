@@ -2,14 +2,14 @@ import { SpeedUnit } from '../../shared';
 import { ForzaTelemetryData } from '../../telemetry/parser';
 import { formatGear, formatRpmBar, formatSpeed, formatSpeedUnit } from '../format';
 import { clamp } from '../utils';
-import { Color, DIAL_HEIGHT, DIAL_WIDTH, generateGearSvgComponent, generateSingleValueImage, getCommonStyle, getLayoutAdjustments, KEY_HEIGHT, KEY_WIDTH, PADDING, TitleInfo, toSvgDataUri } from './common';
+import { Color, createGearSvgComponent, DIAL_HEIGHT, DIAL_WIDTH, generateSingleValueImage, getCommonStyle, getLayoutAdjustments, KEY_HEIGHT, KEY_WIDTH, PADDING, TitleInfo, toSvgDataUri } from './common';
 
 export type SpeedMeterDrawData = Pick<
   Readonly<ForzaTelemetryData>,
   'speed' | 'gear' | 'currentEngineRpm' | 'engineMaxRpm'
 >;
 
-function generateSegmentedRpmBar(
+function createSegmentedRpmBarSvg(
   x: number,
   y: number,
   width: number,
@@ -75,9 +75,9 @@ export function generateSpeedMeterImage(
   <text x="152" y="${speedY}" font-size="54" text-anchor="end" fill="${Color.WHITE}">${speedText}</text>
   <text x="${width - PADDING}" y="${speedY}" font-size="14" fill="${Color.GREY}" text-anchor="end">${unitText}</text>
 
-  ${generateGearSvgComponent(34, gearCircleY, 32, gearText)}
+  ${createGearSvgComponent(34, gearCircleY, 32, gearText)}
 
-  ${generateSegmentedRpmBar(rpmBarX, rpmBarY, rpmBarW, rpmBarH, rpmPct, rpmColor)}
+  ${createSegmentedRpmBarSvg(rpmBarX, rpmBarY, rpmBarW, rpmBarH, rpmPct, rpmColor)}
 </svg>
 `);
   } else {
@@ -102,9 +102,9 @@ export function generateSpeedMeterImage(
   <text x="${speedX}" y="${speedY}" font-size="48" fill="${Color.WHITE}" text-anchor="end">${speedText}</text>
   <text x="${speedUnitX}" y="${speedY}" font-size="18" fill="${Color.GREY}" text-anchor="end">${unitText}</text>
 
-  ${generateGearSvgComponent(gearCircleX, gearCircleY, gearFontSize, gearText)}
+  ${createGearSvgComponent(gearCircleX, gearCircleY, gearFontSize, gearText)}
 
-  ${generateSegmentedRpmBar(rpmBarX, rpmBarY, rpmBarW, rpmBarH, rpmPct, rpmColor)}
+  ${createSegmentedRpmBarSvg(rpmBarX, rpmBarY, rpmBarW, rpmBarH, rpmPct, rpmColor)}
 </svg>
 `);
   }
@@ -142,7 +142,7 @@ export function generateGearImage(
   ${getCommonStyle()}
   ${adj.titleElement}
 
-  ${generateGearSvgComponent(cx, cy, fontSize, gearText)}
+  ${createGearSvgComponent(cx, cy, fontSize, gearText)}
 </svg>
 `);
 

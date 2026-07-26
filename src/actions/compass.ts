@@ -7,7 +7,7 @@ import {
 
 import { COMPASS_DISPLAY_MODES, CompassDisplayMode } from '../shared';
 import { ForzaTelemetryData } from '../telemetry/parser';
-import { generateCompassSvg } from '../utils/graphics';
+import { generateCompassImage } from '../utils/graphics';
 import { clamp } from '../utils/utils';
 import { TelemetryAction } from './telemetry-action';
 
@@ -25,7 +25,7 @@ export class CompassAction extends TelemetryAction<CompassSettings> {
   ): Promise<void> {
     const { dialDisplayMode = 'arch' } = this.getSettings(action.id) ?? {};
     const isDial = action.isDial();
-    const dataUri = generateCompassSvg(isDial, data, dialDisplayMode);
+    const dataUri = generateCompassImage(isDial, data, dialDisplayMode);
 
     if (isDial) {
       await action.setFeedback({ canvas: dataUri });

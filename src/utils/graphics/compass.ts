@@ -3,7 +3,7 @@ import { ForzaTelemetryData } from '../../telemetry/parser';
 import { formatHeading } from '../format';
 import { Color, DIAL_HEIGHT, DIAL_WIDTH, getCommonStyle, KEY_HEIGHT, KEY_WIDTH, PADDING, toSvgDataUri } from './common';
 
-function getCompassTicks(width: number, height: number): string {
+function createCompassTicksSvg(width: number, height: number): string {
   const cx = width / 2;
   const cy = height / 2;
   const r = Math.min(cx, cy) - PADDING;
@@ -24,7 +24,7 @@ function getCompassTicks(width: number, height: number): string {
   return ticks.join('');
 }
 
-function getCompassLabels(width: number, height: number): string {
+function createCompassLabelsSvg(width: number, height: number): string {
   const cx = width / 2;
   const cy = height / 2;
   const r = Math.min(cx, cy) - PADDING;
@@ -45,16 +45,16 @@ function getCompassLabels(width: number, height: number): string {
   }).join('');
 }
 
-const KEY_TICKS = getCompassTicks(KEY_WIDTH, KEY_HEIGHT);
-const DIAL_TICKS = getCompassTicks(DIAL_WIDTH, DIAL_HEIGHT);
-const KEY_LABELS = getCompassLabels(KEY_WIDTH, KEY_HEIGHT);
-const DIAL_LABELS = getCompassLabels(DIAL_WIDTH, DIAL_HEIGHT);
+const KEY_TICKS = createCompassTicksSvg(KEY_WIDTH, KEY_HEIGHT);
+const DIAL_TICKS = createCompassTicksSvg(DIAL_WIDTH, DIAL_HEIGHT);
+const KEY_LABELS = createCompassLabelsSvg(KEY_WIDTH, KEY_HEIGHT);
+const DIAL_LABELS = createCompassLabelsSvg(DIAL_WIDTH, DIAL_HEIGHT);
 
 const ARCH_CX = DIAL_WIDTH / 2;
 const ARCH_CY = DIAL_HEIGHT;
 const ARCH_R = DIAL_HEIGHT - PADDING;
 
-function getCompassArchTicks(cx: number, cy: number, r: number): string {
+function createCompassArchTicksSvg(cx: number, cy: number, r: number): string {
   const ticks: string[] = [];
   for (let a = 0; a < 360; a += 15) {
     const rad = (a * Math.PI) / 180;
@@ -70,7 +70,7 @@ function getCompassArchTicks(cx: number, cy: number, r: number): string {
   return ticks.join('');
 }
 
-function getCompassArchLabels(cx: number, cy: number, r: number): string {
+function createCompassArchLabelsSvg(cx: number, cy: number, r: number): string {
   const textR = r * 0.6;
   const fontSize = r * 0.25;
   const labels = [
@@ -92,10 +92,10 @@ function getCompassArchLabels(cx: number, cy: number, r: number): string {
   }).join('');
 }
 
-const DIAL_ARCH_TICKS = getCompassArchTicks(ARCH_CX, ARCH_CY, ARCH_R);
-const DIAL_ARCH_LABELS = getCompassArchLabels(ARCH_CX, ARCH_CY, ARCH_R);
+const DIAL_ARCH_TICKS = createCompassArchTicksSvg(ARCH_CX, ARCH_CY, ARCH_R);
+const DIAL_ARCH_LABELS = createCompassArchLabelsSvg(ARCH_CX, ARCH_CY, ARCH_R);
 
-function generateCompassArchSvg(
+function generateCompassArchImage(
   data: Pick<Readonly<ForzaTelemetryData>, 'yaw'> | undefined,
 ): string {
   const width = DIAL_WIDTH;
@@ -128,13 +128,13 @@ function generateCompassArchSvg(
 `);
 }
 
-export function generateCompassSvg(
+export function generateCompassImage(
   isDial: boolean,
   data: Pick<Readonly<ForzaTelemetryData>, 'yaw'> | undefined,
   dialDisplayMode: CompassDisplayMode = 'arch',
 ): string {
   if (isDial && dialDisplayMode === 'arch') {
-    return generateCompassArchSvg(data);
+    return generateCompassArchImage(data);
   }
 
   const width = isDial ? DIAL_WIDTH : KEY_WIDTH;

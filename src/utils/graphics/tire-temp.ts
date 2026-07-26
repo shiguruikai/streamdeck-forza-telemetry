@@ -2,7 +2,7 @@ import { SingleWheelPosition, TempUnit } from '../../shared';
 import { ForzaTelemetryData } from '../../telemetry/parser';
 import { formatTemp, formatTireColor } from '../format';
 import { TitleInfo } from './common';
-import { drawAllWheels, drawSingleWheel } from './wheels';
+import { generateAllWheelsImage, generateSingleWheelImage } from './wheels';
 
 export type TireTempDrawData = Pick<
   Readonly<ForzaTelemetryData>,
@@ -28,7 +28,7 @@ export function generateTireTempAllWheelsImage(
     formatTemp(data?.tireTempRearRight, unit),
   ];
   const colors = [colorFL, colorFR, colorRL, colorRR];
-  return drawAllWheels(isDial, values, texts, colors, 0.4, titleInfo);
+  return generateAllWheelsImage(isDial, values, texts, colors, 0.4, titleInfo);
 }
 
 export function generateTireTempSingleWheelImage(
@@ -46,7 +46,7 @@ export function generateTireTempSingleWheelImage(
         ? data?.tireTempRearLeft
         : data?.tireTempRearRight;
 
-  return drawSingleWheel(
+  return generateSingleWheelImage(
     isDial,
     position,
     1,
