@@ -306,7 +306,7 @@ function isFH6(carClass: number, pi: number): boolean {
 export function formatCarClass(
   data: Readonly<Pick<ForzaTelemetryData, 'game' | 'carClass' | 'carPerformanceIndex'>> | null | undefined,
 ): CarClassResult {
-  if (!data) {
+  if (!data || !Number.isFinite(data.carPerformanceIndex) || data.carPerformanceIndex <= 0) {
     return { label: '-', color: FH_CLASS_COLORS.NONE };
   }
 
@@ -379,4 +379,29 @@ export function formatCylinders(cylinders: number | null | undefined): string {
     return 'EV';
   }
   return `${c}Cyl`;
+}
+
+export type CarSpecFormatted = {
+  classLabel: string;
+  classColor: string;
+  piStr: string;
+  drivetrainStr: string;
+  cylindersStr: string;
+};
+
+export function formatCarSpec(
+  data: Readonly<Pick<ForzaTelemetryData, 'game' | 'carClass' | 'carPerformanceIndex' | 'drivetrainType' | 'numCylinders'>> | null | undefined,
+): CarSpecFormatted {
+  const isInvalidPI = !data || !Number.isFinite(data.carPerformanceIndex) || data.carPerformanceIndex <= 0;
+
+  const targetData = isInvalidPI ? undefined : data;
+  const { label: classLabel, color: classColor } = formatCarClass(targetData);
+
+  return {
+    classLabel,
+    classColor,
+    piStr: formatCarPI(targetData?.carPerformanceIndex),
+    drivetrainStr: formatDrivetrain(targetData?.drivetrainType),
+    cylindersStr: formatCylinders(targetData?.numCylinders),
+  };
 }

@@ -1,5 +1,5 @@
 import { ForzaTelemetryData } from '../../telemetry/parser';
-import { formatCarClass, formatCarPI, formatCylinders, formatDrivetrain } from '../format';
+import { formatCarSpec } from '../format';
 import { Color, DIAL_HEIGHT, DIAL_WIDTH, getCommonStyle, getLayoutAdjustments, KEY_HEIGHT, KEY_WIDTH, TitleInfo, toSvgDataUri } from './common';
 
 export type CarSpecDrawData = Pick<
@@ -13,12 +13,10 @@ export function generateCarSpecImage(
   showCylinders: boolean,
   titleInfo: TitleInfo | undefined,
 ): string {
-  const { label: classLabel, color: classColor } = formatCarClass(data);
-  const piStr = formatCarPI(data?.carPerformanceIndex);
+  const { classLabel, classColor, piStr, drivetrainStr, cylindersStr } = formatCarSpec(data);
 
-  const drivetrainStr = formatDrivetrain(data?.drivetrainType);
-  const cylindersStr = showCylinders ? formatCylinders(data?.numCylinders) : '';
-  const subTextStr = [drivetrainStr, cylindersStr].filter(Boolean).join(' ');
+  const activeCylindersStr = showCylinders ? cylindersStr : '';
+  const subTextStr = [drivetrainStr, activeCylindersStr].filter(Boolean).join(' ');
 
   const adj = getLayoutAdjustments(isDial, titleInfo);
 

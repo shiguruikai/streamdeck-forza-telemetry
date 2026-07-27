@@ -4,6 +4,7 @@ import {
   fahrenheitToCelsius,
   formatCarClass,
   formatCarPI,
+  formatCarSpec,
   formatCylinders,
   formatDrivetrain,
   formatGear,
@@ -366,5 +367,50 @@ describe('formatCylinders', () => {
     expect(formatCylinders(null)).toBe('---');
     expect(formatCylinders(undefined)).toBe('---');
     expect(formatCylinders(-1)).toBe('---');
+  });
+});
+
+describe('formatCarSpec', () => {
+  it('有効なテレメトリデータの場合、対応する全フォーマット文字列を返すこと', () => {
+    const result = formatCarSpec({
+      game: 'horizon',
+      carClass: 3,
+      carPerformanceIndex: 700,
+      drivetrainType: 2,
+      numCylinders: 6,
+    });
+    expect(result).toEqual({
+      classLabel: 'A',
+      classColor: '#e6002a',
+      piStr: '700',
+      drivetrainStr: 'AWD',
+      cylindersStr: '6Cyl',
+    });
+  });
+
+  it('PIが0または無効値（走行中以外）の場合、全項目がプレースホルダーを返すこと', () => {
+    const resultWithZeroPI = formatCarSpec({
+      game: 'horizon',
+      carClass: 0,
+      carPerformanceIndex: 0,
+      drivetrainType: 0,
+      numCylinders: 0,
+    });
+    expect(resultWithZeroPI).toEqual({
+      classLabel: '-',
+      classColor: '#737373',
+      piStr: '---',
+      drivetrainStr: '---',
+      cylindersStr: '---',
+    });
+
+    const resultWithUndefined = formatCarSpec(undefined);
+    expect(resultWithUndefined).toEqual({
+      classLabel: '-',
+      classColor: '#737373',
+      piStr: '---',
+      drivetrainStr: '---',
+      cylindersStr: '---',
+    });
   });
 });
