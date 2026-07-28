@@ -9,8 +9,9 @@ import tseslint from 'typescript-eslint';
 
 export default defineConfig([
   globalIgnores(['**.sdPlugin/**', 'docs/**']),
+  // 全ファイルを対象とする基本設定（型チェック・スタイル含む）
   {
-    files: ['src/**/*.{js,ts}', 'tests/**/*.{js,ts}'],
+    files: ['**/*.{js,mjs,ts}'],
     extends: [
       js.configs.recommended,
       tseslint.configs.strictTypeChecked,
@@ -46,7 +47,7 @@ export default defineConfig([
       // テンプレートリテラルの埋め込みできる型を制限する。
       '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
 
-      // 未使用のimportを禁止する。
+      // 未使用のimportおよび変数を unused-imports プラグインで一元管理する。
       '@typescript-eslint/no-unused-vars': 'off',
       'unused-imports/no-unused-imports': 'warn',
       'unused-imports/no-unused-vars': [
@@ -71,6 +72,12 @@ export default defineConfig([
       },
     },
   },
+  // tsconfig の対象外となる設定ファイル群の型チェックを無効化
+  {
+    files: ['eslint.config.ts', 'rollup.config.mjs'],
+    extends: [tseslint.configs.disableTypeChecked],
+  },
+  // Property Inspector UI コンポーネント向けのブラウザ環境設定
   {
     files: ['src/ui/**/*.ts'],
     languageOptions: {
