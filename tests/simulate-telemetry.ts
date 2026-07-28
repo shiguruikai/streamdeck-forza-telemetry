@@ -233,14 +233,14 @@ function writeDashData(buf: Buffer, state: CarState, offsetDiff: number): void {
  */
 function buildTelemetryPacket(state: CarState): Buffer {
   if (format === 'fm-sled') {
-    // Sled 形式 (232バイト)
+    // Sled 形式（232バイト）
     const buf = Buffer.alloc(232, 0);
     writeSledData(buf, state);
     return buf;
   }
 
   if (format === 'fm7-dash') {
-    // FM7 Dash 形式 (311バイト)
+    // FM7 Dash 形式（311バイト）
     const buf = Buffer.alloc(311, 0);
     writeSledData(buf, state);
     writeDashData(buf, state, 0); // オフセットシフトなし
@@ -248,12 +248,12 @@ function buildTelemetryPacket(state: CarState): Buffer {
   }
 
   if (format === 'fm8-dash') {
-    // FM8 Dash 形式 (331バイト)
+    // FM8 Dash 形式（331バイト）
     const buf = Buffer.alloc(331, 0);
     writeSledData(buf, state);
     writeDashData(buf, state, 0); // オフセットシフトなし
 
-    // FM8固有の末尾データ (Offset 311〜330)
+    // FM8固有の末尾データ（Offset 311〜330）
     buf.writeFloatLE(0.01, 311); // tireWearFrontLeft
     buf.writeFloatLE(0.02, 315); // tireWearFrontRight
     buf.writeFloatLE(0.03, 319); // tireWearRearLeft
@@ -262,11 +262,11 @@ function buildTelemetryPacket(state: CarState): Buffer {
     return buf;
   }
 
-  // デフォルト: FH6/FH5 形式 (324バイト)
+  // デフォルト: FH6/FH5 形式（324バイト）
   const buf = Buffer.alloc(324, 0);
   writeSledData(buf, state);
 
-  // FH6/5 の追加データ (Offset 232〜243)
+  // FH6/5 の追加データ（Offset 232〜243）
   buf.writeUInt32LE(99, 232); // carGroup
   buf.writeFloatLE(0.5, 236); // smashableVelDiff
   buf.writeFloatLE(100.0, 240); // smashableMass

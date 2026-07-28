@@ -289,7 +289,7 @@ const FM_CLASS_COLORS = {
  * クラス番号と PI 値の組み合わせから Forza Horizon 6（FH6）データであるか判定します。
  */
 function isFH6(carClass: number, pi: number): boolean {
-  // FH6 特有の条件: carClass = 7 (Xクラス) または carClass = 6 で PI < 999 (Rクラス)
+  // FH6 特有の条件: carClass = 7（Xクラス）または carClass = 6 で PI < 999（Rクラス）
   if (carClass === 7 || (carClass === 6 && pi < 999)) {
     return true;
   }

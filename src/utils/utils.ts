@@ -12,9 +12,9 @@ export function clamp(val: number, min: number, max: number) {
 /**
  * HSLカラー値をRGBカラーオブジェクトに変換する。
  *
- * @param h 色相 (0 - 360)
- * @param s 彩度 (0 - 100)
- * @param l 明度 (0 - 100)
+ * @param h 色相（0 - 360）
+ * @param s 彩度（0 - 100）
+ * @param l 明度（0 - 100）
  */
 export function hslToRgb(h: number, s: number, l: number): { r: number; g: number; b: number } {
   const sPct = s / 100;
