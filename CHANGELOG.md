@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Documentation
 
 - Expanded Global tab settings description (Font, Frame Rate, Connection, RPM Zone Colors) in README.md under usage instructions.
+- Updated release roadmap status for Milestone 1 in `docs/marketplace/roadmap.md`.
 
 ## [1.0.0] - 2026-07-28
 
