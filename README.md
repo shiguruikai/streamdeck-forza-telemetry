@@ -2,6 +2,10 @@
 
 Forza Horizon および Forza Motorsport シリーズから送信されるリアルタイムのテレメトリデータを、Stream Deck の液晶キーおよび Stream Deck + のタッチディスプレイに表示するプラグインです。
 
+## デモ
+
+![デモ](docs/assets/demo.gif)
+
 ## 機能
 
 - **速度計（Speed Meter）**
@@ -41,6 +45,15 @@ Forza Horizon および Forza Motorsport シリーズから送信されるリア
   - **概要**: 車両のパフォーマンスインデックス（PI）、クラス（D〜X）、駆動方式（FWD/RWD/AWD）、エンジン気筒数を表示します。
   - **設定オプション**:
     - **気筒数の表示**: オン、オフ
+
+## インストール
+
+1. [GitHub Releases](https://github.com/shiguruikai/streamdeck-forza-telemetry/releases) ページから最新の `.streamDeckPlugin` ファイルをダウンロードします。
+2. ダウンロードした `.streamDeckPlugin` ファイルをダブルクリックすると、Stream Deck アプリへ自動的にインストールされます。
+
+> [!NOTE]
+> 本プラグインは、公式の [Elgato Marketplace](https://marketplace.elgato.com/) ではなく GitHub Releases にて直接配布しています。
+> [Elgato Marketplace のガイドライン](https://docs.elgato.com/monetization/stripe/) では、Stripe Connect がサポートしていない国であっても無料公開は可能と案内されていますが、[Maker Console](https://maker.elgato.com/) の登録フォームでは、「Location/Region」の選択肢に日本が含まれておらず、登録を完了できませんでした。
 
 ## 使い方
 

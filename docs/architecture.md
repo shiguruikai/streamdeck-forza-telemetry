@@ -30,6 +30,8 @@
 │   │   └── car-spec.html
 │   └── manifest.json                     # プラグインの構成定義
 ├── docs/                                 # 設計・開発ドキュメント
+│   ├── assets/                           # ドキュメント用画像・デモGIFアセット
+│   │   └── demo.gif                      # README掲載用デモGIF
 │   ├── forza-telemetry/                  # Forza テレメトリデータ仕様書
 │   │   ├── fh6.md
 │   │   └── fm8.md
@@ -87,6 +89,7 @@
 │   ├── simulate-telemetry.ts             # 擬似テレメトリ送信シミュレータ
 │   └── tsconfig.json                     # テスト用TypeScript設定
 ├── tools/                                # 開発支援ツール
+│   ├── gen-demo-gif.ps1                  # 録画動画からデモ用GIF（docs/assets/demo.gif）を生成するスクリプト
 │   └── gen-marketplace-icon.ps1          # プラグインのアイコン（marketplace.svg）をPNG形式に変換するスクリプト
 ├── .editorconfig                         # EditorConfig設定ファイル
 ├── .gitattributes                        # Gitのファイル属性設定
