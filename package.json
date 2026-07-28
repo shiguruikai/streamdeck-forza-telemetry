@@ -42,8 +42,7 @@
     "vitest": "^4.1.10"
   },
   "dependencies": {
-    "@elgato/streamdeck": "^2.1.0",
-    "execa": "^9.6.1"
+    "@elgato/streamdeck": "^2.1.0"
   },
   "engines": {
     "node": "^24"

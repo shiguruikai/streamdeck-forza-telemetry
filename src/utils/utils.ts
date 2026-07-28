@@ -1,7 +1,11 @@
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+
 import streamDeck from '@elgato/streamdeck';
-import { execa } from 'execa';
 
 import { WHEEL_POSITIONS, WheelPosition } from '../shared';
+
+const execFileAsync = promisify(execFile);
 
 const logger = streamDeck.logger.createScope('utils');
 
@@ -50,34 +54,32 @@ export type FontItem = {
 export async function getSystemFonts(): Promise<FontItem[]> {
   const platform = process.platform;
   const fontNames = new Set<string>();
+  const options = { encoding: 'utf8', timeout: 5000 } as const;
 
   try {
     if (platform === 'win32') {
-      const { stdout } = await execa({ lines: true })(
+      const { stdout } = await execFileAsync(
         'powershell', [
           '-ExecutionPolicy', 'Bypass',
           '-NoProfile',
           '-Command',
           '[System.Console]::OutputEncoding = [System.Text.Encoding]::UTF8; Add-Type -AssemblyName PresentationCore; ([Windows.Media.Fonts]::SystemFontFamilies).Source',
-        ]);
-
-      stdout.forEach((name) => fontNames.add(name.trim()));
+        ], options);
+      stdout.split(/\r?\n/).forEach((name) => fontNames.add(name.trim()));
     } else if (platform === 'darwin') {
-      const { stdout } = await execa({ lines: true })(
+      const { stdout } = await execFileAsync(
         'osascript', [
           '-e', 'use framework "Cocoa"',
           '-e', 'set AppleScript\'s text item delimiters to linefeed',
           '-e', 'return (current application\'s NSFontManager\'s sharedFontManager\'s availableFontFamilies) as list as string',
-        ]);
-      stdout.forEach((name) => fontNames.add(name.trim()));
+        ], options);
+      stdout.split(/\r?\n/).forEach((name) => fontNames.add(name.trim()));
     } else if (platform === 'linux') {
-      const { stdout } = await execa({ lines: true })(
+      const { stdout } = await execFileAsync(
         'fc-list', [
           ':', 'family',
-        ]);
-      for (const line of stdout) {
-        line.split(',').forEach((name) => fontNames.add(name.trim()));
-      }
+        ], options);
+      stdout.split(/\r?\n/).flatMap((line) => line.split(',')).forEach((name) => fontNames.add(name.trim()));
     }
 
     return [
