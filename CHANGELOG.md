@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-07-28
+
 ### Added
 
 - **Speed Meter action**: Displays current vehicle speed in km/h or mph on key and touch display.
@@ -21,5 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Stream Deck + Optimized**: Full compatibility with both standard LCD keys and Stream Deck + touch displays / dials.
 - **Telemetry Connection Alert**: Visual warning indicator when game telemetry stream is interrupted.
 
-[Unreleased]: https://github.com/shiguruikai/streamdeck-forza-telemetry/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/shiguruikai/streamdeck-forza-telemetry/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/shiguruikai/streamdeck-forza-telemetry/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/shiguruikai/streamdeck-forza-telemetry/releases/tag/v0.1.0
