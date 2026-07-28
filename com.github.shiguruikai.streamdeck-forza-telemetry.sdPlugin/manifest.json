@@ -184,7 +184,7 @@
   "Category": "Forza Telemetry",
   "CategoryIcon": "imgs/plugin/category-icon",
   "CodePath": "bin/plugin.js",
-  "Description": "Displays Forza Horizon telemetry data on Stream Deck.",
+  "Description": "Displays Forza Horizon and Forza Motorsport telemetry data on Stream Deck.",
   "Icon": "imgs/plugin/marketplace",
   "SDKVersion": 3,
   "Software": {
