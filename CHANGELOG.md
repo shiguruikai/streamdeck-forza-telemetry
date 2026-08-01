@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Display 0 when engine power or torque values are negative (e.g. during engine braking).
+
 ### Documentation
 
 - Expanded Global tab settings description (Font, Frame Rate, Connection, RPM Zone Colors) in README.md under usage instructions.

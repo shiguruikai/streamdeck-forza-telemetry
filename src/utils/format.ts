@@ -99,7 +99,7 @@ export function formatPowerUnit(unit: PowerUnit = 'ps'): string {
 }
 
 export function formatPower(powerW: number | null | undefined, unit: PowerUnit = 'ps'): string {
-  const v = toFiniteNumber(powerW);
+  const v = Math.max(0, toFiniteNumber(powerW));
   let result = 0;
   switch (unit) {
     case 'ps':
@@ -128,7 +128,7 @@ export function formatTorqueUnit(unit: TorqueUnit = 'nm'): string {
 }
 
 export function formatTorque(torqueNm: number | null | undefined, unit: TorqueUnit = 'nm'): string {
-  const v = toFiniteNumber(torqueNm);
+  const v = Math.max(0, toFiniteNumber(torqueNm));
   let result = 0;
   switch (unit) {
     case 'nm':

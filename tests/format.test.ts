@@ -145,9 +145,10 @@ describe('formatPower & formatPowerUnit', () => {
     expect(formatPower(w1000ps, 'kw')).toBe('735');
   });
 
-  it('NaN や Infinity 時に 0 を返すこと', () => {
+  it('NaN や Infinity や負の値の時に 0 を返すこと', () => {
     expect(formatPower(NaN, 'ps')).toBe('0');
     expect(formatPower(Infinity, 'ps')).toBe('0');
+    expect(formatPower(-100, 'ps')).toBe('0');
   });
 });
 
@@ -166,9 +167,10 @@ describe('formatTorque & formatTorqueUnit', () => {
     expect(formatTorque(nm10kgfm, 'ftlb')).toBe('72');
   });
 
-  it('NaN や Infinity 時に 0 を返すこと', () => {
+  it('NaN や Infinity や負の値の時に 0 を返すこと', () => {
     expect(formatTorque(NaN, 'nm')).toBe('0');
     expect(formatTorque(Infinity, 'nm')).toBe('0');
+    expect(formatTorque(-50, 'nm')).toBe('0');
   });
 });
 
