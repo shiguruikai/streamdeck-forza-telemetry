@@ -1,7 +1,7 @@
 {
   "$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
   "Name": "Forza Telemetry",
-  "Version": "1.0.0.0",
+  "Version": "1.0.1.0",
   "Author": "shiguruikai",
   "Actions": [
     {

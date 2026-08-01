@@ -1,6 +1,6 @@
 {
   "name": "streamdeck-forza-telemetry",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "scripts": {
     "build": "rollup -c",
     "watch": "rollup -c -w --watch.onEnd=\"streamdeck restart com.github.shiguruikai.streamdeck-forza-telemetry\"",
