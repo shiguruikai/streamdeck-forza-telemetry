@@ -8,7 +8,8 @@ const { logger } = vi.hoisted(() => ({
 
 vi.mock('@elgato/streamdeck', () => ({
   default: { logger: { createScope: () => logger } },
-  SingletonAction: class {},
+  // TelemetryAction の基底クラス。テストでは SDK の機能を使わないため、何もしないクラスで代用する。
+  SingletonAction: Object,
 }));
 
 /**
