@@ -1,12 +1,12 @@
 import { SpeedUnit } from '../../shared';
 import { ForzaTelemetryData } from '../../telemetry/parser';
-import { formatGear, formatRpmBar, formatSpeed, formatSpeedUnit } from '../format';
+import { formatRpmBar, formatSpeed, formatSpeedUnit } from '../format';
 import { clamp } from '../utils';
 import { Color, createGearSvgComponent, DIAL_HEIGHT, DIAL_WIDTH, generateSingleValueImage, getCommonStyle, getLayoutAdjustments, KEY_HEIGHT, KEY_WIDTH, PADDING, TitleInfo, toSvgDataUri } from './common';
 
 export type SpeedMeterDrawData = Pick<
   Readonly<ForzaTelemetryData>,
-  'speed' | 'gear' | 'currentEngineRpm' | 'engineMaxRpm'
+  'speed' | 'currentEngineRpm' | 'engineMaxRpm'
 >;
 
 function createSegmentedRpmBarSvg(
@@ -46,12 +46,11 @@ export function generateSpeedMeterImage(
   isDial: boolean,
   data: SpeedMeterDrawData | undefined,
   unit: SpeedUnit,
-  previousGear?: string,
+  gearText: string,
   titleInfo?: TitleInfo,
 ): string {
   const unitText = formatSpeedUnit(unit);
   const speedText = formatSpeed(data?.speed, unit);
-  const gearText = formatGear(data?.gear, previousGear);
   const { rpmPct, rpmColor } = formatRpmBar(data?.currentEngineRpm, data?.engineMaxRpm);
 
   const adj = getLayoutAdjustments(isDial, titleInfo);
@@ -121,12 +120,9 @@ export function generateSpeedImage(
 
 export function generateGearImage(
   isDial: boolean,
-  data: Pick<SpeedMeterDrawData, 'gear'> | undefined,
-  previousGear?: string,
+  gearText: string,
   titleInfo?: TitleInfo,
-): { image: string; gearText: string } {
-  const gearText = formatGear(data?.gear, previousGear);
-
+): string {
   const adj = getLayoutAdjustments(isDial, titleInfo);
 
   const width = isDial ? DIAL_WIDTH : KEY_WIDTH;
@@ -137,7 +133,7 @@ export function generateGearImage(
 
   const fontSize = isDial ? 50 : 60;
 
-  const image = toSvgDataUri(`
+  return toSvgDataUri(`
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none">
   ${getCommonStyle()}
   ${adj.titleElement}
@@ -145,8 +141,6 @@ export function generateGearImage(
   ${createGearSvgComponent(cx, cy, fontSize, gearText)}
 </svg>
 `);
-
-  return { image, gearText };
 }
 
 export function generateRpmImage(

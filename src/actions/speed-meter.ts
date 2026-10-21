@@ -10,6 +10,7 @@ import {
 
 import { SPEED_METER_LAYOUTS, SpeedMeterLayout, SpeedUnit } from '../shared';
 import { ForzaTelemetryData } from '../telemetry/parser';
+import { formatGear } from '../utils/format';
 import { generateGearImage, generateRpmImage, generateSpeedImage, generateSpeedMeterImage } from '../utils/graphics';
 import { clamp } from '../utils/utils';
 import { TelemetryAction } from './telemetry-action';
@@ -34,15 +35,17 @@ export class SpeedMeterAction extends TelemetryAction<SpeedMeterSettings> {
     const isDial = action.isDial();
     const titleInfo = this.getTitleInfo(action.id);
 
+    // ギアが無効値（変速中の 11 など）の場合に直前のギアを表示し続けるため、レイアウトに関わらず保持する
+    const gearText = formatGear(data?.gear, this.previousGears.get(action.id));
+    this.previousGears.set(action.id, gearText);
+
     let image;
     if (layout === 'full') {
-      image = generateSpeedMeterImage(isDial, data, unit, this.previousGears.get(action.id), titleInfo);
+      image = generateSpeedMeterImage(isDial, data, unit, gearText, titleInfo);
     } else if (layout === 'speed') {
       image = generateSpeedImage(isDial, data, unit, titleInfo);
     } else if (layout === 'gear') {
-      const gearImage = generateGearImage(isDial, data, unit, titleInfo);
-      image = gearImage.image;
-      this.previousGears.set(action.id, gearImage.gearText);
+      image = generateGearImage(isDial, gearText, titleInfo);
     } else {
       image = generateRpmImage(isDial, data, titleInfo);
     }
