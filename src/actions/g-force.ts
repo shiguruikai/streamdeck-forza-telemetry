@@ -38,7 +38,9 @@ export class GForceAction extends TelemetryAction<GForceSettings> {
     action: DialAction<GForceSettings> | KeyAction<GForceSettings>,
     data?: ForzaTelemetryData,
   ): Promise<void> {
-    const { showPeakG = true, scale = DEFAULT_SCALE } = this.getSettings(action.id) ?? {};
+    const { showPeakG = true, scale: rawScale } = this.getSettings(action.id) ?? {};
+    // 保存済み設定のスケールが正の数値でない場合は、既定のスケールで描画する
+    const scale = typeof rawScale === 'number' && rawScale > 0 ? rawScale : DEFAULT_SCALE;
 
     const showResetText = this.showResetTexts.get(action.id) ?? false;
 

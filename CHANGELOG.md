@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - G-Force Meter showing "undefined" when "Show Peak G" is turned off.
 - Images failing to render when the touch display title or the font name contains characters such as `&` or `<`.
 - Plugin process exiting when an error occurs repeatedly while drawing an action image. Errors are now logged instead.
+- Power & Torque and G-Force Meter failing to draw when the saved action settings contain an unknown unit preset or a non-numeric scale.
 
 ## [1.0.1] - 2026-08-02
 

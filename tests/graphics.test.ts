@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { applyGlobalSettings } from '../src/settings';
-import { DEFAULT_GLOBAL_SETTINGS } from '../src/shared';
-import { generateGearImage, generateGForceImage, generateSingleValueImage, generateSpeedMeterImage, getCommonStyle } from '../src/utils/graphics';
+import { DEFAULT_GLOBAL_SETTINGS, PowerUnitPreset } from '../src/shared';
+import { generateGearImage, generateGForceImage, generatePowerImage, generateSingleValueImage, generateSpeedMeterImage, getCommonStyle } from '../src/utils/graphics';
 
 vi.mock('@elgato/streamdeck', () => {
   const logger = { trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() };
@@ -54,6 +54,15 @@ describe('外部由来の文字列のエスケープ', () => {
 
   it('フォント未指定の場合は font-family を出力しない', () => {
     expect(getCommonStyle()).toBe('<style>text{font-weight:bold;}</style>');
+  });
+});
+
+describe('エンジン出力・トルクの単位プリセット', () => {
+  const data = { power: 100_000, torque: 200 };
+
+  it('未知のプリセットが保存されている場合は、既定のプリセット（PS / N·m）で描画する', () => {
+    const image = generatePowerImage(false, data as never, 'both', 'unknown' as PowerUnitPreset);
+    expect(extractTexts(image)).toEqual(extractTexts(generatePowerImage(false, data as never, 'both', 'ps-nm')));
   });
 });
 

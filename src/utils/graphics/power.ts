@@ -19,7 +19,8 @@ export function generatePowerImage(
   preset: PowerUnitPreset = POWER_UNIT_PRESETS[0],
   titleInfo?: TitleInfo,
 ): string {
-  const detail = UNIT_PRESET_DETAILS[preset];
+  // 保存済み設定に未知のプリセットが含まれる場合は、既定のプリセットで描画する
+  const detail = UNIT_PRESET_DETAILS[POWER_UNIT_PRESETS.includes(preset) ? preset : POWER_UNIT_PRESETS[0]];
 
   if (layout === 'both') {
     return generateDoubleValueImage(
