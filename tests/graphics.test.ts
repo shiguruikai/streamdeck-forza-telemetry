@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { generateGearImage, generateSpeedMeterImage } from '../src/utils/graphics';
+import { generateGearImage, generateGForceImage, generateSpeedMeterImage } from '../src/utils/graphics';
 
 vi.mock('@elgato/streamdeck', () => {
   const logger = { trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() };
@@ -30,5 +30,21 @@ describe('速度計のギア表示', () => {
   it('generateSpeedMeterImage は渡されたギア文字列を描画する', () => {
     expect(extractTexts(generateSpeedMeterImage(false, SPEED_DATA, 'kmh', '3'))).toContain('3');
     expect(extractTexts(generateSpeedMeterImage(true, undefined, 'mph', 'N'))).toContain('N');
+  });
+});
+
+describe('Gフォースのピーク表示', () => {
+  const current = { x: 0.3, z: 0.4, total: 0.5 };
+  const peak = { x: 0.6, z: 0.8, total: 1 };
+
+  it.each([false, true])('ピークGを表示する場合は値を描画する（isDial: %s）', (isDial) => {
+    const texts = extractTexts(generateGForceImage(isDial, 2, current, peak, false));
+    expect(texts).toContain(isDial ? '1.00' : '1.0');
+  });
+
+  it.each([false, true])('ピークGを非表示にした場合は "undefined" を描画しない（isDial: %s）', (isDial) => {
+    const texts = extractTexts(generateGForceImage(isDial, 2, current, null, false));
+    expect(texts).not.toContain('undefined');
+    expect(texts).toEqual(['2.0G', isDial ? '0.50' : '0.5']);
   });
 });

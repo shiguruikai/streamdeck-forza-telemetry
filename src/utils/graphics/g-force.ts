@@ -40,7 +40,6 @@ export function generateGForceImage(
   }
 
   const scaleText = `${scale.toFixed(1)}G`;
-  const peakText = peak?.total.toFixed(isDial ? 2 : 1);
   const currentGText = current.total.toFixed(isDial ? 2 : 1);
 
   const resetText = showResetText
@@ -53,6 +52,11 @@ export function generateGForceImage(
   const rightTextX = width - PADDING;
   const bottomTextY = height - PADDING + (titleInfo?.titleAlignment === 'bottom' ? adj.offsetY * 2 : 0);
   const peakTextY = 22 + (titleInfo?.titleAlignment === 'bottom' ? 0 : adj.offsetY * 2);
+
+  // ピークG非表示（peak が null）の場合は、テキスト要素ごと出力しない
+  const peakText = peak
+    ? `<text x="${rightTextX}" y="${peakTextY}" text-anchor="end" font-size="${fontSize}" fill="${Color.YELLOW}">${peak.total.toFixed(isDial ? 2 : 1)}</text>`
+    : '';
 
   return toSvgDataUri(`
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none">
@@ -70,7 +74,7 @@ export function generateGForceImage(
   <line x1="${cx}" y1="${cy}" x2="${currentPlotX}" y2="${currentPlotY}" stroke="${Color.RED}" stroke-width="4" opacity="0.6"/>
   <circle cx="${currentPlotX}" cy="${currentPlotY}" r="${rBall}" fill="${Color.RED}"/>
 
-  <text x="${rightTextX}" y="${peakTextY}" text-anchor="end" font-size="${fontSize}" fill="${Color.YELLOW}">${peakText}</text>
+  ${peakText}
   <text x="${leftTextX}" y="${bottomTextY}" font-size="${fontSize}" fill="${Color.GREY}">${scaleText}</text>
   <text x="${rightTextX}" y="${bottomTextY}" text-anchor="end" font-size="${fontSize}" fill="${Color.WHITE}">${currentGText}</text>
 
