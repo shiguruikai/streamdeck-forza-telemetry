@@ -54,7 +54,7 @@ export class CompassAction extends TelemetryAction<CompassSettings> {
     if (currentMode !== nextMode) {
       const newSettings = { ...currentSettings, dialDisplayMode: nextMode };
       await this.setSettings(ev.action.id, newSettings);
-      await this.updateImage(ev.action, this.getLastTelemetryData(ev.action.id));
+      await this.redraw(ev.action, this.getLastTelemetryData(ev.action.id));
     }
   }
 }

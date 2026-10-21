@@ -61,7 +61,7 @@ export class PowerAction extends TelemetryAction<PowerSettings> {
 
     const newSettings: PowerSettings = { ...current, preset: nextPreset };
     await this.setSettings(action.id, newSettings);
-    await this.updateImage(action, this.getLastTelemetryData(action.id));
+    await this.redraw(action, this.getLastTelemetryData(action.id));
   }
 
   override async onDialRotate(ev: DialRotateEvent<PowerSettings>): Promise<void> {
@@ -74,7 +74,7 @@ export class PowerAction extends TelemetryAction<PowerSettings> {
     if (currentLayout !== nextLayout) {
       const newSettings = { ...currentSettings, layout: nextLayout };
       await this.setSettings(ev.action.id, newSettings);
-      await this.updateImage(ev.action, this.getLastTelemetryData(ev.action.id));
+      await this.redraw(ev.action, this.getLastTelemetryData(ev.action.id));
     }
   }
 }

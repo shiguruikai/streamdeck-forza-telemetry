@@ -107,7 +107,7 @@ export class GForceAction extends TelemetryAction<GForceSettings> {
     const nextScale = currentScale === 1 ? 2 : currentScale === 2 ? 3 : 1;
     const newSettings = { ...currentSettings, scale: nextScale };
     await this.setSettings(ev.action.id, newSettings);
-    await this.updateImage(ev.action, this.getLastTelemetryData(ev.action.id));
+    await this.redraw(ev.action, this.getLastTelemetryData(ev.action.id));
   }
 
   /**
@@ -121,7 +121,7 @@ export class GForceAction extends TelemetryAction<GForceSettings> {
     this.showResetTexts.set(action.id, true);
 
     const lastData = this.getLastTelemetryData(action.id);
-    await this.updateImage(action, lastData);
+    await this.redraw(action, lastData);
 
     const existingFeedbackTimer = this.resetFeedbackTimers.get(action.id);
     if (existingFeedbackTimer) {
@@ -132,7 +132,7 @@ export class GForceAction extends TelemetryAction<GForceSettings> {
       this.showResetTexts.set(action.id, false);
       this.resetFeedbackTimers.delete(action.id);
       const lastData = this.getLastTelemetryData(action.id);
-      void this.updateImage(action, lastData);
+      void this.redraw(action, lastData);
     }, 1000);
 
     this.resetFeedbackTimers.set(action.id, feedbackTimer);
@@ -149,7 +149,7 @@ export class GForceAction extends TelemetryAction<GForceSettings> {
     if (currentScale !== nextScale) {
       const newSettings = { ...currentSettings, scale: nextScale };
       await this.setSettings(ev.action.id, newSettings);
-      await this.updateImage(ev.action, this.getLastTelemetryData(ev.action.id));
+      await this.redraw(ev.action, this.getLastTelemetryData(ev.action.id));
     }
   }
 }

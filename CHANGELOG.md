@@ -12,7 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Telemetry reception stopping after changing the IP address or port in the Global settings while actions are displayed.
 - Speed Meter showing the speed unit (e.g. "kmh") instead of the gear in the Gear layout, and the gear flickering to "N" while shifting in the Full layout.
 - G-Force Meter showing "undefined" when "Show Peak G" is turned off.
-- Touch display images failing to render when the title or font name contains characters such as `&` or `<`.
+- Images failing to render when the touch display title or the font name contains characters such as `&` or `<`.
+- Plugin process exiting when an error occurs repeatedly while drawing an action image. Errors are now logged instead.
 
 ## [1.0.1] - 2026-08-02
 

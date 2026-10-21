@@ -1,3 +1,5 @@
+import { isNativeError } from 'node:util/types';
+
 import streamDeck, {
   DialAction,
   DialDownEvent,
@@ -53,6 +55,9 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
 
   private isListeningErrors = false;
 
+  private lastRedrawErrorTime = 0;
+  private readonly redrawErrorLogIntervalMs = 5000;
+
   private readonly errorHandler = (error: Error) => {
     this.logger.error(error.message);
     this.triggerAlertForActiveActions();
@@ -79,7 +84,33 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
    */
   public refreshActiveActions(): void {
     for (const action of this.activeActions.values()) {
-      void this.onTelemetryData(action, this.lastTelemetryDataMap.get(action.id));
+      void this.redraw(action, this.lastTelemetryDataMap.get(action.id));
+    }
+  }
+
+  /**
+   * 指定されたアクションの画面を描画します（`onTelemetryData` を呼び出します）。
+   * 描画を行う場合は `onTelemetryData` を直接呼び出さず、このメソッドを使用してください。
+   *
+   * @note 描画処理の例外を呼び出し元へ伝播させると、未処理の Promise 拒否としてプラグインプロセスが終了するため、
+   *       ここで捕捉してログに記録します。毎フレーム同じ例外が発生し得るため、ログ出力は5秒に1回までに制限します。
+   *
+   * @param action - 対象の Key / Dial アクションインスタンス
+   * @param data - パースされたテレメトリデータ（未受信時は undefined）
+   */
+  protected async redraw(
+    action: DialAction<TSettings> | KeyAction<TSettings>,
+    data?: ForzaTelemetryData,
+  ): Promise<void> {
+    try {
+      await this.onTelemetryData(action, data);
+    } catch (error) {
+      const now = Date.now();
+      if (now - this.lastRedrawErrorTime > this.redrawErrorLogIntervalMs) {
+        this.lastRedrawErrorTime = now;
+        const err = isNativeError(error) ? error : new Error(String(error));
+        this.logger.error(`Failed to redraw action ${action.id}: ${err.message}\n${err.stack}`);
+      }
     }
   }
 
@@ -253,7 +284,7 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
 
     // 画面切り替え時の表示遅延（黒画面の発生）を防ぐため、
     // キャッシュされている最後のデータを使って即時初回描画を行います。
-    await this.onTelemetryData(action, this.lastTelemetryDataMap.get(action.id));
+    await this.redraw(action, this.lastTelemetryDataMap.get(action.id));
 
     // 同一IDのアクションで既存のイベント購読が残っている場合は二重購読を防ぐため解除します。
     this.unsubscribeTelemetry(action.id);
@@ -261,7 +292,7 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
     // データ受信時に、最新データのキャッシュ更新とアクション固有の描画処理をトリガーするハンドラを登録します。
     const dataHandler = (data: ForzaTelemetryData) => {
       this.lastTelemetryDataMap.set(action.id, data);
-      void this.onTelemetryData(action, data);
+      void this.redraw(action, data);
     };
 
     this.subscribeErrors();
@@ -280,7 +311,7 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
     this.settingsMap.set(action.id, payload.settings);
 
     await this.onSettingsUpdated(action, payload.settings);
-    await this.onTelemetryData(action, this.lastTelemetryDataMap.get(action.id));
+    await this.redraw(action, this.lastTelemetryDataMap.get(action.id));
   }
 
   /**
@@ -326,7 +357,7 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
       this.titleInfoMap.delete(action.id);
     }
 
-    await this.onTelemetryData(action, this.lastTelemetryDataMap.get(action.id));
+    await this.redraw(action, this.lastTelemetryDataMap.get(action.id));
   }
 
   private subscribeErrors() {

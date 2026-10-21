@@ -57,7 +57,7 @@ export class SuspensionTravelAction extends TelemetryAction<SuspensionTravelSett
     const nextMode: SuspensionMode = currentSettings.mode === 'value' ? 'percentage' : 'value';
     const newSettings = { ...currentSettings, mode: nextMode };
     await this.setSettings(ev.action.id, newSettings);
-    await this.updateImage(ev.action, this.getLastTelemetryData(ev.action.id));
+    await this.redraw(ev.action, this.getLastTelemetryData(ev.action.id));
   }
 
   /**
@@ -71,7 +71,7 @@ export class SuspensionTravelAction extends TelemetryAction<SuspensionTravelSett
     if (currentPos !== nextPos) {
       const newSettings = { ...currentSettings, position: nextPos };
       await this.setSettings(ev.action.id, newSettings);
-      await this.updateImage(ev.action, this.getLastTelemetryData(ev.action.id));
+      await this.redraw(ev.action, this.getLastTelemetryData(ev.action.id));
     }
   }
 }

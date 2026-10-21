@@ -80,7 +80,7 @@ export class RaceInfoAction extends TelemetryAction<RaceInfoSettings> {
     if (currentLayout !== nextLayout) {
       const newSettings = { ...currentSettings, layout: nextLayout };
       await this.setSettings(ev.action.id, newSettings);
-      await this.updateImage(ev.action, this.getLastTelemetryData(ev.action.id));
+      await this.redraw(ev.action, this.getLastTelemetryData(ev.action.id));
     }
   }
 }
