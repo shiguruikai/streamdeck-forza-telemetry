@@ -1,6 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { generateGearImage, generateGForceImage, generateSpeedMeterImage } from '../src/utils/graphics';
+import { applyGlobalSettings } from '../src/settings';
+import { DEFAULT_GLOBAL_SETTINGS } from '../src/shared';
+import { generateGearImage, generateGForceImage, generateSingleValueImage, generateSpeedMeterImage, getCommonStyle } from '../src/utils/graphics';
 
 vi.mock('@elgato/streamdeck', () => {
   const logger = { trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() };
@@ -30,6 +32,28 @@ describe('速度計のギア表示', () => {
   it('generateSpeedMeterImage は渡されたギア文字列を描画する', () => {
     expect(extractTexts(generateSpeedMeterImage(false, SPEED_DATA, 'kmh', '3'))).toContain('3');
     expect(extractTexts(generateSpeedMeterImage(true, undefined, 'mph', 'N'))).toContain('N');
+  });
+});
+
+describe('外部由来の文字列のエスケープ', () => {
+  afterEach(() => {
+    applyGlobalSettings(DEFAULT_GLOBAL_SETTINGS, []);
+  });
+
+  it('ダイヤルのタイトルを XML エスケープして描画する', () => {
+    const titleInfo = { text: 'R&D <Power> "Torque" \'s', titleAlignment: 'top' as const, titleColor: '#ffffff' };
+    const svg = decodeSvg(generateSingleValueImage(true, '100', 'PS', titleInfo));
+    expect(svg).toContain('>R&amp;D &lt;Power&gt; &quot;Torque&quot; &apos;s</text>');
+    expect(svg).not.toContain('R&D');
+  });
+
+  it('フォント名を CSS 文字列および XML としてエスケープして埋め込む', () => {
+    applyGlobalSettings({ ...DEFAULT_GLOBAL_SETTINGS, font: 'A&B <C> "D"' }, []);
+    expect(getCommonStyle()).toBe('<style>text{font-family:"A&amp;B &lt;C&gt; \\22 D\\22 ";font-weight:bold;}</style>');
+  });
+
+  it('フォント未指定の場合は font-family を出力しない', () => {
+    expect(getCommonStyle()).toBe('<style>text{font-weight:bold;}</style>');
   });
 });
 

@@ -1,6 +1,28 @@
 import { getGlobalSettings } from '../../settings/settings';
 import { formatTime } from '../format';
 
+const XML_ESCAPES: Readonly<Record<string, string>> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  '\'': '&apos;',
+};
+
+/**
+ * 外部由来の文字列（ユーザー入力のタイトルやフォント名など）を、SVG（XML）のテキストおよび属性値として安全に埋め込めるようエスケープします。
+ */
+export function escapeXml(text: string): string {
+  return text.replace(/[&<>"']/g, (c) => XML_ESCAPES[c]);
+}
+
+/**
+ * CSSの文字列（ダブルクォート囲み）に埋め込む値をエスケープします。
+ */
+function escapeCssString(value: string): string {
+  return value.replace(/["\\\n\r\f]/g, (c) => `\\${(c.codePointAt(0) ?? 0).toString(16)} `);
+}
+
 /**
  * すべてのSVGに共通して適用するCSSスタイルシートを取得します。
  *
@@ -8,7 +30,7 @@ import { formatTime } from '../format';
  */
 export function getCommonStyle(): string {
   const font = getGlobalSettings().font;
-  const fontFamily = font ? `font-family:"${font}";` : '';
+  const fontFamily = font ? `font-family:"${escapeXml(escapeCssString(font))}";` : '';
   return `<style>text{${fontFamily}font-weight:bold;}</style>`;
 }
 
@@ -63,7 +85,7 @@ export function getLayoutAdjustments(
     // ダイヤルは高さが100pxと狭いため、常に左上に描画します。
     return {
       offsetY: 0,
-      titleElement: `<text x="${PADDING}" y="20" font-size="16" fill="${titleInfo.titleColor}" text-anchor="start">${titleInfo.text}</text>`,
+      titleElement: `<text x="${PADDING}" y="20" font-size="16" fill="${escapeXml(titleInfo.titleColor)}" text-anchor="start">${escapeXml(titleInfo.text)}</text>`,
     };
   }
 
