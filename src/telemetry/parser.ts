@@ -78,13 +78,13 @@ export type BaseForzaTelemetryData = {
   /** ホイールが縁石に乗っているか（1＝乗っている、0＝乗っていない）: 右後輪 */
   wheelOnRumbleStripRearRight: number;
 
-  /** ホイールが水たまりに入っているか（1＝入っている、0＝入っていない）: 左前輪 */
+  /** Horizon: ホイールが水たまりに入っているか（1＝入っている、0＝入っていない）、Motorsport: 水たまりの深さ（0〜1、1が最も深い）: 左前輪 */
   wheelInPuddleFrontLeft: number;
-  /** ホイールが水たまりに入っているか（1＝入っている、0＝入っていない）: 右前輪 */
+  /** Horizon: ホイールが水たまりに入っているか（1＝入っている、0＝入っていない）、Motorsport: 水たまりの深さ（0〜1、1が最も深い）: 右前輪 */
   wheelInPuddleFrontRight: number;
-  /** ホイールが水たまりに入っているか（1＝入っている、0＝入っていない）: 左後輪 */
+  /** Horizon: ホイールが水たまりに入っているか（1＝入っている、0＝入っていない）、Motorsport: 水たまりの深さ（0〜1、1が最も深い）: 左後輪 */
   wheelInPuddleRearLeft: number;
-  /** ホイールが水たまりに入っているか（1＝入っている、0＝入っていない）: 右後輪 */
+  /** Horizon: ホイールが水たまりに入っているか（1＝入っている、0＝入っていない）、Motorsport: 水たまりの深さ（0〜1、1が最も深い）: 右後輪 */
   wheelInPuddleRearRight: number;
 
   /** コントローラーのフォースフィードバックに渡される無次元の路面振動値: 左前輪 */
@@ -320,6 +320,9 @@ export function parseToForzaTelemetryData(buffer: Buffer): ForzaTelemetryData {
   try {
     const ctx: ParseContext = { offset: 0 };
 
+    // 水たまりの項目は、Horizon（S32: WheelInPuddle）と Motorsport（F32: WheelInPuddleDepth）で型が異なる
+    const readWheelInPuddle = size === 324 ? readS32 : readF32;
+
     // Sledデータ領域（0〜228バイト）は共通
     const baseData = {
       isRaceOn: readS32(buffer, ctx), // Offset: 0
@@ -355,10 +358,10 @@ export function parseToForzaTelemetryData(buffer: Buffer): ForzaTelemetryData {
       wheelOnRumbleStripFrontRight: readS32(buffer, ctx), // Offset: 120
       wheelOnRumbleStripRearLeft: readS32(buffer, ctx), // Offset: 124
       wheelOnRumbleStripRearRight: readS32(buffer, ctx), // Offset: 128
-      wheelInPuddleFrontLeft: readS32(buffer, ctx), // Offset: 132
-      wheelInPuddleFrontRight: readS32(buffer, ctx), // Offset: 136
-      wheelInPuddleRearLeft: readS32(buffer, ctx), // Offset: 140
-      wheelInPuddleRearRight: readS32(buffer, ctx), // Offset: 144
+      wheelInPuddleFrontLeft: readWheelInPuddle(buffer, ctx), // Offset: 132
+      wheelInPuddleFrontRight: readWheelInPuddle(buffer, ctx), // Offset: 136
+      wheelInPuddleRearLeft: readWheelInPuddle(buffer, ctx), // Offset: 140
+      wheelInPuddleRearRight: readWheelInPuddle(buffer, ctx), // Offset: 144
       surfaceRumbleFrontLeft: readF32(buffer, ctx), // Offset: 148
       surfaceRumbleFrontRight: readF32(buffer, ctx), // Offset: 152
       surfaceRumbleRearLeft: readF32(buffer, ctx), // Offset: 156
