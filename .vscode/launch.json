@@ -9,7 +9,7 @@
       "type": "node",
       "request": "attach",
       "processId": "${command:PickProcess}",
-      "outFiles": ["${workspaceFolder}/bin/**/*.js"],
+      "outFiles": ["${workspaceFolder}/com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin/bin/**/*.js"],
       "resolveSourceMapLocations": ["${workspaceFolder}/**"]
     }
   ]
