@@ -57,7 +57,8 @@ export function formatSpeedUnit(unit?: SpeedUnit): string {
 
 export function formatSpeed(speed: number | null | undefined, unit?: SpeedUnit): string {
   const s = toFiniteNumber(speed);
-  return Math.round(s * (unit === 'kmh' ? 3.6 : 3.6 / 1.609344)).toString();
+  // 単位未指定時は formatSpeedUnit と同じく km/h とする
+  return Math.round(s * (unit === 'mph' ? 3.6 / 1.609344 : 3.6)).toString();
 }
 
 export function formatRpmBar(

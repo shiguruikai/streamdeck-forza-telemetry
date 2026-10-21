@@ -103,6 +103,11 @@ describe('formatSpeed & formatSpeedUnit', () => {
     expect(formatSpeed(mps100kmh, 'mph')).toBe('62');
   });
 
+  it('単位未指定時は formatSpeedUnit と同じく km/h で換算すること', () => {
+    expect(formatSpeedUnit(undefined)).toBe('KM/H');
+    expect(formatSpeed(10, undefined)).toBe('36');
+  });
+
   it('null/undefined/NaN/Infinity 時は 0 を返すこと', () => {
     expect(formatSpeed(null, 'kmh')).toBe('0');
     expect(formatSpeed(undefined, 'mph')).toBe('0');
