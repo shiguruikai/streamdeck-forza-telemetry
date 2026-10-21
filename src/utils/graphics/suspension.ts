@@ -1,6 +1,6 @@
 import { SingleWheelPosition, SuspensionMode } from '../../shared';
 import { ForzaTelemetryData } from '../../telemetry/parser';
-import { formatTravel, formatTravelColor } from '../format';
+import { formatTravel, formatTravelColor, toFiniteNumber } from '../format';
 import { TitleInfo } from './common';
 import { generateAllWheelsImage, generateSingleWheelImage } from './wheels';
 
@@ -24,7 +24,7 @@ export function generateSuspensionTravelAllWheelsImage(
     data?.normalizedSuspensionTravelRearLeft,
     data?.normalizedSuspensionTravelRearRight,
   ];
-  const values = travels.map((v) => v ?? 0);
+  const values = travels.map((v) => toFiniteNumber(v));
   const texts = travels.map((v) => formatTravel(v, mode));
   const colors = travels.map((v) => formatTravelColor(v));
   return generateAllWheelsImage(isDial, values, texts, colors, 0, titleInfo);
@@ -49,7 +49,7 @@ export function generateSuspensionTravelSingleWheelImage(
   return generateSingleWheelImage(
     isDial,
     position,
-    travel ?? 0,
+    toFiniteNumber(travel),
     formatTravel(travel, mode),
     formatTravelColor(travel),
     0,

@@ -11,6 +11,7 @@ import {
 } from '@elgato/streamdeck';
 
 import { ForzaTelemetryData } from '../telemetry/parser';
+import { toFiniteNumber } from '../utils/format';
 import { generateGForceImage } from '../utils/graphics';
 import { clamp } from '../utils/utils';
 import { TelemetryAction } from './telemetry-action';
@@ -53,9 +54,9 @@ export class GForceAction extends TelemetryAction<GForceSettings> {
     } else if (data) {
       // テレメトリの加速度は m/s² なので、標準重力加速度で除算してG値（重力加速度）を算出
       // 左右慣性G（左カーブ・右方向加速度のときに慣性力は左に働くため、符号をマイナスに反転）
-      current.x = -data.accelerationX / STANDARD_GRAVITY;
+      current.x = -toFiniteNumber(data.accelerationX) / STANDARD_GRAVITY;
       // 前後慣性G（加速・前方加速度のときに慣性力は後ろに働くため、符号は順方向。加速度正＝Gボールが後ろ／下へ）
-      current.z = data.accelerationZ / STANDARD_GRAVITY;
+      current.z = toFiniteNumber(data.accelerationZ) / STANDARD_GRAVITY;
 
       current.total = Math.hypot(current.x, current.z);
 

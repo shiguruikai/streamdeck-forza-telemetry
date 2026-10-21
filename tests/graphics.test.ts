@@ -2,7 +2,16 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { applyGlobalSettings } from '../src/settings';
 import { DEFAULT_GLOBAL_SETTINGS, PowerUnitPreset } from '../src/shared';
-import { generateGearImage, generateGForceImage, generatePowerImage, generateSingleValueImage, generateSpeedMeterImage, getCommonStyle } from '../src/utils/graphics';
+import {
+  generateGearImage,
+  generateGForceImage,
+  generatePowerImage,
+  generateSingleValueImage,
+  generateSpeedMeterImage,
+  generateSuspensionTravelAllWheelsImage,
+  generateSuspensionTravelSingleWheelImage,
+  getCommonStyle,
+} from '../src/utils/graphics';
 
 vi.mock('@elgato/streamdeck', () => {
   const logger = { trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() };
@@ -63,6 +72,25 @@ describe('エンジン出力・トルクの単位プリセット', () => {
   it('未知のプリセットが保存されている場合は、既定のプリセット（PS / N·m）で描画する', () => {
     const image = generatePowerImage(false, data as never, 'both', 'unknown' as PowerUnitPreset);
     expect(extractTexts(image)).toEqual(extractTexts(generatePowerImage(false, data as never, 'both', 'ps-nm')));
+  });
+});
+
+describe('サスペンション移動量の非有限値', () => {
+  const data = {
+    normalizedSuspensionTravelFrontLeft: NaN,
+    normalizedSuspensionTravelFrontRight: Infinity,
+    normalizedSuspensionTravelRearLeft: -Infinity,
+    normalizedSuspensionTravelRearRight: 0.5,
+  };
+
+  it.each([false, true])('全輪表示で NaN / Infinity を SVG に出力しない（isDial: %s）', (isDial) => {
+    const svg = decodeSvg(generateSuspensionTravelAllWheelsImage(isDial, data, 'percentage'));
+    expect(svg).not.toMatch(/NaN|Infinity/);
+  });
+
+  it.each([false, true])('単輪表示で NaN を SVG に出力しない（isDial: %s）', (isDial) => {
+    const svg = decodeSvg(generateSuspensionTravelSingleWheelImage(isDial, 'fl', data, 'value'));
+    expect(svg).not.toMatch(/NaN|Infinity/);
   });
 });
 

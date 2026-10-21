@@ -6,7 +6,7 @@ import { clamp, hslToRgb, hslToRgbHex } from './utils';
 /**
  * 数値が有限の数値（number）であるか判定し、非有限値（NaN, Infinity, null, undefined）の場合はデフォルト値を返します。
  */
-function toFiniteNumber(val: number | null | undefined, fallback = 0): number {
+export function toFiniteNumber(val: number | null | undefined, fallback = 0): number {
   return val !== undefined && val !== null && Number.isFinite(val) ? val : fallback;
 }
 
