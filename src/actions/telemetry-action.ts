@@ -36,7 +36,7 @@ import { getSystemFonts } from '../utils/utils';
 export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject> extends SingletonAction<TSettings> {
   /* eslint-disable unused-imports/no-unused-vars */
 
-  private readonly logger = streamDeck.logger.createScope(TelemetryAction.name);
+  private readonly logger = streamDeck.logger.createScope('TelemetryAction');
 
   private readonly settingsMap = new Map<string, TSettings>();
   private readonly lastTelemetryDataMap = new Map<string, ForzaTelemetryData>();

@@ -21,7 +21,7 @@ type TelemetryManagerEvents = {
  * - **タイムアウト監視**: データ受信が3秒間途絶えた場合にタイムアウトイベントを通知。
  */
 class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
-  private readonly logger = streamDeck.logger.createScope(TelemetryManager.name);
+  private readonly logger = streamDeck.logger.createScope('TelemetryManager');
 
   private readonly server: TelemetryServer;
 
