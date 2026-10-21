@@ -35,30 +35,37 @@ export class TelemetryServer extends EventEmitter<TelemetryServerEvents> {
 
     try {
       this.stop();
-      this.server = dgram.createSocket('udp4');
+      const socket = dgram.createSocket('udp4');
+      this.server = socket;
 
-      this.server.on('listening', () => {
-        if (!this.server) return;
-        const address = this.server.address();
+      // 再起動時は、閉じた旧ソケットのイベントが新ソケットの生成後に遅れて届くため、
+      // 現在のソケット以外からのイベントは無視する。
+      socket.on('listening', () => {
+        if (this.server !== socket) return;
+        const address = socket.address();
         this.logger.info(`Listening on ${address.address}:${address.port}`);
         this.emit('listening');
       });
 
-      this.server.on('message', (msg, rinfo) => {
+      socket.on('message', (msg, rinfo) => {
+        if (this.server !== socket) return;
         this.emit('message', msg, rinfo);
       });
 
-      this.server.on('close', () => {
-        this.stop();
+      socket.on('close', () => {
+        if (this.server === socket) {
+          this.server = undefined;
+        }
       });
 
-      this.server.on('error', (err) => {
+      socket.on('error', (err) => {
+        if (this.server !== socket) return;
         this.logger.error(`Server error:\n${err.stack}`);
         this.emit('error', err);
         this.stop();
       });
 
-      this.server.bind(this.port, this.address);
+      socket.bind(this.port, this.address);
     } catch (e) {
       this.server = undefined;
 

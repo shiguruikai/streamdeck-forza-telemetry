@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Telemetry reception stopping after changing the IP address or port in the Global settings while actions are displayed.
+
 ## [1.0.1] - 2026-08-02
 
 ### Fixed
