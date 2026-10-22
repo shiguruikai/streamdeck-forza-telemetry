@@ -56,6 +56,12 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
       }
       this.resetTimeoutTimer();
 
+      // メニュー画面やポーズ中（IsRaceOn = 0）のパケットは、TimestampMS 以外がすべて0で走行データではないため、
+      // 配信せずに直前の表示を保つ。パケット自体は届いているため、タイムアウトのタイマーはリセット済み。
+      if (msg.length >= 4 && msg.readInt32LE(0) === 0) {
+        return;
+      }
+
       const now = Date.now();
 
       // スロットリング

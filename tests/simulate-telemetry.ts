@@ -276,6 +276,16 @@ function buildTelemetryPacket(state: CarState): Buffer {
   return buf;
 }
 
+/**
+ * メニュー画面やポーズ中（IsRaceOn = 0）を模したパケットバッファを生成します。
+ * 実機と同様に、選択中のフォーマットと同じ長さで、TimestampMS 以外をすべて0にします。
+ */
+function buildMenuPacket(state: CarState): Buffer {
+  const buf = buildTelemetryPacket(state).fill(0);
+  buf.writeUInt32LE(state.timestampMs, 4); // TIMESTAMP_MS
+  return buf;
+}
+
 let positionTimer = 0;
 let totalElapsedTime = 0;
 
@@ -471,6 +481,7 @@ const state: CarState = {
 };
 
 let isPaused = false;
+let isMenu = false;
 let lastUpdateTime = performance.now();
 let lastConsoleRenderTime = 0;
 
@@ -483,7 +494,7 @@ Format: ${format.toUpperCase()}
 Send Rate: ~${Math.round(1000 / TELEMETRY_INTERVAL_MS)} FPS (${TELEMETRY_INTERVAL_MS}ms)
 Render Rate: ~${Math.round(1000 / CONSOLE_RENDER_INTERVAL_MS)} FPS (${CONSOLE_RENDER_INTERVAL_MS}ms)
 Max RPM: ${MAX_RPM}, Max Gear: ${MAX_GEAR}
-Press 'P' to pause/resume simulation, Ctrl+C to exit.
+Press 'P' to pause/resume simulation, 'M' to toggle menu (IsRaceOn = 0), Ctrl+C to exit.
 
 `.trimStart();
 
@@ -506,7 +517,23 @@ function cleanup(): void {
 process.on('SIGINT', cleanup);
 process.on('SIGTERM', cleanup);
 
-// キーボード入力（Pキーでパケット送信の一時停止/再開）の設定
+// 一時停止中・メニュー中のメッセージを表示します（どちらでもない場合は行を消去します）。
+function renderStatusMessage(): void {
+  if (!process.stdout.isTTY) return;
+  readline.cursorTo(process.stdout, 0);
+  readline.clearLine(process.stdout, 0);
+  if (isPaused) {
+    process.stdout.write(
+      "[PAUSED] Simulation is paused. Press 'P' to resume...",
+    );
+  } else if (isMenu) {
+    process.stdout.write(
+      "[MENU] Sending IsRaceOn = 0 packets (menu / pause screen). Press 'M' to return to the race...",
+    );
+  }
+}
+
+// キーボード入力（Pキーでパケット送信の一時停止/再開、Mキーでメニュー中の切り替え）の設定
 if (process.stdin.isTTY) {
   readline.emitKeypressEvents(process.stdin);
   process.stdin.setRawMode(true);
@@ -516,15 +543,11 @@ if (process.stdin.isTTY) {
     }
     if (key.name === 'p' || key.sequence === 'p' || key.sequence === 'P') {
       isPaused = !isPaused;
-      if (process.stdout.isTTY) {
-        readline.cursorTo(process.stdout, 0);
-        readline.clearLine(process.stdout, 0);
-        if (isPaused) {
-          process.stdout.write(
-            "[PAUSED] Simulation is paused. Press 'P' to resume...",
-          );
-        }
-      }
+      renderStatusMessage();
+    }
+    if (key.name === 'm' || key.sequence === 'm' || key.sequence === 'M') {
+      isMenu = !isMenu;
+      renderStatusMessage();
     }
   });
 }
@@ -546,10 +569,15 @@ setInterval(() => {
   // 1. 実経過時間（秒）を計算してシミュレーション状態を更新
   const dt = (now - lastUpdateTime) / 1000;
   lastUpdateTime = now;
-  updateCarState(state, dt);
+  if (isMenu) {
+    // メニュー中は車両の状態を止め、TimestampMS だけを進める
+    state.timestampMs += dt * 1000;
+  } else {
+    updateCarState(state, dt);
+  }
 
   // 2. パケット生成と送信（30FPS超の高レートで送信）
-  const packet: Buffer = buildTelemetryPacket(state);
+  const packet: Buffer = isMenu ? buildMenuPacket(state) : buildTelemetryPacket(state);
 
   socket.send(packet, 0, packet.length, PORT, HOST, (err: Error | null) => {
     if (err) {
@@ -558,8 +586,8 @@ setInterval(() => {
     }
   });
 
-  // 3. コンソール出力（間引いて描画負荷を低減）
-  if (process.stdout.isTTY && now - lastConsoleRenderTime >= CONSOLE_RENDER_INTERVAL_MS) {
+  // 3. コンソール出力（間引いて描画負荷を低減。メニュー中はメッセージを表示したままにする）
+  if (!isMenu && process.stdout.isTTY && now - lastConsoleRenderTime >= CONSOLE_RENDER_INTERVAL_MS) {
     lastConsoleRenderTime = now;
 
     const speedKmh: string = (state.speed * 3.6).toFixed(0);
