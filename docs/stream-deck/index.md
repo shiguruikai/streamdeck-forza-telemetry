@@ -2,6 +2,8 @@
 
 This is a collection of knowledge documents for developing Stream Deck plugins, curated from the official Elgato Maker documentation.
 
+> **注記**: このディレクトリは公式ドキュメントの機械的な転記であり、欠落がある（例: [plugin-guidelines.md](distribution/plugin-guidelines.md) では Do / Don't の区別が失われている）。判断の根拠にするときは、各ページの原文（docs.elgato.com）を確認すること。
+
 ## Subcategories
 
 * [WebSocket API References](api/index.md) - WebSocket API specifications for communicating between the plugin, Property Inspector, and Stream Deck application.

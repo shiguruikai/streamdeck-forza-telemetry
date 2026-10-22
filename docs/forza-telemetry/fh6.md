@@ -287,7 +287,7 @@ U8 Clutch;
 U8 HandBrake;
 
 // Current gear
-// 0 = リバース（R）、1〜10 = 1速〜10速（前進ギア）。ニュートラル（N）は存在しない。
+
 U8 Gear;
 
 // Steering input (-127 = full left, 0 = center, 127 = full right)
@@ -309,3 +309,11 @@ S8 NormalizedAIBrakeDifference;
 - The packet format is fixed. Unlike Forza Motorsport, there is no option to select between different formats.
 - Developers of companion apps should note that Forza Horizon 6 includes three fields not present in Forza Motorsport: CarGroup, SmashableVelDiff, and SmashableMass. These are inserted after NumCylinders and before PositionX.
 - Forza Horizon 6 does not include TireWear or TrackOrdinal fields that are present in Forza Motorsport's "Dash" format.
+
+## 本リポジトリでの補足（非公式）
+
+上記は公式ページの転記である。以下は、本リポジトリの実装での確認結果と、コミュニティの解析による補足であり、公式の記載ではない。
+
+- **ギア（`Gear`）**: 0 = リバース（R）、1〜10 = 前進ギア。ゲームにニュートラル（N）はない。変速の瞬間に 11 が届くことがあるため、本プラグインは 11 以上を無効値として扱い、直前のギアを表示する。詳細は [format.ts](../../src/utils/format.ts) の `formatGear` を参照。
+- **パケット長**: 公式ページは 324 bytes としているが、フィールドの合計は 323 バイトで、324 バイト目は公式の仕様に記載がない（コミュニティの解析では常に 0）。パーサーは 324 バイトのパケットを Horizon 形式として扱う（[parser.ts](../../src/telemetry/parser.ts) の `parseToForzaTelemetryData`）。
+- **タイヤ温度の単位**: 公式ページに単位の記載はない。°F である（コミュニティの解析による）。本プラグインも °F として変換している（[format.ts](../../src/utils/format.ts) の `formatTemp`）。
