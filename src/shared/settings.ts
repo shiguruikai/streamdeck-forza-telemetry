@@ -68,7 +68,7 @@ export const DEFAULT_GLOBAL_SETTINGS: GlobalSettings = {
   port: 24000,
   font: '',
   fps: 15,
-  rpmNormalColor: '#FFFFFF',
+  rpmNormalColor: '#DEDEDE',
   rpmWarnPct: 70,
   rpmWarnColor: '#FFCC00',
   rpmRevPct: 85,

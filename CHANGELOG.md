@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unavailable values are now shown as `--` instead of placeholder values such as "0", "-18℃" or "N". Position and lap are shown as `--` outside races (e.g. free roam).
 - When no telemetry is received for 3 seconds, actions now show `--` in addition to the warning icon. Peak G is kept.
 - IP address and port changes in the Global settings are applied 1 second after the last edit, and the fields now show placeholders.
+- Default color of the RPM Normal Zone changed from pure white to light grey (`#DEDEDE`) to reduce glare. Saved settings are not changed.
 
 ### Fixed
 

@@ -160,9 +160,9 @@ describe('formatRpmBar', () => {
   });
 
   it('RPMまたはMaxRPMがnull/undefined/NaN時のフォールバック処理を行うこと', () => {
-    expect(formatRpmBar(null, null)).toEqual({ rpm: 0, rpmPct: 0, rpmColor: '#FFFFFF' });
-    expect(formatRpmBar(NaN, NaN)).toEqual({ rpm: 0, rpmPct: 0, rpmColor: '#FFFFFF' });
-    expect(formatRpmBar(Infinity, Infinity)).toEqual({ rpm: 0, rpmPct: 0, rpmColor: '#FFFFFF' });
+    expect(formatRpmBar(null, null)).toEqual({ rpm: 0, rpmPct: 0, rpmColor: '#DEDEDE' });
+    expect(formatRpmBar(NaN, NaN)).toEqual({ rpm: 0, rpmPct: 0, rpmColor: '#DEDEDE' });
+    expect(formatRpmBar(Infinity, Infinity)).toEqual({ rpm: 0, rpmPct: 0, rpmColor: '#DEDEDE' });
   });
 });
 
