@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-22
+
 ### Added
 
 - Third-party license notices (`bin/THIRD_PARTY_LICENSES.txt`) in the plugin package.
@@ -63,6 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Stream Deck + Optimized**: Full compatibility with both standard LCD keys and Stream Deck + touch displays / dials.
 - **Telemetry Connection Alert**: Visual warning indicator when game telemetry stream is interrupted.
 
-[Unreleased]: https://github.com/shiguruikai/streamdeck-forza-telemetry/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/shiguruikai/streamdeck-forza-telemetry/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/shiguruikai/streamdeck-forza-telemetry/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/shiguruikai/streamdeck-forza-telemetry/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/shiguruikai/streamdeck-forza-telemetry/compare/v0.1.0...v1.0.0
