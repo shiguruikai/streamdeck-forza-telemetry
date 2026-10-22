@@ -27,6 +27,7 @@ import { getSystemFonts } from '../utils/utils';
  *
  * - **ライフサイクル管理**: 表示・非表示（onWillAppear / onWillDisappear）に応じたデータ受信ハンドラの自動登録と解除。
  * - **キャッシュ**: ローカル設定、タイトル情報、アクティブアクションの参照を保持（最新のテレメトリデータは `telemetryManager` が保持）。
+ * - **画像の重複送信の抑止**: 前回送信した画像と同じ画像は、Stream Deck へ送信しない（`sendImage`）。
  * - **Property Inspector連携**: システムフォント一覧の取得要求など、設定画面との双方向通信の仲介。
  * - **エラー・タイムアウト監視**: サーバーエラーや受信タイムアウト（3秒）発生時に、アクティブアクションへ一斉に警告（showAlert）を表示。
  *   タイムアウト時は、あわせて未受信の表示で再描画。
@@ -43,6 +44,7 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
   private readonly handlers = new Map<string, (data: ForzaTelemetryData) => void>();
   private readonly activeActions = new Map<string, DialAction<TSettings> | KeyAction<TSettings>>();
   private readonly titleInfoMap = new Map<string, TitleInfo>();
+  private readonly lastImages = new Map<string, string>();
 
   private readonly pressTimers = new Map<string, NodeJS.Timeout>();
   private readonly longPressedFlags = new Set<string>();
@@ -117,6 +119,34 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
   }
 
   /**
+   * 描画した画像を Stream Deck へ送信します（ダイヤルは `setFeedback`、キーは `setImage`）。
+   * `redraw()` が描画の入口であるのに対し、このメソッドは出口です。
+   * `onTelemetryData` の実装では、`setImage` や `setFeedback` を直接呼び出さず、このメソッドを使用してください。
+   *
+   * @note 同じアクションに前回送信した画像と同じ場合は送信しません。SDK は重複を除かずに毎回送信するため、
+   *       表示がほとんど変わらないアクション（カースペック、停車中のコンパス、整数に丸めたタイヤ温度など）で、
+   *       同じ画像を毎フレーム送り続けることを避けます。前回の画像の記録は、表示の開始前と非表示時に破棄します。
+   *
+   * @param action - 対象の Key / Dial アクションインスタンス
+   * @param image - 送信する画像（SVG の data URI）
+   */
+  protected async sendImage(
+    action: DialAction<TSettings> | KeyAction<TSettings>,
+    image: string,
+  ): Promise<void> {
+    if (this.lastImages.get(action.id) === image) return;
+
+    // 送信の完了を待たずに記録する。非表示の直前に始めた送信の完了後に記録が残り、表示の再開時に送信されなくなるのを防ぐ。
+    this.lastImages.set(action.id, image);
+
+    if (action.isDial()) {
+      await action.setFeedback({ canvas: image });
+    } else {
+      await action.setImage(image);
+    }
+  }
+
+  /**
    * 指定されたアクションインスタンスのローカル設定をキャッシュから取得します。
    *
    * @param actionId - アクションID
@@ -160,7 +190,7 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
 
   /**
    * テレメトリデータを受信した際、または初回表示・設定変更時に呼び出されるメソッド。
-   * サブクラスはこのメソッドを実装し、受信データに基づいたSVGの生成と画面描画（setImage / setFeedback）を行います。
+   * サブクラスはこのメソッドを実装し、受信データに基づいたSVGの生成と画面描画（`sendImage`）を行います。
    *
    * @param action - 対象の Key / Dial アクションインスタンス
    * @param data - パースされたテレメトリデータ（未受信時は undefined）
@@ -284,6 +314,9 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
     this.settingsMap.set(action.id, payload.settings);
     this.activeActions.set(action.id, action);
 
+    // 表示の再開時は、同じ画像でも確実に送信するため、前回送信した画像の記録を破棄します。
+    this.lastImages.delete(action.id);
+
     // 同一IDのアクションで既存のイベント購読が残っている場合は二重購読を防ぐため解除します。
     this.unsubscribeTelemetry(action.id);
 
@@ -331,6 +364,7 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
 
     this.settingsMap.delete(action.id);
     this.activeActions.delete(action.id);
+    this.lastImages.delete(action.id);
 
     // アクティブなアクションがなくなった場合、エラーイベントの購読を解除
     if (this.activeActions.size === 0) {

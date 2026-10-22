@@ -35,11 +35,7 @@ export class TireTempAction extends TelemetryAction<TireTempSettings> {
       ? generateTireTempAllWheelsImage(isDial, data, unit, titleInfo)
       : generateTireTempSingleWheelImage(isDial, position, data, unit, titleInfo);
 
-    if (isDial) {
-      await action.setFeedback({ canvas: image });
-    } else {
-      await action.setImage(image);
-    }
+    await this.sendImage(action, image);
   }
 
   protected override onTelemetryData(

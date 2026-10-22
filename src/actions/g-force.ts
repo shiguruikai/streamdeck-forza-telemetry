@@ -79,11 +79,7 @@ export class GForceAction extends TelemetryAction<GForceSettings> {
       this.getTitleInfo(action.id),
     );
 
-    if (isDial) {
-      await action.setFeedback({ canvas: dataUri });
-    } else {
-      await action.setImage(dataUri);
-    }
+    await this.sendImage(action, dataUri);
   }
 
   protected override async onTelemetryData(

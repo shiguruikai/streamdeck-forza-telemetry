@@ -19,11 +19,7 @@ export class CarSpecAction extends TelemetryAction<CarSpecSettings> {
 
     const image = generateCarSpecImage(isDial, data, showCylinders, titleInfo);
 
-    if (isDial) {
-      await action.setFeedback({ canvas: image });
-    } else {
-      await action.setImage(image);
-    }
+    await this.sendImage(action, image);
   }
 
   protected override async onTelemetryData(

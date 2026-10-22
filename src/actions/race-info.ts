@@ -53,11 +53,7 @@ export class RaceInfoAction extends TelemetryAction<RaceInfoSettings> {
       image = generatePositionImage(isDial, data, titleInfo);
     }
 
-    if (isDial) {
-      await action.setFeedback({ canvas: image });
-    } else {
-      await action.setImage(image);
-    }
+    await this.sendImage(action, image);
   }
 
   protected override async onTelemetryData(

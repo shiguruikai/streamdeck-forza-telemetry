@@ -188,3 +188,138 @@ describe('TelemetryAction の最新データとタイムアウト', () => {
     expect(servers[0].stop).not.toHaveBeenCalled();
   });
 });
+
+describe('TelemetryAction の画像の送信', () => {
+  /**
+   * 指定された画像（`image`）を送信するテスト用アクション。
+   */
+  class SendingAction extends TelemetryAction {
+    public image = '';
+
+    protected override async onTelemetryData(action: DialAction | KeyAction): Promise<void> {
+      await this.sendImage(action, this.image);
+    }
+  }
+
+  function createFakeAction(id: string, isDial = false) {
+    return {
+      id,
+      isDial: () => isDial,
+      setImage: vi.fn(() => Promise.resolve()),
+      setFeedback: vi.fn(() => Promise.resolve()),
+    };
+  }
+
+  type FakeAction = ReturnType<typeof createFakeAction>;
+
+  function appear(instance: TelemetryAction, action: FakeAction): Promise<void> {
+    return instance.onWillAppear({ action, payload: { settings: {} } } as never);
+  }
+
+  function disappear(instance: TelemetryAction, action: FakeAction): Promise<void> {
+    return instance.onWillDisappear({ action, payload: { settings: {} } } as never);
+  }
+
+  // 設定変更による再描画
+  function redraw(instance: TelemetryAction, action: FakeAction): Promise<void> {
+    return instance.onDidReceiveSettings({ action, payload: { settings: {} } } as never);
+  }
+
+  const shown: [TelemetryAction, FakeAction][] = [];
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(async () => {
+    for (const [instance, action] of shown.splice(0)) {
+      await disappear(instance, action);
+    }
+    await waitNextTick();
+    vi.useRealTimers();
+  });
+
+  function show(action: FakeAction): SendingAction {
+    const instance = new SendingAction();
+    shown.push([instance, action]);
+    return instance;
+  }
+
+  it('同じ画像は、2回目以降を送信しない', async () => {
+    const a = createFakeAction('a');
+    const instance = show(a);
+    instance.image = 'image-1';
+
+    await appear(instance, a);
+    await redraw(instance, a);
+    await redraw(instance, a);
+
+    expect(a.setImage).toHaveBeenCalledTimes(1);
+    expect(a.setImage).toHaveBeenCalledWith('image-1');
+  });
+
+  it('画像が変わったら、そのつど送信する（前回より前の画像に戻した場合も含む）', async () => {
+    const a = createFakeAction('a');
+    const instance = show(a);
+
+    for (const image of ['image-1', 'image-2', 'image-1']) {
+      instance.image = image;
+      await redraw(instance, a);
+    }
+
+    expect(a.setImage.mock.calls).toEqual([['image-1'], ['image-2'], ['image-1']]);
+  });
+
+  it('記録はアクションごとに分け、別のアクションには同じ画像でも送信する', async () => {
+    const a = createFakeAction('a');
+    const b = createFakeAction('b');
+    const instance = show(a);
+    shown.push([instance, b]);
+    instance.image = 'image-1';
+
+    await appear(instance, a);
+    await appear(instance, b);
+    await redraw(instance, a);
+    await redraw(instance, b);
+
+    expect(a.setImage).toHaveBeenCalledTimes(1);
+    expect(b.setImage).toHaveBeenCalledTimes(1);
+  });
+
+  it('ダイヤルには、setFeedback で canvas を送信する', async () => {
+    const dial = createFakeAction('dial', true);
+    const instance = show(dial);
+    instance.image = 'image-1';
+
+    await appear(instance, dial);
+    await redraw(instance, dial);
+    instance.image = 'image-2';
+    await redraw(instance, dial);
+
+    expect(dial.setFeedback.mock.calls).toEqual([[{ canvas: 'image-1' }], [{ canvas: 'image-2' }]]);
+    expect(dial.setImage).not.toHaveBeenCalled();
+  });
+
+  it('表示の終了と再開（ページの切り替え）の後は、同じ画像でも送信し直す', async () => {
+    const a = createFakeAction('a');
+    const instance = show(a);
+    instance.image = 'image-1';
+
+    await appear(instance, a);
+    await disappear(instance, a);
+    await appear(instance, a);
+
+    expect(a.setImage).toHaveBeenCalledTimes(2);
+  });
+
+  it('非表示を挟まずに表示が再び通知された場合も、同じ画像を送信し直す', async () => {
+    const a = createFakeAction('a');
+    const instance = show(a);
+    instance.image = 'image-1';
+
+    await appear(instance, a);
+    await appear(instance, a);
+
+    expect(a.setImage).toHaveBeenCalledTimes(2);
+  });
+});

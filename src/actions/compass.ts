@@ -27,11 +27,7 @@ export class CompassAction extends TelemetryAction<CompassSettings> {
     const isDial = action.isDial();
     const dataUri = generateCompassImage(isDial, data, dialDisplayMode);
 
-    if (isDial) {
-      await action.setFeedback({ canvas: dataUri });
-    } else {
-      await action.setImage(dataUri);
-    }
+    await this.sendImage(action, dataUri);
   }
 
   protected override async onTelemetryData(

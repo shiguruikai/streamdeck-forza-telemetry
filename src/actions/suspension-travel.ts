@@ -35,11 +35,7 @@ export class SuspensionTravelAction extends TelemetryAction<SuspensionTravelSett
       ? generateSuspensionTravelAllWheelsImage(isDial, data, mode, titleInfo)
       : generateSuspensionTravelSingleWheelImage(isDial, position, data, mode, titleInfo);
 
-    if (isDial) {
-      await action.setFeedback({ canvas: image });
-    } else {
-      await action.setImage(image);
-    }
+    await this.sendImage(action, image);
   }
 
   protected override onTelemetryData(
