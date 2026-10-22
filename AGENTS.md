@@ -13,9 +13,11 @@
 
 - `pnpm build`: プラグインのビルド
 - `pnpm watch`: 変更監視ビルドおよび自動再起動
+- `pnpm lint`: ESLintによるコードチェック（JavaScript、TypeScript、JSONのみ対象。`**.sdPlugin/**` と `docs/**` は対象外）
 - `pnpm lint:fix`: ESLintによるコード修正（JavaScript、TypeScript、JSONのみ対象）
+- `pnpm typecheck`: TypeScriptの型チェック（ルート、`src`、`src/ui`、`tests` の各 tsconfig を対象）
 - `pnpm test`: Vitestによる単体テストの実行
-- `pnpm sim`: 擬似テレメトリ送信（`tests/simulate-telemetry.ts`のデフォルト実行）
+- `pnpm sim`: 擬似テレメトリ送信（`tests/simulate-telemetry.ts`のデフォルト実行。形式の既定はFH6形式）
   - `pnpm sim:fh5`: FH5形式
   - `pnpm sim:fh6`: FH6形式
   - `pnpm sim:fm7`: FM7 Dash形式
@@ -58,9 +60,9 @@
 ### Gitルール
 
 - コミットメッセージ: `Conventional Commits` に準拠した簡潔な日本語。
-- コミット前に `pnpm lint:fix` を実行すること（ドキュメント修正のみの場合は不要）。
+- コミット前に `pnpm lint:fix` と `pnpm typecheck` を実行すること（ドキュメント修正のみの場合は不要）。
 - ユーザーの明示的な指示がない限り、自動で `git commit` や `git push` を行ってはならない。必ず事前にユーザーの確認と許可を得ること。
 
 ## 禁止事項
 
-- **不要なコマンド実行の禁止**: 変更ファイルが `*.md` のみの場合、`pnpm lint:fix`、`pnpm sd:validate`、`pnpm build` を実行しないでください。
+- **不要なコマンド実行の禁止**: 変更ファイルが `*.md` のみの場合、`pnpm lint:fix`、`pnpm typecheck`、`pnpm sd:validate`、`pnpm build` を実行しないでください。

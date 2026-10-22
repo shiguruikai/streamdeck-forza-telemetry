@@ -1,11 +1,13 @@
 {
   "name": "streamdeck-forza-telemetry",
   "version": "1.0.1",
+  "private": true,
   "scripts": {
     "build": "rollup -c",
     "watch": "rollup -c -w --watch.onEnd=\"streamdeck restart com.github.shiguruikai.streamdeck-forza-telemetry\"",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit -p . && tsc --noEmit -p src && tsc --noEmit -p src/ui && tsc --noEmit -p tests",
     "sim": "node tests/simulate-telemetry.ts",
     "sim:fh5": "node tests/simulate-telemetry.ts --format fh5",
     "sim:fh6": "node tests/simulate-telemetry.ts --format fh6",
@@ -50,7 +52,7 @@
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
-      "version": "^11",
+      "version": "11.15.0",
       "onFail": "download"
     }
   }
