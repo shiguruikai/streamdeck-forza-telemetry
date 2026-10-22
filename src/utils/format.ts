@@ -73,9 +73,9 @@ export function formatPosition(pos: number | null | undefined): string {
 export function formatGear(gear: number | null | undefined, previous?: string | null): string {
   // データがない（値がない）場合は '--' を返す。
   if (!isFiniteNumber(gear)) return '--';
-  // ギアが有効範囲外の場合、previous を返す。
+  // ギアが有効範囲外の場合、previous を返す（直前のギアがない場合は、値がない場合と同じく '--' を返す）。
   // NOTE: 実機において、シフトチェンジの瞬間に11の値となることがあるので、11以上は無効値として扱う。
-  if (gear < 0 || gear > 10) return previous ?? 'N';
+  if (gear < 0 || gear > 10) return previous ?? '--';
   return gear === 0 ? 'R' : gear.toString();
 }
 

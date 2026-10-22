@@ -1,13 +1,21 @@
 import { Color, DIAL_HEIGHT, DIAL_WIDTH, getCommonStyle, getLayoutAdjustments, KEY_HEIGHT, KEY_WIDTH, PADDING, TitleInfo, toSvgDataUri } from './common';
 
+/**
+ * Gフォースメーターの画像を生成します。
+ *
+ * @param current - 現在のG（データがない場合は null。Gボールは中心に描画し、現在値のテキストは '--' とする）
+ * @param peak - ピークG（ピークGを非表示にする場合は null）
+ */
 export function generateGForceImage(
   isDial: boolean,
   scale: number,
-  current: { x: number; z: number; total: number },
+  current: { x: number; z: number; total: number } | null | undefined,
   peak: { x: number; z: number; total: number } | null | undefined,
   showResetText: boolean,
   titleInfo?: TitleInfo,
 ): string {
+  const currentG = current ?? { x: 0, z: 0, total: 0 };
+
   const adj = getLayoutAdjustments(isDial, titleInfo);
 
   const width = isDial ? DIAL_WIDTH : KEY_WIDTH;
@@ -23,12 +31,12 @@ export function generateGForceImage(
 
   let currentPlotX: number;
   let currentPlotY: number;
-  if (current.total > scale) {
-    currentPlotX = cx + (current.x / current.total) * maxRadius;
-    currentPlotY = cy + (current.z / current.total) * maxRadius;
+  if (currentG.total > scale) {
+    currentPlotX = cx + (currentG.x / currentG.total) * maxRadius;
+    currentPlotY = cy + (currentG.z / currentG.total) * maxRadius;
   } else {
-    currentPlotX = cx + (current.x / scale) * maxRadius;
-    currentPlotY = cy + (current.z / scale) * maxRadius;
+    currentPlotX = cx + (currentG.x / scale) * maxRadius;
+    currentPlotY = cy + (currentG.z / scale) * maxRadius;
   }
 
   let peakCircle = '';
@@ -40,7 +48,7 @@ export function generateGForceImage(
   }
 
   const scaleText = `${scale.toFixed(1)}G`;
-  const currentGText = current.total.toFixed(isDial ? 2 : 1);
+  const currentGText = current ? current.total.toFixed(isDial ? 2 : 1) : '--';
 
   const resetText = showResetText
     ? `<text x="${cx}" y="${cy + 10}" text-anchor="middle" font-size="24" fill="${Color.GREEN}">RESET</text>`

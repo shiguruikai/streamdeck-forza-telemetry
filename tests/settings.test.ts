@@ -104,7 +104,8 @@ describe('グローバル設定', () => {
       manager.configure.mockClear();
 
       apply({ ...DEFAULT_GLOBAL_SETTINGS, address: '127.0.0.', fps: 30 });
-      expect(manager.setUpdateInterval).toHaveBeenLastCalledWith(33);
+      // 配信間隔は丸めずに渡す
+      expect(manager.setUpdateInterval).toHaveBeenLastCalledWith(1000 / 30);
       expect(manager.clearConfig).not.toHaveBeenCalled();
 
       vi.advanceTimersByTime(1000);

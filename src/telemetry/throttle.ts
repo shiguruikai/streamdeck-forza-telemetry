@@ -7,7 +7,9 @@
  * そこで、受信間隔の平滑値の半分（ただし配信間隔の半分を上限とする）を許容幅とし、
  * 「前回の基準時刻からの経過時間 ≥ 配信間隔 − 許容幅」でパケットを受け付ける。
  * また、基準時刻は受け付けた時刻ではなく配信間隔ぶん進めることで、早めに受け付けた分と遅れた分を相殺し、
- * 平均の配信間隔を設定値に合わせる。
+ * 平均の配信間隔を設定値に合わせる（受信が途絶えた後は、続けて配信しないよう基準時刻を現在の時刻にそろえる）。
+ * 配信間隔は、丸めない値（1000 / FPS）を渡すことで、受信間隔の整数倍と一致する場合に位相がずれず、
+ * 隣接するパケットを続けて配信しない。
  *
  * @note 時刻は引数で受け取り、タイマーなどの副作用を持たない。
  */
@@ -43,13 +45,18 @@ export class Throttle {
     }
 
     const toleranceMs = Math.min((this.smoothedArrivalIntervalMs ?? 0) / 2, intervalMs / 2);
-    if (nowMs - this.baseTimeMs < intervalMs - toleranceMs) {
+    const elapsedMs = nowMs - this.baseTimeMs;
+    if (elapsedMs < intervalMs - toleranceMs) {
       return false;
     }
 
-    // 基準時刻を配信間隔ぶん進める。ただし、受信が途絶えるなどして大きく遅れた場合は、
-    // 遅れを取り戻すために続けて配信しないよう、許容幅の範囲まで基準時刻を現在に寄せる。
-    this.baseTimeMs = Math.max(this.baseTimeMs + intervalMs, nowMs - toleranceMs);
+    if (elapsedMs >= intervalMs * 2) {
+      // 受信が途絶えるなどして大きく遅れた場合は、遅れを取り戻すために続けて配信しないよう、基準時刻を現在の時刻にする
+      this.baseTimeMs = nowMs;
+    } else {
+      // 基準時刻を配信間隔ぶん進める。ただし、許容幅を超えて遅れた場合は、許容幅の範囲まで基準時刻を現在に寄せる。
+      this.baseTimeMs = Math.max(this.baseTimeMs + intervalMs, nowMs - toleranceMs);
+    }
     return true;
   }
 

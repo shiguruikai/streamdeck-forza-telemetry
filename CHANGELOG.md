@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Actions briefly showing no data after switching pages. The latest telemetry is now shared by all actions.
 - Reception resuming with the previous IP address and port after an invalid value had stopped it, and frame rate changes not being applied while the IP address or port was invalid.
 - Port values such as "0x5DC0" or " 24000" being accepted.
+- Actions keeping stale values after a socket error such as a port conflict. They now show `--` after 3 seconds, like a normal timeout.
 
 ## [1.0.1] - 2026-08-02
 

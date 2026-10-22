@@ -212,6 +212,25 @@ describe('TelemetryManager', () => {
       expect(server.start).toHaveBeenCalledTimes(1);
     });
 
+    it('バインドや受信のエラーでサーバーが止まっても、タイムアウトの監視を続け、3秒後に最新データを破棄してタイムアウトする', () => {
+      vi.useFakeTimers();
+      const onError = vi.fn();
+      const onTimeout = vi.fn();
+      manager.on('error', onError);
+      manager.on('timeout', onTimeout);
+      manager.on('data', vi.fn());
+      receive(racePacket(10));
+
+      server.emit('error', new Error('bind EADDRINUSE'));
+      expect(onError).toHaveBeenCalledTimes(1);
+
+      vi.advanceTimersByTime(2999);
+      expect(onTimeout).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(1);
+      expect(onTimeout).toHaveBeenCalledTimes(1);
+      expect(manager.getLatestData()).toBeUndefined();
+    });
+
     it('不正な値で受信を止めても、表示中のアクションがあれば3秒後にタイムアウトする', () => {
       vi.useFakeTimers();
       const onTimeout = vi.fn();

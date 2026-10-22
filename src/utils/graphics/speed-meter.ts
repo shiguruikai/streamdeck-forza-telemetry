@@ -160,13 +160,15 @@ export function generateRpmImage(
   const unitY = titleInfo?.titleAlignment === 'bottom' ? PADDING + 12 : height - PADDING;
 
   const { rpm, rpmColor } = formatRpmBar(data?.currentEngineRpm, data?.engineMaxRpm);
+  // formatRpmBar の rpm は値がない場合に 0 へ補正されるため、元の値で判定する
+  const rpmText = Number.isFinite(data?.currentEngineRpm) ? rpm.toFixed(0) : '--';
 
   return toSvgDataUri(`
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none">
   ${getCommonStyle()}
   ${adj.titleElement}
 
-  <text x="${cx}" y="${cy + 19}" font-size="50" text-anchor="middle" fill="${rpmColor}">${rpm.toFixed(0)}</text>
+  <text x="${cx}" y="${cy + 19}" font-size="50" text-anchor="middle" fill="${rpmColor}">${rpmText}</text>
   <text x="${unitX}" y="${unitY}" font-size="24" text-anchor="end" fill="${Color.GREY}">RPM</text>
 </svg>
 `);

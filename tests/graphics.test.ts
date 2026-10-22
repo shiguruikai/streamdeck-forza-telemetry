@@ -12,6 +12,7 @@ import {
   generatePowerImage,
   generateRaceInfoImage,
   generateRacePosAndTimeImage,
+  generateRpmImage,
   generateSingleValueImage,
   generateSpeedImage,
   generateSpeedMeterImage,
@@ -130,6 +131,18 @@ describe('データがないときの表示', () => {
     expect(extractTexts(generateSuspensionTravelAllWheelsImage(isDial, undefined, 'percentage'))).toEqual(['--%', '--%', '--%', '--%']);
     expect(extractTexts(generateSuspensionTravelSingleWheelImage(isDial, 'rr', undefined, 'value'))).toEqual(['RR', '--']);
     expect(extractTexts(generateCompassImage(isDial, undefined, 'circle'))).toContain('--°');
+    expect(extractTexts(generateRpmImage(isDial, undefined))).toEqual(['--', 'RPM']);
+    expect(extractTexts(generateGForceImage(isDial, 2, null, null, false))).toEqual(['2.0G', '--']);
+  });
+
+  it.each([false, true])('回転数が非有限値の場合も "--" を描画し、0 の場合は "0" を描画する（isDial: %s）', (isDial) => {
+    expect(extractTexts(generateRpmImage(isDial, { currentEngineRpm: NaN, engineMaxRpm: 8000 }))[0]).toBe('--');
+    expect(extractTexts(generateRpmImage(isDial, { currentEngineRpm: 0, engineMaxRpm: 8000 }))[0]).toBe('0');
+  });
+
+  it.each([false, true])('Gフォースのデータがない場合も、ピークGの値は描画する（isDial: %s）', (isDial) => {
+    const peak = { x: 0.6, z: 0.8, total: 1 };
+    expect(extractTexts(generateGForceImage(isDial, 2, null, peak, false))).toEqual([isDial ? '1.00' : '1.0', '2.0G', '--']);
   });
 
   it('ダイヤルのアーチ表示のコンパスに "--°" を描画する', () => {

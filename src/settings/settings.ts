@@ -130,7 +130,8 @@ export function applyGlobalSettings(rawSettings: JsonObject | GlobalSettings, ac
   currentSettings = parseSettings(rawSettings);
 
   // 1. FPS設定の適用（接続設定とは関係なく、すぐに反映する）
-  telemetryManager.setUpdateInterval(Math.round(1000 / currentSettings.fps));
+  // NOTE: 丸めると、受信間隔との位相が少しずつずれて、隣接するパケットを続けて配信することがあるため、丸めずに渡す。
+  telemetryManager.setUpdateInterval(1000 / currentSettings.fps);
 
   // 2. 接続設定の適用（最後の変更から1秒後。起動時の最初の1回はすぐに適用する）
   scheduleConnectionSettings({ port: currentSettings.port, address: currentSettings.address });

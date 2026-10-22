@@ -101,7 +101,11 @@ describe('formatGear', () => {
   it('範囲外の値（変速中の 11 など）で直前のギア文字列を返すこと', () => {
     expect(formatGear(11, '4')).toBe('4');
     expect(formatGear(-1, '2')).toBe('2');
-    expect(formatGear(11)).toBe('N');
+  });
+
+  it('範囲外の値で直前のギアがない場合は "--" を返すこと', () => {
+    expect(formatGear(11)).toBe('--');
+    expect(formatGear(11, null)).toBe('--');
   });
 
   it('値がない（null/undefined/NaN/Infinity）場合は、直前のギアではなく "--" を返すこと', () => {

@@ -72,7 +72,8 @@ export class GForceAction extends TelemetryAction<GForceSettings> {
     const dataUri = generateGForceImage(
       isDial,
       scale,
-      current,
+      // データがない場合は、現在値のテキストを '--' にする（Gボールは中心のまま）
+      data ? current : null,
       showPeakG ? peak : null,
       showResetText,
       this.getTitleInfo(action.id),

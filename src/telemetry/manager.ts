@@ -92,8 +92,9 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
       }
     });
 
+    // バインドや受信のエラーでサーバーが停止しても、タイムアウトの監視は止めず、
+    // 通常の受信なしと同じく3秒後にタイムアウトを通知する（未受信の表示にする）
     this.server.on('error', (err) => {
-      this.clearTimeoutTimer();
       this.emit('error', err);
     });
 
