@@ -5,6 +5,7 @@ import commonjs from '@rollup/plugin-commonjs';
 import nodeResolve from '@rollup/plugin-node-resolve';
 import terser from '@rollup/plugin-terser';
 import typescript from '@rollup/plugin-typescript';
+import license from 'rollup-plugin-license';
 
 const isWatching = !!process.env.ROLLUP_WATCH;
 const sdPlugin = 'com.github.shiguruikai.streamdeck-forza-telemetry.sdPlugin';
@@ -39,6 +40,19 @@ const pluginConfig = {
       preferBuiltins: true,
     }),
     commonjs(),
+    // バンドルに含まれるサードパーティのライセンス表記を出力する。許可リスト外のライセンスはビルドエラーにする。
+    license({
+      thirdParty: {
+        output: {
+          file: `${sdPlugin}/bin/THIRD_PARTY_LICENSES.txt`,
+        },
+        allow: {
+          test: '(MIT OR ISC OR 0BSD OR BSD-2-Clause OR BSD-3-Clause OR Apache-2.0)',
+          failOnUnlicensed: true,
+          failOnViolation: true,
+        },
+      },
+    }),
     !isWatching && terser(),
     {
       name: 'emit-module-package-file',

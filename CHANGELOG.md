@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Third-party license notices (`bin/THIRD_PARTY_LICENSES.txt`) in the plugin package.
+
 ### Fixed
 
 - Telemetry reception stopping after changing the IP address or port in the Global settings while actions are displayed.
