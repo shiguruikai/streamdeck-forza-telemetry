@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Suspension Travel and G-Force Meter outputting invalid drawing values (or "NaN") when telemetry values are not finite numbers.
 - Log scope names being minified (e.g. "An") in release builds.
 - Actions showing meaningless values (e.g. "R", "-18℃", "POS 0") while in game menus or paused. The last values are now kept.
+- Effective frame rate being lower than the configured FPS (e.g. about 13 FPS at 15 FPS).
 
 ## [1.0.1] - 2026-08-02
 

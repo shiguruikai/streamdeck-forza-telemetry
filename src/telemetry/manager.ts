@@ -4,6 +4,7 @@ import streamDeck from '@elgato/streamdeck';
 
 import { ForzaTelemetryData, parseToForzaTelemetryData, SledFormatNotSupportedError, UnsupportedPacketSizeError } from './parser';
 import { TelemetryServer } from './server';
+import { Throttle } from './throttle';
 
 type TelemetryManagerEvents = {
   data: [data: ForzaTelemetryData];
@@ -30,7 +31,7 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
   // 本プラグインでは、設定画面から 10〜30 FPS（100ms〜33.3ms）に変更できるようにしています。
   private updateIntervalMs = 100;
 
-  private lastProcessed = 0;
+  private readonly throttle = new Throttle();
 
   private startParams?: { port?: number; address?: string };
 
@@ -62,19 +63,17 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
         return;
       }
 
-      const now = Date.now();
-
       // スロットリング
-      if (now - this.lastProcessed < this.updateIntervalMs) {
+      if (!this.throttle.accept(performance.now(), this.updateIntervalMs)) {
         return;
       }
-      this.lastProcessed = now;
 
       try {
         const data = parseToForzaTelemetryData(msg);
         this.emit('data', data);
       } catch (error) {
         if (error instanceof SledFormatNotSupportedError || error instanceof UnsupportedPacketSizeError) {
+          const now = Date.now();
           if (now - this.lastWarningTime > this.warningIntervalMs) {
             this.logger.warn(error.message);
             this.lastWarningTime = now;
@@ -118,7 +117,7 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
         this.server.stop();
 
         this.isTimeout = false;
-        this.lastProcessed = 0;
+        this.throttle.reset();
         this.clearTimeoutTimer();
       });
     });
@@ -135,6 +134,7 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
     if (params?.updateIntervalMs !== undefined) {
       this.updateIntervalMs = params.updateIntervalMs;
     }
+    this.throttle.reset();
 
     // リスナーが既に存在する場合は、新しいパラメータでサーバーを起動/更新する
     if (this.listenerCount('data') > 0) {
@@ -150,7 +150,7 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
     this.startParams = undefined;
     this.clearTimeoutTimer();
     this.isTimeout = false;
-    this.lastProcessed = 0;
+    this.throttle.reset();
     this.server.stop();
   }
 
