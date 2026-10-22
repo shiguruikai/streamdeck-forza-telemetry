@@ -133,7 +133,8 @@ describe('TelemetryAction の最新データとタイムアウト', () => {
     vi.useFakeTimers();
     log.length = 0;
     servers[0].stop.mockClear();
-    telemetryManager.configure({ port: 24000, address: '127.0.0.1', updateIntervalMs: 100 });
+    telemetryManager.setUpdateInterval(100);
+    telemetryManager.configure({ port: 24000, address: '127.0.0.1' });
   });
 
   afterEach(async () => {

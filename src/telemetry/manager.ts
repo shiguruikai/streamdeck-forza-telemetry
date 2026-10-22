@@ -37,7 +37,8 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
   // 最後に配信したデータ。サーバーの停止、接続先の変更、タイムアウトで破棄する。
   private latestData?: ForzaTelemetryData;
 
-  private startParams?: { port?: number; address?: string };
+  // 接続設定（ポート、IPアドレス）。未受信、または不正な値で停止した場合は undefined。
+  private startParams?: { port: number; address: string };
 
   private lastWarningTime = 0;
   private readonly warningIntervalMs = 5000;
@@ -98,12 +99,16 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
 
     // dataイベントのリスナー追加・削除を監視してサーバーを自動制御
     // アクションが画面に表示された（リスナーが登録された）ときにUDP受信サーバーを起動
+    // ただし、接続設定を受け取っていない（未受信、または不正な値で停止した）場合は、
+    // 以前の接続先で再開しないよう起動せず、タイムアウトの監視のみ行う。
     this.on('newListener', (eventName) => {
       if (eventName !== 'data') return;
       if (this.listenerCount('data') > 0) return;
 
-      this.logger.info('First telemetry listener added. Starting UDP server...');
-      this.server.start(this.startParams);
+      if (this.startParams) {
+        this.logger.info('First telemetry listener added. Starting UDP server...');
+        this.server.start(this.startParams);
+      }
       this.resetTimeoutTimer();
     });
 
@@ -111,10 +116,10 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
     this.on('removeListener', (eventName) => {
       if (eventName !== 'data') return;
 
-      // removeListener イベントが発生した直後の時点では、まだリスナーオブジェクトが
-      // 登録リストから完全に削除されていない。そのため、process.nextTick を用いて
-      // 現在のコールスタックの処理（イベントループ）が完了した直後にリスナー数を評価し、
-      // 最終的に登録数が 0 になったことを担保した上で、安全にサーバーを停止する。
+      // removeListener イベントはリスナーの削除後に発生するため、この時点のリスナー数は削除後の値になっている。
+      // ただし、ページの切り替えなどで同じ tick 内にリスナーの解除と登録が続く場合に、一時的に 0 になった時点で
+      // サーバーを停止・再起動しないよう、process.nextTick で現在の処理が終わるのを待ってからリスナー数を評価し、
+      // 0 のままであればサーバーを停止する。
       process.nextTick(() => {
         if (this.listenerCount('data') > 0) return;
 
@@ -140,20 +145,28 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
   }
 
   /**
+   * 配信間隔（FPS）を設定します。接続設定とは関係なく、すぐに反映します。
+   *
+   * @param updateIntervalMs - 配信間隔（ミリ秒）
+   */
+  public setUpdateInterval(updateIntervalMs: number) {
+    if (updateIntervalMs === this.updateIntervalMs) return;
+    this.updateIntervalMs = updateIntervalMs;
+    this.throttle.reset();
+  }
+
+  /**
    * テレメトリサーバーの接続ポート・IPアドレスを設定します。
    * すでにリスナーが存在する（アクティブなアクションがある）場合は、即時適用してサーバーを起動します。
    *
    * @param params - 接続先の設定（ポート、IPアドレス）
    */
-  public configure(params?: { port?: number; address?: string; updateIntervalMs?: number }) {
+  public configure(params: { port: number; address: string }) {
     // 接続先が変わる場合は、変更前の接続先から受信したデータを破棄する
-    if (params?.port !== this.startParams?.port || params?.address !== this.startParams?.address) {
+    if (params.port !== this.startParams?.port || params.address !== this.startParams.address) {
       this.latestData = undefined;
     }
     this.startParams = params;
-    if (params?.updateIntervalMs !== undefined) {
-      this.updateIntervalMs = params.updateIntervalMs;
-    }
     this.throttle.reset();
 
     // リスナーが既に存在する場合は、新しいパラメータでサーバーを起動/更新する
@@ -164,15 +177,22 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
   }
 
   /**
-   * 設定パラメータを初期化し、実行中のサーバーを停止します。
+   * 接続設定を破棄し、受信を停止します（接続設定が不正な場合に使用します）。
+   * 以降は、新しい接続設定を受け取るまでサーバーを起動しません。
+   * 表示中のアクションがある場合はタイムアウトの監視を続け、通常の受信なしと同じく3秒後にタイムアウトを通知します。
    */
   public clearConfig() {
     this.startParams = undefined;
-    this.clearTimeoutTimer();
     this.isTimeout = false;
     this.throttle.reset();
     this.latestData = undefined;
     this.server.stop();
+
+    if (this.listenerCount('data') > 0) {
+      this.resetTimeoutTimer();
+    } else {
+      this.clearTimeoutTimer();
+    }
   }
 
   /**

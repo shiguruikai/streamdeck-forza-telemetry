@@ -66,7 +66,8 @@ describe('TelemetryManager', () => {
     vi.resetModules();
     manager = (await import('../src/telemetry/manager')).telemetryManager;
     server = servers[servers.length - 1];
-    manager.configure({ port: 24000, address: '127.0.0.1', updateIntervalMs: 100 });
+    manager.setUpdateInterval(100);
+    manager.configure({ port: 24000, address: '127.0.0.1' });
   });
 
   afterEach(() => {
@@ -163,11 +164,66 @@ describe('TelemetryManager', () => {
       manager.on('data', vi.fn());
       receive(racePacket(10));
 
-      manager.configure({ port: 24000, address: '127.0.0.1', updateIntervalMs: 50 });
+      manager.configure({ port: 24000, address: '127.0.0.1' });
       expect(manager.getLatestData()?.speed).toBe(10);
 
-      manager.configure({ port: 24001, address: '127.0.0.1', updateIntervalMs: 50 });
+      manager.configure({ port: 24001, address: '127.0.0.1' });
       expect(manager.getLatestData()).toBeUndefined();
+    });
+  });
+
+  describe('接続設定', () => {
+    it('接続設定を受け取るまでは、アクションが表示されてもサーバーを起動せず、タイムアウトの監視は行う', async () => {
+      vi.useFakeTimers();
+      vi.resetModules();
+      const fresh = (await import('../src/telemetry/manager')).telemetryManager;
+      const freshServer = servers[servers.length - 1];
+      try {
+        const onTimeout = vi.fn();
+        fresh.on('timeout', onTimeout);
+        fresh.on('data', vi.fn());
+        expect(freshServer.start).not.toHaveBeenCalled();
+
+        vi.advanceTimersByTime(3000);
+        expect(onTimeout).toHaveBeenCalledTimes(1);
+
+        // 接続設定を受け取ったら、表示中のアクションのためにサーバーを起動する
+        fresh.configure({ port: 24000, address: '127.0.0.1' });
+        expect(freshServer.start).toHaveBeenCalledWith({ port: 24000, address: '127.0.0.1' });
+      } finally {
+        fresh.removeAllListeners();
+      }
+    });
+
+    it('不正な値で受信を止めた後は、アクションが表示されても以前の接続先で再開しない', async () => {
+      const onData = vi.fn();
+      manager.on('data', onData);
+      expect(server.start).toHaveBeenCalledTimes(1);
+      receive(racePacket(10));
+
+      manager.clearConfig();
+      expect(server.stop).toHaveBeenCalled();
+      expect(manager.getLatestData()).toBeUndefined();
+
+      // ページの切り替えなどで、すべてのアクションが消えてから再び表示される
+      manager.off('data', onData);
+      await waitNextTick();
+      manager.on('data', vi.fn());
+      expect(server.start).toHaveBeenCalledTimes(1);
+    });
+
+    it('不正な値で受信を止めても、表示中のアクションがあれば3秒後にタイムアウトする', () => {
+      vi.useFakeTimers();
+      const onTimeout = vi.fn();
+      manager.on('timeout', onTimeout);
+      manager.on('data', vi.fn());
+      receive(racePacket(10));
+
+      manager.clearConfig();
+      vi.advanceTimersByTime(2999);
+      expect(onTimeout).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(1);
+      expect(onTimeout).toHaveBeenCalledTimes(1);
     });
   });
 });
