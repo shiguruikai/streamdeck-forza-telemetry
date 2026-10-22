@@ -16,7 +16,7 @@ Forza Horizon および Forza Motorsport シリーズから送信されるリア
 - **レース情報（Race Info）**
   - **概要**: 現在のラップタイム、ベストラップ、現在の順位や周回数を表示します。
   - **設定オプション**:
-    - **表示レイアウト**: Lap Time（現在のタイムとベストタイム）、Race Time（レース時間と順位/周回数）、Race Time Only、Current Lap Time Only、Best Lap Time Only、Lap Number Only、Position Only
+    - **表示レイアウト**: Lap Time（周回数・順位・現在のラップタイム・ベストラップ）、Race Time（順位とレース経過時間）、Race Time Only、Current Lap Time Only、Best Lap Time Only、Lap Number Only、Position Only
 - **タイヤ温度（Tire Temperature）**
   - **概要**: 4輪のタイヤ温度状況をカラーゲージでグラフィカルに表示します。
   - **設定オプション**:
@@ -39,7 +39,7 @@ Forza Horizon および Forza Motorsport シリーズから送信されるリア
 - **エンジン出力（Power & Torque）**
   - **概要**: 車両のリアルタイムなエンジン出力（馬力など）およびトルク数値を表示します。
   - **設定オプション**:
-    - **表示レイアウト**: Both（出力とトルクの両方を表示）、Power Only（出力のみ表示）、Torque Only（トルクのみ表示）
+    - **表示レイアウト**: Power & Torque（出力とトルクの両方を表示）、Power Only（出力のみ表示）、Torque Only（トルクのみ表示）
     - **単位プリセット**: PS & N·m（現代日欧規格）、PS & kgf·m（日本伝統規格）、HP & ft·lb（英米規格）、kW & N·m（SI/EV規格）
 - **カースペック（Car Spec）**
   - **概要**: 車両のパフォーマンスインデックス（PI）、クラス（D〜X）、駆動方式（FWD/RWD/AWD）、エンジン気筒数を表示します。
@@ -53,7 +53,7 @@ Forza Horizon および Forza Motorsport シリーズから送信されるリア
 
 > [!NOTE]
 > 本プラグインは、公式の [Elgato Marketplace](https://marketplace.elgato.com/) ではなく GitHub Releases にて直接配布しています。
-> [Elgato Marketplace のガイドライン](https://docs.elgato.com/monetization/stripe/) では、Stripe Connect がサポートしていない国であっても無料公開は可能と案内されていますが、[Maker Console](https://maker.elgato.com/) の登録フォームでは、「Location/Region」の選択肢に日本が含まれておらず、登録を完了できませんでした。
+> [Elgato Marketplace の Stripe Connect に関するドキュメント](https://docs.elgato.com/monetization/stripe/) では、Stripe Connect がサポートしていない国であっても無料公開は可能と案内されていますが、[Maker Console](https://maker.elgato.com/) の登録フォームでは、「Location/Region」の選択肢に日本が含まれておらず、登録を完了できませんでした。
 
 ## 使い方
 
@@ -61,12 +61,12 @@ Forza Horizon および Forza Motorsport シリーズから送信されるリア
 
 Forza Horizon または Forza Motorsport のゲーム内設定メニューから、テレメトリのUDP送信を有効にします。
 
-1. ゲーム内の設定メニューから **HUDとゲームプレイ（HUD & Gameplay）** を開きます。
+1. ゲーム内の設定メニューから **HUDとゲームプレイ（HUD & Gameplay）** を開きます（Forza Motorsport 2023 は **GAMEPLAY & HUD > UDP RACE TELEMETRY**）。
 2. 以下の項目を設定します。
    - **データ出力**: オン
-   - **データ出力 IP アドレス**: `127.0.0.1`
-   - **データ出力 IP ポート**: `24000`（任意の値）
-   - **データ出力パケットフォーマット（Forza Motorsportのみ）**: `Car Dash`
+   - **データ出力 IP アドレス**: `127.0.0.1`（別の機器で遊ぶ場合は、プラグインを動かす PC の IP アドレス）
+   - **データ出力 IP ポート**: `24000`（任意の値。5200〜5300 は避けてください）
+   - **データ出力パケットフォーマット（Forza Motorsportのみ）**: `Car Dash`（`Sled` は非対応）
 
 ### 2. プラグイン側の設定
 
@@ -76,8 +76,8 @@ Forza Horizon または Forza Motorsport のゲーム内設定メニューから
    - **Port**: ゲーム側の設定と一致するポート（デフォルト: `24000`）
    - **Font**: 表示に使用するフォント（OSにインストールされているフォントから一覧を自動取得。等幅の `BIZ UDGothic` などを推奨）
    - **Frame Rate (FPS)**: 描画レート（デフォルト: 15 FPS、10〜30 FPSを選択可能）
-   - **RPM Normal / Warning / Rev Zone**: RPM表示における各ゾーン（通常・警告・レブ限界）の閾値（%）およびカラー
-3. **Action** タブから、表示単位やレイアウトなど個別のアクション設定を行います。
+   - **RPM Normal / Warning / Rev Zone**: RPM表示における各ゾーン（通常・警告・レブ限界）のカラー、および警告・レブ限界の閾値（%）
+3. **Action** タブから、表示単位やレイアウトなど個別のアクション設定を行います。ダイヤルを回すとレイアウトや表示位置を、キーやダイヤルを押すと単位などを切り替えることもできます。
 
 > [!TIP]
 > UDPデータは1つのアプリしか受信できません。
