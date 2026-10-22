@@ -4,6 +4,10 @@
 
 ```
 .
+├── .claude/
+│   └── skills/
+│       └── release/
+│           └── SKILL.md                  # リリース用スキル
 ├── .github/
 │   └── workflows/
 │       ├── ci.yml                        # CI（lint、型チェック、テスト、ビルド、マニフェストの検証）
@@ -44,8 +48,7 @@
 │   │   └── roadmap.md                    # Marketplace リリースロードマップ
 │   ├── stream-deck/                      # Stream Deck プラグイン開発ナレッジベース
 │   ├── architecture.md                   # アーキテクチャ概要
-│   ├── design-rules.md                   # UIデザインルール
-│   └── release-guide.md                  # リリース手順書
+│   └── design-rules.md                   # UIデザインルール
 ├── src/                                  # ソースコード
 │   ├── actions/                          # 各アクションの処理
 │   │   ├── car-spec.ts                   # カースペック
@@ -192,4 +195,4 @@ Stream Deck公式のUIライブラリ [sdpi-components.js](../com.github.shiguru
 ## CI・リリース
 
 - **CI ([ci.yml](../.github/workflows/ci.yml))**: `main` ブランチへの push、プルリクエスト、リリースワークフローからの呼び出しで実行する。lint（警告でも失敗）、型チェック（`pnpm typecheck`）、単体テスト、ビルド、マニフェストの検証を行う。
-- **リリース ([release.yml](../.github/workflows/release.yml))**: `vX.Y.Z` 形式のタグの push で起動する。CI を実行し、タグと `package.json`、`manifest.json`、`CHANGELOG.md` のバージョンを照合したうえで、`CHANGELOG.md` の該当バージョンの節を本文にして GitHub Release を作成する。手順の詳細は[リリース手順書](release-guide.md)を参照。
+- **リリース ([release.yml](../.github/workflows/release.yml))**: `vX.Y.Z` 形式のタグの push で起動する。CI を実行し、タグと `package.json`、`manifest.json`、`CHANGELOG.md` のバージョンを照合したうえで、`CHANGELOG.md` の該当バージョンの節を本文にして GitHub Release を作成する。手順の詳細は[リリース用スキル](../.claude/skills/release/SKILL.md)を参照。

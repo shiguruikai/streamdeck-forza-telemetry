@@ -38,7 +38,7 @@
 - [Stream Deck プラグイン開発ナレッジベース（API仕様、ガイドライン）](docs/stream-deck/index.md)
 - [Forza Horizon テレメトリデータ仕様](docs/forza-telemetry/fh6.md)
 - [Forza Motorsport テレメトリデータ仕様](docs/forza-telemetry/fm8.md)
-- [リリース手順書](docs/release-guide.md)
+- [リリース用スキル](.claude/skills/release/SKILL.md)
 - [Marketplace リリースロードマップ](docs/marketplace/roadmap.md)
 - [Marketplace 掲載用説明文](docs/marketplace/listing.md)
 

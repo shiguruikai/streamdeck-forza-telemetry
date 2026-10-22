@@ -10,3 +10,7 @@ com.github.shiguruikai.streamdeck-forza-telemetry.streamDeckPlugin
 # OS files
 .DS_Store
 Thumbs.db
+
+# Claude Code
+.claude/worktrees/
+.claude/settings.local.json

@@ -84,7 +84,7 @@ Elgato Marketplace への掲載は、Elgato サポートによるフォーム不
 
 ## 関連ドキュメント
 
-- [リリース手順書](../release-guide.md)
+- [リリース用スキル](../../.claude/skills/release/SKILL.md)
 - [Marketplace掲載用説明文](listing.md)
 - [UIデザインルール](../design-rules.md)
 - [アーキテクチャ概要](../architecture.md)
