@@ -10,6 +10,14 @@ export function toFiniteNumber(val: number | null | undefined, fallback = 0): nu
   return val !== undefined && val !== null && Number.isFinite(val) ? val : fallback;
 }
 
+/**
+ * 値が有限の数値（number）であるか判定します。非有限値（NaN, Infinity, null, undefined）の場合は false を返します。
+ * 数値のテキストは、値がない（false の）場合に '--' を表示します。
+ */
+function isFiniteNumber(val: number | null | undefined): val is number {
+  return val !== undefined && val !== null && Number.isFinite(val);
+}
+
 // =============================================================================
 // レース情報・共通（Race Info & Common）
 // =============================================================================
@@ -29,20 +37,44 @@ export function formatTime(seconds: number | null | undefined): string {
   return `${mins}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`;
 }
 
-export function formatLap(lap: number | null | undefined): string {
-  if (lap === undefined || lap === null || !Number.isFinite(lap)) return 'LAP --';
-  return `LAP ${(lap + 1).toString().padStart(2, ' ')}`;
+/**
+ * 順位からレース中であるか判定します。
+ * フリーロームなど、レース中でない場合の順位は0になるため、0以下（および値がない場合）はレース中ではないとみなします。
+ */
+function isRacing(racePosition: number | null | undefined): racePosition is number {
+  return isFiniteNumber(racePosition) && racePosition > 0;
+}
+
+/**
+ * 周回数（現在の周回）を数字のみの文字列にフォーマットします。
+ * 完了したラップ数に1を加えた値を返し、レース中でない場合や値がない場合は '--' を返します。
+ */
+export function formatLapNumber(lap: number | null | undefined, racePosition: number | null | undefined): string {
+  if (!isRacing(racePosition) || !isFiniteNumber(lap)) return '--';
+  return (lap + 1).toString();
+}
+
+/**
+ * 順位を数字のみの文字列にフォーマットします。レース中でない場合（順位が0以下）や値がない場合は '--' を返します。
+ */
+export function formatPositionNumber(pos: number | null | undefined): string {
+  if (!isRacing(pos)) return '--';
+  return pos.toString();
+}
+
+export function formatLap(lap: number | null | undefined, racePosition: number | null | undefined): string {
+  return `LAP ${formatLapNumber(lap, racePosition).padStart(2, ' ')}`;
 }
 
 export function formatPosition(pos: number | null | undefined): string {
-  if (pos === undefined || pos === null || !Number.isFinite(pos)) return 'POS --';
-  return `POS ${pos.toString().padStart(2, ' ')}`;
+  return `POS ${formatPositionNumber(pos).padStart(2, ' ')}`;
 }
 
 export function formatGear(gear: number | null | undefined, previous?: string | null): string {
-  // ギアが有効範囲外または NaN の場合、previous を返す。
+  // データがない（値がない）場合は '--' を返す。
+  if (!isFiniteNumber(gear)) return '--';
+  // ギアが有効範囲外の場合、previous を返す。
   // NOTE: 実機において、シフトチェンジの瞬間に11の値となることがあるので、11以上は無効値として扱う。
-  if (gear === undefined || gear === null || !Number.isFinite(gear)) return previous ?? 'N';
   if (gear < 0 || gear > 10) return previous ?? 'N';
   return gear === 0 ? 'R' : gear.toString();
 }
@@ -56,9 +88,9 @@ export function formatSpeedUnit(unit?: SpeedUnit): string {
 }
 
 export function formatSpeed(speed: number | null | undefined, unit?: SpeedUnit): string {
-  const s = toFiniteNumber(speed);
+  if (!isFiniteNumber(speed)) return '--';
   // 単位未指定時は formatSpeedUnit と同じく km/h とする
-  return Math.round(s * (unit === 'mph' ? 3.6 / 1.609344 : 3.6)).toString();
+  return Math.round(speed * (unit === 'mph' ? 3.6 / 1.609344 : 3.6)).toString();
 }
 
 export function formatRpmBar(
@@ -100,7 +132,8 @@ export function formatPowerUnit(unit: PowerUnit = 'ps'): string {
 }
 
 export function formatPower(powerW: number | null | undefined, unit: PowerUnit = 'ps'): string {
-  const v = Math.max(0, toFiniteNumber(powerW));
+  if (!isFiniteNumber(powerW)) return '--';
+  const v = Math.max(0, powerW);
   let result = 0;
   switch (unit) {
     case 'ps':
@@ -129,7 +162,8 @@ export function formatTorqueUnit(unit: TorqueUnit = 'nm'): string {
 }
 
 export function formatTorque(torqueNm: number | null | undefined, unit: TorqueUnit = 'nm'): string {
-  const v = Math.max(0, toFiniteNumber(torqueNm));
+  if (!isFiniteNumber(torqueNm)) return '--';
+  const v = Math.max(0, torqueNm);
   let result = 0;
   switch (unit) {
     case 'nm':
@@ -157,17 +191,19 @@ export function fahrenheitToCelsius(fahrenheit: number): number {
 }
 
 export function formatTemp(tempF: number | null | undefined, unit?: TempUnit): string {
-  const t = toFiniteNumber(tempF);
-  const value = unit === 'fahrenheit' ? t : fahrenheitToCelsius(t);
   const u = unit === 'fahrenheit' ? '℉' : '℃';
+  if (!isFiniteNumber(tempF)) return `--${u}`;
+  const value = unit === 'fahrenheit' ? tempF : fahrenheitToCelsius(tempF);
   return `${Math.round(value)}${u}`;
 }
 
 /**
- * タイヤ温度に応じてメーターの表示色を決定します。
- * - 80℃未満：冷えている（水色～緑のグラデーション）
- * - 80℃～100℃：適正動作温度（緑色固定）
- * - 100℃～120℃：警告・過熱状態（緑～黄～赤のグラデーション、120℃で完全に赤色）
+ * タイヤ温度に応じてメーターの表示色を決定します（彩度100%、輝度55%）。
+ * - 40℃未満：青（240°）固定
+ * - 40℃～80℃：冷えている（青から緑へのグラデーション）
+ * - 80℃～100℃：適正動作温度（緑固定）
+ * - 100℃～120℃：過熱警告（緑から赤へのグラデーション）
+ * - 120℃超：赤（0°）固定
  */
 const MIN_TIRE_COLORS_TEMP_C = 40;
 const MAX_TIRE_COLORS_TEMP_C = 120;
@@ -209,8 +245,8 @@ export function formatTireColor(tempF: number | null | undefined): string {
 // =============================================================================
 
 export function formatTravel(travel: number | null | undefined, mode?: SuspensionMode): string {
-  const t = toFiniteNumber(travel);
-  return mode === 'value' ? t.toFixed(2) : `${Math.round(t * 100)}%`;
+  if (!isFiniteNumber(travel)) return mode === 'value' ? '--' : '--%';
+  return mode === 'value' ? travel.toFixed(2) : `${Math.round(travel * 100)}%`;
 }
 
 // 0%から100%まで1%刻みのRGBカラー文字列を保持するキャッシュ配列
@@ -249,8 +285,9 @@ export function formatTravelColor(travel: number | null | undefined): string {
 // =============================================================================
 
 export function formatHeading(yaw: number | null | undefined): { heading: number; headingStr: string } {
-  const y = toFiniteNumber(yaw);
-  const deg = y * (180 / Math.PI);
+  // 値がない場合、方位盤は 0°（北）の位置のまま、テキストのみ '--°' とする
+  if (!isFiniteNumber(yaw)) return { heading: 0, headingStr: '--°' };
+  const deg = yaw * (180 / Math.PI);
   const heading = (Math.round(deg) % 360 + 360) % 360;
   const headingStr = `${heading}°`;
   return { heading, headingStr };

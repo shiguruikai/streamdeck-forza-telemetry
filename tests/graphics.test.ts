@@ -2,14 +2,23 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { applyGlobalSettings } from '../src/settings';
 import { DEFAULT_GLOBAL_SETTINGS, PowerUnitPreset } from '../src/shared';
+import { formatGear } from '../src/utils/format';
 import {
+  generateCompassImage,
   generateGearImage,
   generateGForceImage,
+  generateLapNumberImage,
+  generatePositionImage,
   generatePowerImage,
+  generateRaceInfoImage,
+  generateRacePosAndTimeImage,
   generateSingleValueImage,
+  generateSpeedImage,
   generateSpeedMeterImage,
   generateSuspensionTravelAllWheelsImage,
   generateSuspensionTravelSingleWheelImage,
+  generateTireTempAllWheelsImage,
+  generateTireTempSingleWheelImage,
   getCommonStyle,
 } from '../src/utils/graphics';
 
@@ -107,5 +116,42 @@ describe('Gフォースのピーク表示', () => {
     const texts = extractTexts(generateGForceImage(isDial, 2, current, null, false));
     expect(texts).not.toContain('undefined');
     expect(texts).toEqual(['2.0G', isDial ? '0.50' : '0.5']);
+  });
+});
+
+describe('データがないときの表示', () => {
+  it.each([false, true])('数値のテキストに "--" を描画する（isDial: %s）', (isDial) => {
+    expect(extractTexts(generateSpeedImage(isDial, undefined, 'kmh'))).toEqual(['--', 'KM/H']);
+    expect(extractTexts(generateSpeedMeterImage(isDial, undefined, 'kmh', formatGear(undefined)))).toEqual(['--', 'KM/H', '--']);
+    expect(extractTexts(generateGearImage(isDial, formatGear(undefined)))).toEqual(['--']);
+    expect(extractTexts(generatePowerImage(isDial, undefined, 'both', 'ps-nm'))).toEqual(['--', 'PS', '--', 'N·m']);
+    expect(extractTexts(generateTireTempAllWheelsImage(isDial, undefined, 'celsius'))).toEqual(['--℃', '--℃', '--℃', '--℃']);
+    expect(extractTexts(generateTireTempSingleWheelImage(isDial, 'fl', undefined, 'fahrenheit'))).toEqual(['FL', '--℉']);
+    expect(extractTexts(generateSuspensionTravelAllWheelsImage(isDial, undefined, 'percentage'))).toEqual(['--%', '--%', '--%', '--%']);
+    expect(extractTexts(generateSuspensionTravelSingleWheelImage(isDial, 'rr', undefined, 'value'))).toEqual(['RR', '--']);
+    expect(extractTexts(generateCompassImage(isDial, undefined, 'circle'))).toContain('--°');
+  });
+
+  it('ダイヤルのアーチ表示のコンパスに "--°" を描画する', () => {
+    expect(extractTexts(generateCompassImage(true, undefined, 'arch'))).toContain('--°');
+  });
+});
+
+describe('レース中でないときのレース情報', () => {
+  // フリーロームなどでは、順位が0になる
+  const freeRoam = { racePosition: 0, lapNumber: 0, currentRaceTime: 12.3, currentLap: 0, bestLap: 0 };
+  const racing = { ...freeRoam, racePosition: 3, lapNumber: 1 };
+
+  it.each([false, true])('順位が0の場合は、順位と周回を "--" で描画する（isDial: %s）', (isDial) => {
+    expect(extractTexts(generateRaceInfoImage(isDial, freeRoam))).toEqual(expect.arrayContaining(['LAP --', 'POS --']));
+    expect(extractTexts(generateRacePosAndTimeImage(isDial, freeRoam))).toContain('POS --');
+    expect(extractTexts(generateLapNumberImage(isDial, freeRoam))).toEqual(['--']);
+    expect(extractTexts(generatePositionImage(isDial, freeRoam))).toEqual(['--']);
+  });
+
+  it.each([false, true])('レース中は、順位と周回を描画する（isDial: %s）', (isDial) => {
+    expect(extractTexts(generateRaceInfoImage(isDial, racing))).toEqual(expect.arrayContaining(['LAP  2', 'POS  3']));
+    expect(extractTexts(generateLapNumberImage(isDial, racing))).toEqual(['2']);
+    expect(extractTexts(generatePositionImage(isDial, racing))).toEqual(['3']);
   });
 });

@@ -53,7 +53,8 @@ export class GForceAction extends TelemetryAction<GForceSettings> {
       peak = { x: 0, z: 0, total: 0 };
     } else if (data) {
       // テレメトリの加速度は m/s² なので、標準重力加速度で除算してG値（重力加速度）を算出
-      // 左右慣性G（左カーブ・右方向加速度のときに慣性力は左に働くため、符号をマイナスに反転）
+      // 左右慣性G: 慣性力は加速度と逆向きに働くため、符号をマイナスに反転する。
+      // 例: 右カーブでは加速度が右向き（X が正）に、慣性力が左向きに働くため、Gボールは左へ動く。
       current.x = -toFiniteNumber(data.accelerationX) / STANDARD_GRAVITY;
       // 前後慣性G（加速・前方加速度のときに慣性力は後ろに働くため、符号は順方向。加速度正＝Gボールが後ろ／下へ）
       current.z = toFiniteNumber(data.accelerationZ) / STANDARD_GRAVITY;
@@ -110,7 +111,7 @@ export class GForceAction extends TelemetryAction<GForceSettings> {
     const nextScale = currentScale === 1 ? 2 : currentScale === 2 ? 3 : 1;
     const newSettings = { ...currentSettings, scale: nextScale };
     await this.setSettings(ev.action.id, newSettings);
-    await this.redraw(ev.action, this.getLastTelemetryData(ev.action.id));
+    await this.redraw(ev.action, this.getLatestData());
   }
 
   /**
@@ -123,7 +124,7 @@ export class GForceAction extends TelemetryAction<GForceSettings> {
 
     this.showResetTexts.set(action.id, true);
 
-    const lastData = this.getLastTelemetryData(action.id);
+    const lastData = this.getLatestData();
     await this.redraw(action, lastData);
 
     const existingFeedbackTimer = this.resetFeedbackTimers.get(action.id);
@@ -134,7 +135,7 @@ export class GForceAction extends TelemetryAction<GForceSettings> {
     const feedbackTimer = setTimeout(() => {
       this.showResetTexts.set(action.id, false);
       this.resetFeedbackTimers.delete(action.id);
-      const lastData = this.getLastTelemetryData(action.id);
+      const lastData = this.getLatestData();
       void this.redraw(action, lastData);
     }, 1000);
 
@@ -152,7 +153,7 @@ export class GForceAction extends TelemetryAction<GForceSettings> {
     if (currentScale !== nextScale) {
       const newSettings = { ...currentSettings, scale: nextScale };
       await this.setSettings(ev.action.id, newSettings);
-      await this.redraw(ev.action, this.getLastTelemetryData(ev.action.id));
+      await this.redraw(ev.action, this.getLatestData());
     }
   }
 }

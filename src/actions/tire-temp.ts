@@ -58,7 +58,7 @@ export class TireTempAction extends TelemetryAction<TireTempSettings> {
     const newSettings = { ...currentSettings, unit: nextUnit };
 
     await this.setSettings(ev.action.id, newSettings);
-    await this.redraw(ev.action, this.getLastTelemetryData(ev.action.id));
+    await this.redraw(ev.action, this.getLatestData());
   }
 
   /**
@@ -72,7 +72,7 @@ export class TireTempAction extends TelemetryAction<TireTempSettings> {
     if (currentPos !== nextPos) {
       const newSettings = { ...currentSettings, position: nextPos };
       await this.setSettings(ev.action.id, newSettings);
-      await this.redraw(ev.action, this.getLastTelemetryData(ev.action.id));
+      await this.redraw(ev.action, this.getLatestData());
     }
   }
 }

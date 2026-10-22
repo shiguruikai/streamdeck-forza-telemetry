@@ -10,7 +10,9 @@ import {
   formatGear,
   formatHeading,
   formatLap,
+  formatLapNumber,
   formatPosition,
+  formatPositionNumber,
   formatPower,
   formatPowerUnit,
   formatRpmBar,
@@ -51,17 +53,41 @@ describe('formatTime', () => {
 
 describe('formatLap & formatPosition', () => {
   it('ラップおよび順位をフォーマットすること', () => {
-    expect(formatLap(0)).toBe('LAP  1');
-    expect(formatLap(undefined)).toBe('LAP --');
+    expect(formatLap(0, 1)).toBe('LAP  1');
+    expect(formatLap(undefined, 1)).toBe('LAP --');
     expect(formatPosition(1)).toBe('POS  1');
     expect(formatPosition(undefined)).toBe('POS --');
   });
 
   it('NaN や Infinity に対してプレースホルダーを返すこと', () => {
-    expect(formatLap(NaN)).toBe('LAP --');
-    expect(formatLap(Infinity)).toBe('LAP --');
+    expect(formatLap(NaN, 1)).toBe('LAP --');
+    expect(formatLap(Infinity, 1)).toBe('LAP --');
     expect(formatPosition(NaN)).toBe('POS --');
     expect(formatPosition(Infinity)).toBe('POS --');
+  });
+
+  it('順位が0以下（フリーロームなどレース中でない）の場合は、順位と周回にプレースホルダーを返すこと', () => {
+    expect(formatPosition(0)).toBe('POS --');
+    expect(formatPosition(-1)).toBe('POS --');
+    expect(formatLap(0, 0)).toBe('LAP --');
+    expect(formatLap(2, undefined)).toBe('LAP --');
+  });
+});
+
+describe('formatLapNumber & formatPositionNumber', () => {
+  it('周回（完了したラップ数 + 1）および順位を数字のみの文字列で返すこと', () => {
+    expect(formatLapNumber(0, 3)).toBe('1');
+    expect(formatLapNumber(9, 3)).toBe('10');
+    expect(formatPositionNumber(3)).toBe('3');
+  });
+
+  it('レース中でない場合や値がない場合は "--" を返すこと', () => {
+    expect(formatLapNumber(0, 0)).toBe('--');
+    expect(formatLapNumber(undefined, 3)).toBe('--');
+    expect(formatLapNumber(NaN, 3)).toBe('--');
+    expect(formatPositionNumber(0)).toBe('--');
+    expect(formatPositionNumber(undefined)).toBe('--');
+    expect(formatPositionNumber(NaN)).toBe('--');
   });
 });
 
@@ -72,12 +98,17 @@ describe('formatGear', () => {
     expect(formatGear(10, 'N')).toBe('10');
   });
 
-  it('範囲外の値で直前のギア文字列を返すこと', () => {
+  it('範囲外の値（変速中の 11 など）で直前のギア文字列を返すこと', () => {
     expect(formatGear(11, '4')).toBe('4');
     expect(formatGear(-1, '2')).toBe('2');
-    expect(formatGear(null, 'N')).toBe('N');
-    expect(formatGear(NaN, '3')).toBe('3');
-    expect(formatGear(Infinity, '5')).toBe('5');
+    expect(formatGear(11)).toBe('N');
+  });
+
+  it('値がない（null/undefined/NaN/Infinity）場合は、直前のギアではなく "--" を返すこと', () => {
+    expect(formatGear(undefined, '4')).toBe('--');
+    expect(formatGear(null, 'N')).toBe('--');
+    expect(formatGear(NaN, '3')).toBe('--');
+    expect(formatGear(Infinity, '5')).toBe('--');
   });
 });
 
@@ -108,11 +139,11 @@ describe('formatSpeed & formatSpeedUnit', () => {
     expect(formatSpeed(10, undefined)).toBe('36');
   });
 
-  it('null/undefined/NaN/Infinity 時は 0 を返すこと', () => {
-    expect(formatSpeed(null, 'kmh')).toBe('0');
-    expect(formatSpeed(undefined, 'mph')).toBe('0');
-    expect(formatSpeed(NaN, 'kmh')).toBe('0');
-    expect(formatSpeed(Infinity, 'kmh')).toBe('0');
+  it('null/undefined/NaN/Infinity 時は "--" を返すこと', () => {
+    expect(formatSpeed(null, 'kmh')).toBe('--');
+    expect(formatSpeed(undefined, 'mph')).toBe('--');
+    expect(formatSpeed(NaN, 'kmh')).toBe('--');
+    expect(formatSpeed(Infinity, 'kmh')).toBe('--');
   });
 });
 
@@ -150,10 +181,15 @@ describe('formatPower & formatPowerUnit', () => {
     expect(formatPower(w1000ps, 'kw')).toBe('735');
   });
 
-  it('NaN や Infinity や負の値の時に 0 を返すこと', () => {
-    expect(formatPower(NaN, 'ps')).toBe('0');
-    expect(formatPower(Infinity, 'ps')).toBe('0');
+  it('負の値の時に 0 を返すこと', () => {
     expect(formatPower(-100, 'ps')).toBe('0');
+  });
+
+  it('null/undefined/NaN/Infinity 時は "--" を返すこと', () => {
+    expect(formatPower(null, 'ps')).toBe('--');
+    expect(formatPower(undefined, 'hp')).toBe('--');
+    expect(formatPower(NaN, 'ps')).toBe('--');
+    expect(formatPower(Infinity, 'kw')).toBe('--');
   });
 });
 
@@ -172,10 +208,15 @@ describe('formatTorque & formatTorqueUnit', () => {
     expect(formatTorque(nm10kgfm, 'ftlb')).toBe('72');
   });
 
-  it('NaN や Infinity や負の値の時に 0 を返すこと', () => {
-    expect(formatTorque(NaN, 'nm')).toBe('0');
-    expect(formatTorque(Infinity, 'nm')).toBe('0');
+  it('負の値の時に 0 を返すこと', () => {
     expect(formatTorque(-50, 'nm')).toBe('0');
+  });
+
+  it('null/undefined/NaN/Infinity 時は "--" を返すこと', () => {
+    expect(formatTorque(null, 'nm')).toBe('--');
+    expect(formatTorque(undefined, 'kgfm')).toBe('--');
+    expect(formatTorque(NaN, 'nm')).toBe('--');
+    expect(formatTorque(Infinity, 'ftlb')).toBe('--');
   });
 });
 
@@ -193,7 +234,13 @@ describe('fahrenheitToCelsius & formatTemp', () => {
   it('指定された単位の温度文字列を生成すること', () => {
     expect(formatTemp(212, 'celsius')).toBe('100℃');
     expect(formatTemp(212, 'fahrenheit')).toBe('212℉');
-    expect(formatTemp(NaN, 'celsius')).toBe('-18℃'); // 0℉ 相当 -> -18℃
+  });
+
+  it('null/undefined/NaN/Infinity 時は "--" と単位を返すこと', () => {
+    expect(formatTemp(undefined, 'celsius')).toBe('--℃');
+    expect(formatTemp(null, 'fahrenheit')).toBe('--℉');
+    expect(formatTemp(NaN, 'celsius')).toBe('--℃');
+    expect(formatTemp(Infinity, undefined)).toBe('--℃');
   });
 });
 
@@ -235,7 +282,13 @@ describe('formatTravel & formatTravelColor', () => {
   it('サスペンション移動量を%表示および数値固定少数表示にフォーマットすること', () => {
     expect(formatTravel(0.5, 'percentage')).toBe('50%');
     expect(formatTravel(0.254, 'value')).toBe('0.25');
-    expect(formatTravel(NaN, 'percentage')).toBe('0%');
+  });
+
+  it('null/undefined/NaN/Infinity 時は "--%"（実数表示は "--"）を返すこと', () => {
+    expect(formatTravel(undefined, 'percentage')).toBe('--%');
+    expect(formatTravel(NaN, 'percentage')).toBe('--%');
+    expect(formatTravel(null, 'value')).toBe('--');
+    expect(formatTravel(Infinity, 'value')).toBe('--');
   });
 
   it('サスペンション移動量に応じた正確なRGBカラー文字列を返すこと', () => {
@@ -279,9 +332,11 @@ describe('formatHeading', () => {
     expect(formatHeading(rad359_6)).toEqual({ heading: 0, headingStr: '0°' });
   });
 
-  it('NaN や Infinity 時に 0° を返すこと', () => {
-    expect(formatHeading(NaN)).toEqual({ heading: 0, headingStr: '0°' });
-    expect(formatHeading(Infinity)).toEqual({ heading: 0, headingStr: '0°' });
+  it('null/undefined/NaN/Infinity 時に、方位盤は 0° のまま、テキストは "--°" を返すこと', () => {
+    expect(formatHeading(undefined)).toEqual({ heading: 0, headingStr: '--°' });
+    expect(formatHeading(null)).toEqual({ heading: 0, headingStr: '--°' });
+    expect(formatHeading(NaN)).toEqual({ heading: 0, headingStr: '--°' });
+    expect(formatHeading(Infinity)).toEqual({ heading: 0, headingStr: '--°' });
   });
 });
 

@@ -19,7 +19,8 @@ type TelemetryManagerEvents = {
  *
  * - **サーバー制御**: 表示中のアクション数（dataリスナー数）に応じてUDPサーバーの起動と停止を自動制御。
  * - **スロットリング**: 描画負荷を抑えるため、外部から設定された配信間隔（updateIntervalMs）に基づいてデータ配信を制限。
- * - **タイムアウト監視**: データ受信が3秒間途絶えた場合にタイムアウトイベントを通知。
+ * - **最新データの保持**: 最後に配信したデータを1件保持し、アクションの表示開始や設定変更時の再描画に提供。
+ * - **タイムアウト監視**: データ受信が3秒間途絶えた場合に、保持している最新データを破棄してタイムアウトイベントを通知。
  */
 class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
   private readonly logger = streamDeck.logger.createScope('TelemetryManager');
@@ -32,6 +33,9 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
   private updateIntervalMs = 100;
 
   private readonly throttle = new Throttle();
+
+  // 最後に配信したデータ。サーバーの停止、接続先の変更、タイムアウトで破棄する。
+  private latestData?: ForzaTelemetryData;
 
   private startParams?: { port?: number; address?: string };
 
@@ -70,6 +74,7 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
 
       try {
         const data = parseToForzaTelemetryData(msg);
+        this.latestData = data;
         this.emit('data', data);
       } catch (error) {
         if (error instanceof SledFormatNotSupportedError || error instanceof UnsupportedPacketSizeError) {
@@ -118,9 +123,20 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
 
         this.isTimeout = false;
         this.throttle.reset();
+        this.latestData = undefined;
         this.clearTimeoutTimer();
       });
     });
+  }
+
+  /**
+   * 最後に配信したテレメトリデータを取得します。
+   * アクションの表示開始や設定の変更時に、次のデータの受信を待たずに再描画するために使用します。
+   *
+   * @returns 最新のテレメトリデータ（未受信、またはサーバーの停止やタイムアウトで破棄された場合は undefined）
+   */
+  public getLatestData(): ForzaTelemetryData | undefined {
+    return this.latestData;
   }
 
   /**
@@ -130,6 +146,10 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
    * @param params - 接続先の設定（ポート、IPアドレス）
    */
   public configure(params?: { port?: number; address?: string; updateIntervalMs?: number }) {
+    // 接続先が変わる場合は、変更前の接続先から受信したデータを破棄する
+    if (params?.port !== this.startParams?.port || params?.address !== this.startParams?.address) {
+      this.latestData = undefined;
+    }
     this.startParams = params;
     if (params?.updateIntervalMs !== undefined) {
       this.updateIntervalMs = params.updateIntervalMs;
@@ -151,6 +171,7 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
     this.clearTimeoutTimer();
     this.isTimeout = false;
     this.throttle.reset();
+    this.latestData = undefined;
     this.server.stop();
   }
 
@@ -166,6 +187,8 @@ class TelemetryManager extends EventEmitter<TelemetryManagerEvents> {
 
       this.isTimeout = true;
       this.logger.warn(`No telemetry data received for ${this.timeoutDelayMs / 1000}s. Timing out.`);
+      // 受信が途絶えたため、古いデータで再描画しないよう破棄してから通知する
+      this.latestData = undefined;
       this.emit('timeout');
     }, this.timeoutDelayMs);
   }

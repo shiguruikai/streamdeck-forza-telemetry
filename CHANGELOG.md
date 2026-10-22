@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Third-party license notices (`bin/THIRD_PARTY_LICENSES.txt`) in the plugin package.
 
+### Changed
+
+- Unavailable values are now shown as `--` instead of placeholder values such as "0", "-18℃" or "N". Position and lap are shown as `--` outside races (e.g. free roam).
+- When no telemetry is received for 3 seconds, actions now show `--` in addition to the warning icon. Peak G is kept.
+
 ### Fixed
 
 - Telemetry reception stopping after changing the IP address or port in the Global settings while actions are displayed.
@@ -23,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Log scope names being minified (e.g. "An") in release builds.
 - Actions showing meaningless values (e.g. "R", "-18℃", "POS 0") while in game menus or paused. The last values are now kept.
 - Effective frame rate being lower than the configured FPS (e.g. about 13 FPS at 15 FPS).
+- Actions briefly showing no data after switching pages. The latest telemetry is now shared by all actions.
 
 ## [1.0.1] - 2026-08-02
 

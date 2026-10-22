@@ -26,9 +26,10 @@ import { getSystemFonts } from '../utils/utils';
  * 各アクションの基底クラス。ライフサイクル制御やイベント購読などの共通処理を隠蔽します。
  *
  * - **ライフサイクル管理**: 表示・非表示（onWillAppear / onWillDisappear）に応じたデータ受信ハンドラの自動登録と解除。
- * - **キャッシュ**: ローカル設定、最終受信データ、アクティブアクションの参照を保持。
+ * - **キャッシュ**: ローカル設定、タイトル情報、アクティブアクションの参照を保持（最新のテレメトリデータは `telemetryManager` が保持）。
  * - **Property Inspector連携**: システムフォント一覧の取得要求など、設定画面との双方向通信の仲介。
  * - **エラー・タイムアウト監視**: サーバーエラーや受信タイムアウト（3秒）発生時に、アクティブアクションへ一斉に警告（showAlert）を表示。
+ *   タイムアウト時は、あわせて未受信の表示で再描画。
  * - **短押し・長押しのハンドリング**: キーおよびダイヤル操作の短押し（離した瞬間）と長押し（500ms経過時）のライフサイクルイベントを提供。
  *
  * @template TSettings - アクションが使用するローカル設定の型
@@ -39,7 +40,6 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
   private readonly logger = streamDeck.logger.createScope('TelemetryAction');
 
   private readonly settingsMap = new Map<string, TSettings>();
-  private readonly lastTelemetryDataMap = new Map<string, ForzaTelemetryData>();
   private readonly handlers = new Map<string, (data: ForzaTelemetryData) => void>();
   private readonly activeActions = new Map<string, DialAction<TSettings> | KeyAction<TSettings>>();
   private readonly titleInfoMap = new Map<string, TitleInfo>();
@@ -64,6 +64,8 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
   };
 
   private readonly timeoutHandler = () => {
+    // 受信が途絶えたため、最新データが破棄された状態（未受信の表示）で再描画してから警告を表示する
+    this.refreshActiveActions();
     this.triggerAlertForActiveActions();
   };
 
@@ -79,12 +81,12 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
   /**
    * 現在画面に表示されているすべてのアクティブなアクションの再描画を実行します。
    *
-   * @note このメソッドは、フォント変更などのグローバル設定が更新された際、
-   *       各アクションに対して最後のテレメトリデータキャッシュを用いて即時に描画を同期・再生成させるために呼び出されます。
+   * @note このメソッドは、フォント変更などのグローバル設定が更新された際や受信タイムアウト時に、
+   *       各アクションに対して `telemetryManager` が持つ最新のデータを用いて即時に描画を同期・再生成させるために呼び出されます。
    */
   public refreshActiveActions(): void {
     for (const action of this.activeActions.values()) {
-      void this.redraw(action, this.lastTelemetryDataMap.get(action.id));
+      void this.redraw(action, this.getLatestData());
     }
   }
 
@@ -147,13 +149,13 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
   }
 
   /**
-   * 指定されたアクションインスタンスが最後に受信したテレメトリデータのキャッシュを取得します。
+   * `telemetryManager` が最後に配信したテレメトリデータを取得します（全アクションで共有）。
+   * 表示開始、設定変更、操作時などの再描画に使用します。
    *
-   * @param actionId - アクションID
-   * @returns 最後にキャッシュされたテレメトリデータ
+   * @returns 最新のテレメトリデータ（未受信、またはサーバーの停止やタイムアウトで破棄された場合は undefined）
    */
-  protected getLastTelemetryData(actionId: string): ForzaTelemetryData | undefined {
-    return this.lastTelemetryDataMap.get(actionId);
+  protected getLatestData(): ForzaTelemetryData | undefined {
+    return telemetryManager.getLatestData();
   }
 
   /**
@@ -282,16 +284,13 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
     this.settingsMap.set(action.id, payload.settings);
     this.activeActions.set(action.id, action);
 
-    // 画面切り替え時の表示遅延（黒画面の発生）を防ぐため、
-    // キャッシュされている最後のデータを使って即時初回描画を行います。
-    await this.redraw(action, this.lastTelemetryDataMap.get(action.id));
-
     // 同一IDのアクションで既存のイベント購読が残っている場合は二重購読を防ぐため解除します。
     this.unsubscribeTelemetry(action.id);
 
-    // データ受信時に、最新データのキャッシュ更新とアクション固有の描画処理をトリガーするハンドラを登録します。
+    // データ受信時に、アクション固有の描画処理をトリガーするハンドラを登録します。
+    // NOTE: ページ切り替えで同じ tick 内に別のアクションが消えた場合に、リスナー数が0と判定されて
+    //       サーバーの停止と最新データの破棄が起きないよう、await より前に購読します。
     const dataHandler = (data: ForzaTelemetryData) => {
-      this.lastTelemetryDataMap.set(action.id, data);
       void this.redraw(action, data);
     };
 
@@ -299,6 +298,10 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
 
     this.handlers.set(action.id, dataHandler);
     telemetryManager.on('data', dataHandler);
+
+    // 次のデータの受信を待たずに、`telemetryManager` が持つ最新のデータで即時に初回描画を行います。
+    // 最新のデータは全アクションで共有しているため、ページを切り替えても未受信の表示を挟まずに直前の値を表示できます。
+    await this.redraw(action, this.getLatestData());
   }
 
   /**
@@ -311,7 +314,7 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
     this.settingsMap.set(action.id, payload.settings);
 
     await this.onSettingsUpdated(action, payload.settings);
-    await this.redraw(action, this.lastTelemetryDataMap.get(action.id));
+    await this.redraw(action, this.getLatestData());
   }
 
   /**
@@ -327,7 +330,6 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
     this.unsubscribeTelemetry(action.id);
 
     this.settingsMap.delete(action.id);
-    this.lastTelemetryDataMap.delete(action.id);
     this.activeActions.delete(action.id);
 
     // アクティブなアクションがなくなった場合、エラーイベントの購読を解除
@@ -357,7 +359,7 @@ export abstract class TelemetryAction<TSettings extends JsonObject = JsonObject>
       this.titleInfoMap.delete(action.id);
     }
 
-    await this.redraw(action, this.lastTelemetryDataMap.get(action.id));
+    await this.redraw(action, this.getLatestData());
   }
 
   private subscribeErrors() {

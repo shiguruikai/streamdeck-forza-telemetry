@@ -32,9 +32,10 @@ type Manager = typeof import('../src/telemetry/manager').telemetryManager;
 /**
  * 走行中（IsRaceOn = 1）の Forza Horizon 形式のパケットを生成します。
  */
-function racePacket(): Buffer {
+function racePacket(speed = 0): Buffer {
   const buf = Buffer.alloc(324);
   buf.writeInt32LE(1, 0);
+  buf.writeFloatLE(speed, 256); // Speed（m/s）
   return buf;
 }
 
@@ -45,6 +46,15 @@ function menuPacket(timestampMs: number): Buffer {
   const buf = Buffer.alloc(324);
   buf.writeUInt32LE(timestampMs, 4);
   return buf;
+}
+
+/**
+ * process.nextTick で予約された処理（リスナーの解除後のサーバー停止の判定）が終わるのを待ちます。
+ */
+function waitNextTick(): Promise<void> {
+  return new Promise((resolve) => {
+    process.nextTick(resolve);
+  });
 }
 
 describe('TelemetryManager', () => {
@@ -97,6 +107,67 @@ describe('TelemetryManager', () => {
       // パケットが途絶えたら、3秒後にタイムアウトする
       vi.advanceTimersByTime(3000);
       expect(onTimeout).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('最新データ', () => {
+    it('最後に配信したデータを保持し、メニュー中のパケットでは更新しない', () => {
+      manager.on('data', vi.fn());
+      expect(manager.getLatestData()).toBeUndefined();
+
+      receive(racePacket(10));
+      expect(manager.getLatestData()?.speed).toBe(10);
+
+      receive(menuPacket(1000));
+      expect(manager.getLatestData()?.speed).toBe(10);
+    });
+
+    it('タイムアウトしたら、通知の前に最新データを破棄する', () => {
+      vi.useFakeTimers();
+      let latestOnTimeout: unknown = 'not called';
+      manager.on('timeout', () => {
+        latestOnTimeout = manager.getLatestData();
+      });
+      manager.on('data', vi.fn());
+
+      receive(racePacket(10));
+      vi.advanceTimersByTime(3000);
+      expect(latestOnTimeout).toBeUndefined();
+      expect(manager.getLatestData()).toBeUndefined();
+    });
+
+    it('最後のアクションが消えてサーバーが止まったら、最新データを破棄する', async () => {
+      const onData = vi.fn();
+      manager.on('data', onData);
+      receive(racePacket(10));
+
+      manager.off('data', onData);
+      await waitNextTick();
+      expect(server.stop).toHaveBeenCalled();
+      expect(manager.getLatestData()).toBeUndefined();
+    });
+
+    it('同じ tick 内でアクションが入れ替わった（ページの切り替え）場合は、サーバーを止めず最新データを保つ', async () => {
+      const onData1 = vi.fn();
+      manager.on('data', onData1);
+      receive(racePacket(10));
+
+      manager.off('data', onData1);
+      manager.on('data', vi.fn());
+      await waitNextTick();
+      expect(server.stop).not.toHaveBeenCalled();
+      expect(manager.getLatestData()?.speed).toBe(10);
+    });
+
+    it('接続先が変わらない設定の変更では最新データを保ち、接続先が変わったら破棄する', () => {
+      manager.on('data', vi.fn());
+      receive(racePacket(10));
+
+      manager.configure({ port: 24000, address: '127.0.0.1', updateIntervalMs: 50 });
+      expect(manager.getLatestData()?.speed).toBe(10);
+
+      manager.configure({ port: 24001, address: '127.0.0.1', updateIntervalMs: 50 });
+      expect(manager.getLatestData()).toBeUndefined();
     });
   });
 });

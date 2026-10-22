@@ -76,7 +76,7 @@ export class SpeedMeterAction extends TelemetryAction<SpeedMeterSettings> {
     const nextUnit: SpeedUnit = currentSettings.unit === 'mph' ? 'kmh' : 'mph';
     const newSettings = { ...currentSettings, unit: nextUnit };
     await this.setSettings(ev.action.id, newSettings);
-    await this.redraw(ev.action, this.getLastTelemetryData(ev.action.id));
+    await this.redraw(ev.action, this.getLatestData());
   }
 
   /**
@@ -92,7 +92,7 @@ export class SpeedMeterAction extends TelemetryAction<SpeedMeterSettings> {
     if (currentLayout !== nextLayout) {
       const newSettings = { ...currentSettings, layout: nextLayout };
       await this.setSettings(ev.action.id, newSettings);
-      await this.redraw(ev.action, this.getLastTelemetryData(ev.action.id));
+      await this.redraw(ev.action, this.getLatestData());
     }
   }
 }

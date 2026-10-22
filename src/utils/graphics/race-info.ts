@@ -1,5 +1,5 @@
 import { ForzaTelemetryData } from '../../telemetry/parser';
-import { formatLap, formatPosition, formatTime } from '../format';
+import { formatLap, formatLapNumber, formatPosition, formatPositionNumber, formatTime } from '../format';
 import { Color, DIAL_HEIGHT, DIAL_WIDTH, generateSingleTimeImage, generateSingleValueImage, getCommonStyle, getLayoutAdjustments, KEY_HEIGHT, KEY_WIDTH, PADDING, TitleInfo, toSvgDataUri } from './common';
 
 export type RaceInfoDrawData = Pick<
@@ -32,7 +32,7 @@ export function generateRaceInfoImage(
   ${getCommonStyle()}
   ${adj.titleElement}
 
-  <text x="${x1}" y="${y1}" font-size="18" text-anchor="start" fill="${Color.WHITE}">${formatLap(data?.lapNumber)}</text>
+  <text x="${x1}" y="${y1}" font-size="18" text-anchor="start" fill="${Color.WHITE}">${formatLap(data?.lapNumber, data?.racePosition)}</text>
   <text x="${x2}" y="${y1}" font-size="18" text-anchor="end" fill="${Color.WHITE}">${formatPosition(data?.racePosition)}</text>
   <text x="${x2}" y="${y2}" font-size="${fontSize}" text-anchor="end" fill="${Color.WHITE}">${formatTime(data?.currentLap)}</text>
   <text x="${x2}" y="${y3}" font-size="${fontSize}" text-anchor="end" fill="${Color.YELLOW}">${formatTime(data?.bestLap)}</text>
@@ -91,11 +91,10 @@ export function generateBestLapTimeImage(
 
 export function generateLapNumberImage(
   isDial: boolean,
-  data: Pick<RaceInfoDrawData, 'lapNumber'> | undefined,
+  data: Pick<RaceInfoDrawData, 'lapNumber' | 'racePosition'> | undefined,
   titleInfo?: TitleInfo,
 ): string {
-  const value = data?.lapNumber !== undefined ? (data.lapNumber + 1).toString() : '--';
-  return generateSingleValueImage(isDial, value, null, titleInfo);
+  return generateSingleValueImage(isDial, formatLapNumber(data?.lapNumber, data?.racePosition), null, titleInfo);
 }
 
 export function generatePositionImage(
@@ -103,6 +102,5 @@ export function generatePositionImage(
   data: Pick<RaceInfoDrawData, 'racePosition'> | undefined,
   titleInfo?: TitleInfo,
 ): string {
-  const value = data?.racePosition !== undefined ? data.racePosition.toString() : '--';
-  return generateSingleValueImage(isDial, value, null, titleInfo);
+  return generateSingleValueImage(isDial, formatPositionNumber(data?.racePosition), null, titleInfo);
 }
