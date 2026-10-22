@@ -190,6 +190,8 @@
   "Software": {
     "MinimumVersion": "7.1"
   },
+  "SupportURL": "https://github.com/shiguruikai/streamdeck-forza-telemetry",
+  "URL": "https://github.com/shiguruikai/streamdeck-forza-telemetry",
   "OS": [
     {
       "Platform": "mac",

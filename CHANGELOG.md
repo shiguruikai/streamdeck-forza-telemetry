@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Third-party license notices (`bin/THIRD_PARTY_LICENSES.txt`) in the plugin package.
+- Help button above the property inspector that opens the project page on GitHub.
 
 ### Changed
 
